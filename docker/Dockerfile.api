@@ -1,0 +1,37 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY src/backend/NuGet.Config ./
+COPY src/backend/Kys.Domain/Kys.Domain.csproj src/backend/Kys.Domain/
+COPY src/backend/Kys.Application/Kys.Application.csproj src/backend/Kys.Application/
+COPY src/backend/Kys.Infrastructure/Kys.Infrastructure.csproj src/backend/Kys.Infrastructure/
+COPY src/backend/Kys.Api/Kys.Api.csproj src/backend/Kys.Api/
+COPY src/backend/Directory.Build.props src/backend/
+
+RUN dotnet restore src/backend/Kys.Api/Kys.Api.csproj
+
+COPY src/backend/ src/backend/
+RUN dotnet publish src/backend/Kys.Api/Kys.Api.csproj -c Release -o /app/publish --no-restore
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup --system --gid 1001 appgroup \
+    && adduser --system --uid 1001 --ingroup appgroup appuser
+
+COPY --from=build /app/publish .
+
+# Create log directory with proper permissions
+RUN mkdir -p logs && chown -R appuser:appgroup /app
+
+USER appuser
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "Kys.Api.dll"]

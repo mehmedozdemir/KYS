@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: kys-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kys
+      POSTGRES_USER: ${DB_USER:-kys_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kys_user} -d kys"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: kys-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=kys;Username=${DB_USER:-kys_user};Password=${DB_PASSWORD}
+      - Jwt__Secret=${JWT_SECRET:?JWT_SECRET is required}
+      - Jwt__Issuer=kys-api
+      - Jwt__Audience=kys-clients
+      - Encryption__Key=${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      - Encryption__IV=${ENCRYPTION_IV:?ENCRYPTION_IV is required}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/live || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postgres_data:

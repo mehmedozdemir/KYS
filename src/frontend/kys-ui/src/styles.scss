@@ -1,0 +1,93 @@
+@use 'styles/variables' as *;
+
+// PrimeNG Aura theme
+@import 'primeng/resources/themes/aura-light-blue/theme.css';
+@import 'primeng/resources/primeng.css';
+@import 'primeicons/primeicons.css';
+
+// Google Fonts - Inter
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: $font-family;
+  font-size: $font-size-base;
+  color: $gray-800;
+  background-color: $surface-ground;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: $primary;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+.p-component {
+  font-family: $font-family;
+}
+
+.p-datatable .p-datatable-header {
+  background: $surface-card;
+  border: none;
+  border-bottom: 1px solid $surface-border;
+  padding: $space-4;
+}
+
+.p-card {
+  border: 1px solid $surface-border;
+  box-shadow: $shadow-sm;
+}
+
+.p-dialog .p-dialog-header {
+  border-bottom: 1px solid $surface-border;
+}
+
+// Status badges
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px $space-2;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &--active     { background: #D1FAE5; color: #065F46; }
+  &--onboarding { background: #DBEAFE; color: #1E40AF; }
+  &--pilot      { background: #EDE9FE; color: #5B21B6; }
+  &--suspended  { background: #FEF3C7; color: #92400E; }
+  &--churned    { background: #FEE2E2; color: #991B1B; }
+  &--archived   { background: #F3F4F6; color: #4B5563; }
+}
+
+.page-content {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }

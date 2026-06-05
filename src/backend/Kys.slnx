@@ -1,0 +1,11 @@
+<Solution>
+  <Project Path="../../tests/Kys.Api.Tests/Kys.Api.Tests.csproj" />
+  <Project Path="../../tests/Kys.Application.Tests/Kys.Application.Tests.csproj" />
+  <Project Path="../../tests/Kys.Architecture.Tests/Kys.Architecture.Tests.csproj" />
+  <Project Path="../../tests/Kys.Domain.Tests/Kys.Domain.Tests.csproj" />
+  <Project Path="../../tests/Kys.Infrastructure.Tests/Kys.Infrastructure.Tests.csproj" />
+  <Project Path="Kys.Api/Kys.Api.csproj" />
+  <Project Path="Kys.Application/Kys.Application.csproj" />
+  <Project Path="Kys.Domain/Kys.Domain.csproj" />
+  <Project Path="Kys.Infrastructure/Kys.Infrastructure.csproj" />
+</Solution>
