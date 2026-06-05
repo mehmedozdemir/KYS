@@ -17,7 +17,9 @@ public sealed class PersonRepository(AppDbContext db) : IPersonRepository
         => await db.People.FirstOrDefaultAsync(p => p.Username == username, ct);
 
     public async Task<Person?> GetByEmailAsync(string email, CancellationToken ct = default)
-        => await db.People.FirstOrDefaultAsync(p => p.Email == email, ct);
+        => await db.People
+            .Include(p => p.SystemRoles).ThenInclude(psr => psr.SystemRole)
+            .FirstOrDefaultAsync(p => p.Email == email, ct);
 
     public async Task<IReadOnlyList<Person>> GetAllAsync(CancellationToken ct = default)
         => await db.People.OrderBy(p => p.LastName).ThenBy(p => p.FirstName).ToListAsync(ct);

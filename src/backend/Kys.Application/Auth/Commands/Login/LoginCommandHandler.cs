@@ -16,7 +16,7 @@ public sealed class LoginCommandHandler(
 {
     public async Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var person = await personRepository.GetByUsernameAsync(request.Username, cancellationToken)
+        var person = await personRepository.GetByEmailAsync(request.Email, cancellationToken)
             ?? throw new ForbiddenException("Invalid credentials.");
 
         if (!person.IsPlatformUser)

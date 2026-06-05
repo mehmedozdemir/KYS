@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SetupService } from '../../core/services/setup.service';
@@ -39,14 +39,6 @@ import { SetupService } from '../../core/services/setup.service';
             <label for="email">E-posta</label>
             <input id="email" type="email" formControlName="email" placeholder="ad@sirket.com" autocomplete="email" />
             <span class="error-msg" *ngIf="isInvalid('email')">Geçerli bir e-posta giriniz.</span>
-          </div>
-
-          <div class="form-group" [class.error]="isInvalid('username')">
-            <label for="username">Kullanıcı Adı</label>
-            <input id="username" formControlName="username" placeholder="admin" autocomplete="username" />
-            <span class="error-msg" *ngIf="isInvalid('username')">
-              En az 3 karakter, yalnızca harf/rakam/nokta/tire/alt çizgi.
-            </span>
           </div>
 
           <div class="form-group" [class.error]="isInvalid('password')">
@@ -232,8 +224,6 @@ export class SetupComponent {
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
     lastName: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(200)]],
-    username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50),
-      Validators.pattern('^[a-zA-Z0-9._-]+$')]],
     password: ['', [Validators.required, Validators.minLength(8),
       Validators.pattern('(?=.*[A-Z])(?=.*[0-9]).{8,}')]],
     confirmPassword: ['', Validators.required]
@@ -256,13 +246,12 @@ export class SetupComponent {
     this.loading = true;
     this.errorMessage = '';
 
-    const { firstName, lastName, email, username, password } = this.form.value;
+    const { firstName, lastName, email, password } = this.form.value;
 
     this.setupService.initialize({
       firstName: firstName!,
       lastName: lastName!,
       email: email!,
-      username: username!,
       password: password!
     }).subscribe({
       next: () => this.router.navigate(['/auth/login']),

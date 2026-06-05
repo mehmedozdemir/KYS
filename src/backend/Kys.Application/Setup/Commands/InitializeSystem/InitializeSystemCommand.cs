@@ -12,7 +12,6 @@ public sealed record InitializeSystemCommand(
     string FirstName,
     string LastName,
     string Email,
-    string Username,
     string Password
 ) : IRequest;
 
@@ -23,8 +22,6 @@ public sealed class InitializeSystemCommandValidator : AbstractValidator<Initial
         RuleFor(x => x.FirstName).NotEmpty().MaximumLength(100);
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(200);
-        RuleFor(x => x.Username).NotEmpty().MinimumLength(3).MaximumLength(50)
-            .Matches("^[a-zA-Z0-9._-]+$").WithMessage("Username can only contain letters, numbers, dots, hyphens and underscores.");
         RuleFor(x => x.Password).NotEmpty().MinimumLength(8)
             .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
             .Matches("[0-9]").WithMessage("Password must contain at least one number.");
@@ -50,7 +47,6 @@ public sealed class InitializeSystemCommandHandler(
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,
-            Username = request.Username,
             IsPlatformUser = true
         };
 
