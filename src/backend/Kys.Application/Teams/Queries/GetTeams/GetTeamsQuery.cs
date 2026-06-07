@@ -7,4 +7,4 @@ public sealed record GetTeamsQuery(string? Search = null, int Page = 1, int Page
 
 public sealed record PagedTeamsResult(IReadOnlyList<TeamListDto> Items, int TotalCount, int Page, int PageSize);
 
-public sealed record TeamListDto(Guid Id, string Name, string? Description, int MemberCount, bool IsActive);
+public sealed record TeamListDto(Guid Id, string Name, string? Code, string? Description, int MemberCount, bool IsActive);

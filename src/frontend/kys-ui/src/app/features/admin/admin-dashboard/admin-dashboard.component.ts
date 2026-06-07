@@ -135,6 +135,18 @@ interface AuditLogList {
                 <i class="pi pi-building"></i>
                 <span>Müşteri Yönetimi</span>
               </a>
+              <a routerLink="/admin/platform-users" class="link-card">
+                <i class="pi pi-shield"></i>
+                <span>Platform Kullanıcıları</span>
+              </a>
+              <a routerLink="/admin/custom-fields" class="link-card">
+                <i class="pi pi-sliders-h"></i>
+                <span>Özel Alanlar</span>
+              </a>
+              <a routerLink="/admin/environment-types" class="link-card">
+                <i class="pi pi-server"></i>
+                <span>Ortam Tipleri</span>
+              </a>
               <a routerLink="/admin/shared-resources" class="link-card">
                 <i class="pi pi-share-alt"></i>
                 <span>Paylaşımlı Kaynaklar</span>

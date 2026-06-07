@@ -25,6 +25,6 @@ public sealed class GetTeamDetailQueryHandler(ITeamRepository teamRepository)
             .OrderBy(m => m.PersonName)
             .ToList();
 
-        return new TeamDetailDto(team.Id, team.Name, team.Description, !team.IsDeleted, members);
+        return new TeamDetailDto(team.Id, team.Name, team.Code, team.Description, !team.IsDeleted, members);
     }
 }

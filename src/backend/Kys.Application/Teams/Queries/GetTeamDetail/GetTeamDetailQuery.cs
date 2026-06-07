@@ -7,6 +7,7 @@ public sealed record GetTeamDetailQuery(Guid Id) : IRequest<TeamDetailDto>;
 public sealed record TeamDetailDto(
     Guid Id,
     string Name,
+    string? Code,
     string? Description,
     bool IsActive,
     IReadOnlyList<TeamMemberDto> Members

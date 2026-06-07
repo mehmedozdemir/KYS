@@ -295,7 +295,7 @@ export class ProductListComponent implements OnInit {
     const body = {
       name: this.form.name,
       code: this.form.code.toUpperCase(),
-      productType: this.form.productType,
+      productType: Number(this.form.productType),
       description: this.form.description || null
     };
     this.http.post(`${environment.apiUrl}/products`, body).subscribe({

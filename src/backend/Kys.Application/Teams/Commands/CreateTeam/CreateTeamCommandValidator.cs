@@ -9,6 +9,7 @@ public sealed class CreateTeamCommandValidator : AbstractValidator<CreateTeamCom
     public CreateTeamCommandValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Code).MaximumLength(20).When(x => x.Code is not null);
         RuleFor(x => x.Description).MaximumLength(1000).When(x => x.Description is not null);
         RuleFor(x => x.TeamType).NotEmpty().Must(t => ValidTypes.Contains(t))
             .WithMessage("TeamType must be Domain, Project, or Platform.");

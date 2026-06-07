@@ -6,6 +6,18 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () => import('./admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent)
   },
   {
+    path: 'custom-fields',
+    loadComponent: () => import('./custom-fields/custom-fields.component').then(m => m.CustomFieldsComponent)
+  },
+  {
+    path: 'environment-types',
+    loadComponent: () => import('./environment-types/environment-types.component').then(m => m.EnvironmentTypesComponent)
+  },
+  {
+    path: 'platform-users',
+    loadComponent: () => import('./platform-users/platform-users.component').then(m => m.PlatformUsersComponent)
+  },
+  {
     path: 'shared-resources',
     loadComponent: () => import('./shared-resources/shared-resources.component').then(m => m.SharedResourcesComponent)
   },

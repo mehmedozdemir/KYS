@@ -8,6 +8,7 @@ import { environment } from '../../../../environments/environment';
 interface TeamDetail {
   id: string;
   name: string;
+  code: string | null;
   description: string | null;
   isActive: boolean;
   members: TeamMember[];
@@ -73,7 +74,12 @@ interface AddMemberRequest {
           <div class="header-main">
             <div class="team-avatar">{{ team()!.name[0] }}</div>
             <div>
-              <h1>{{ team()!.name }}</h1>
+              <div class="name-row">
+                <h1>{{ team()!.name }}</h1>
+                @if (team()!.code) {
+                  <span class="code-badge">{{ team()!.code }}</span>
+                }
+              </div>
               <p class="header-desc">{{ team()!.description ?? 'Açıklama eklenmemiş' }}</p>
             </div>
           </div>
@@ -224,6 +230,8 @@ interface AddMemberRequest {
       font-size: 1.25rem; font-weight: 700; flex-shrink: 0;
     }
     h1 { font-size: 1.25rem; font-weight: 700; color: #111827; }
+    .name-row { display: flex; align-items: center; gap: 0.625rem; }
+    .code-badge { display: inline-flex; align-items: center; padding: 0.1875rem 0.5rem; background: #EEF2FF; color: #4F46E5; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; }
     .header-desc { font-size: 0.875rem; color: #6B7280; margin-top: 0.125rem; }
 
     .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }

@@ -19,7 +19,7 @@ public sealed class GetTeamsQueryHandler(ITeamRepository teamRepository)
         var items = filtered
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(t => new TeamListDto(t.Id, t.Name, t.Description, t.Memberships.Count(m => m.IsActive), !t.IsDeleted))
+            .Select(t => new TeamListDto(t.Id, t.Name, t.Code, t.Description, t.Memberships.Count(m => m.IsActive), !t.IsDeleted))
             .ToList();
 
         return new PagedTeamsResult(items, totalCount, request.Page, request.PageSize);

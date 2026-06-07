@@ -10,6 +10,7 @@ public sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
     {
         builder.HasKey(t => t.Id);
         builder.Property(t => t.Name).HasMaxLength(200).IsRequired();
+        builder.Property(t => t.Code).HasMaxLength(20);
         builder.Property(t => t.Description).HasMaxLength(1000);
         builder.Property(t => t.TeamType).HasMaxLength(50).IsRequired();
 

@@ -34,6 +34,12 @@ interface EnvironmentType {
   color: string | null;
 }
 
+interface ProductOption {
+  id: string;
+  name: string;
+  code: string;
+}
+
 interface CustomerProduct {
   id: string;
   productId: string;
@@ -191,6 +197,12 @@ interface CustomerDetail {
         <!-- Tab: Ürünler -->
         @if (activeTab() === 'products') {
           <div class="tab-content">
+            <div class="section-action-row">
+              <span class="section-count">{{ customer()!.products.length }} ürün</span>
+              <button class="btn-sm" (click)="openAddProduct()">
+                <i class="pi pi-plus"></i> Ürün Ekle
+              </button>
+            </div>
             @if (!customer()!.products.length) {
               <p class="empty-text">Ürün atanmamış.</p>
             } @else {
@@ -298,6 +310,52 @@ interface CustomerDetail {
       }
     </div>
 
+    <!-- Add Product Modal -->
+    @if (showAddProductModal()) {
+      <div class="modal-backdrop" (click)="showAddProductModal.set(false)">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Ürün Ekle</h2>
+            <button class="modal-close" (click)="showAddProductModal.set(false)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Ürün <span class="required">*</span></label>
+              <select [(ngModel)]="addProductForm.productId" [class.input-error]="addProductSubmitted() && !addProductForm.productId">
+                <option value="">Ürün seçin...</option>
+                @for (p of availableProducts(); track p.id) {
+                  <option [value]="p.id">{{ p.name }} ({{ p.code }})</option>
+                }
+              </select>
+              @if (addProductSubmitted() && !addProductForm.productId) {
+                <span class="error-msg">Ürün seçimi zorunludur</span>
+              }
+            </div>
+            <div class="form-group">
+              <label>Kullanım Modu <span class="required">*</span></label>
+              <select [(ngModel)]="addProductForm.usageMode">
+                <option value="0">SaaS — Paylaşımlı (ortam tanımlanamaz)</option>
+                <option value="1">Dedicated — Müşteriye özel (ortam tanımlanabilir)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Notlar</label>
+              <textarea [(ngModel)]="addProductForm.notes" rows="2" placeholder="İsteğe bağlı not..."></textarea>
+            </div>
+            @if (addProductError()) {
+              <div class="alert-error">{{ addProductError() }}</div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="showAddProductModal.set(false)">İptal</button>
+            <button class="btn-save" [disabled]="addProductSaving()" (click)="saveAddProduct()">
+              {{ addProductSaving() ? 'Ekleniyor...' : 'Ekle' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Create Environment Modal -->
     @if (showEnvModal()) {
       <div class="modal-backdrop" (click)="showEnvModal.set(false)">
@@ -403,6 +461,8 @@ interface CustomerDetail {
     .badge--custom { background: #F3E8FF; color: #6B21A8; }
 
     /* Ortamlar tab */
+    .section-action-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .section-count { font-size: 0.875rem; color: #6B7280; }
     .env-product-section { margin-bottom: 1.5rem; &:last-child { margin-bottom: 0; } }
     .env-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
     .env-section-title { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; font-weight: 600; color: #374151; i { color: #6B7280; font-size: 0.875rem; } }
@@ -424,7 +484,7 @@ interface CustomerDetail {
     .modal-close { background: none; border: none; cursor: pointer; color: #6B7280; font-size: 1.25rem; padding: 0.25rem; border-radius: 0.375rem; &:hover { background: #F3F4F6; } }
     .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 0.75rem; }
-    .form-group { display: flex; flex-direction: column; gap: 0.375rem; label { font-size: 0.8125rem; font-weight: 600; color: #374151; } input, select { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; &:focus { outline: none; border-color: #3B82F6; } } }
+    .form-group { display: flex; flex-direction: column; gap: 0.375rem; label { font-size: 0.8125rem; font-weight: 600; color: #374151; } input, select, textarea { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; width: 100%; box-sizing: border-box; resize: vertical; background: white; &:focus { outline: none; border-color: #3B82F6; } } }
     .input-error { border-color: #EF4444 !important; }
     .error-msg { font-size: 0.75rem; color: #EF4444; }
     .required { color: #EF4444; }
@@ -447,6 +507,56 @@ export class CustomerDetailComponent implements OnInit {
   envLoading = signal(false);
   envTypes = signal<EnvironmentType[]>([]);
   private envTypesLoaded = false;
+
+  // Add product state
+  showAddProductModal = signal(false);
+  private allProducts = signal<ProductOption[]>([]);
+  addProductForm = { productId: '', usageMode: '1', notes: '' };
+  addProductSubmitted = signal(false);
+  addProductSaving = signal(false);
+  addProductError = signal('');
+
+  availableProducts() {
+    const existing = new Set(this.customer()?.products.map(p => p.productId) ?? []);
+    return this.allProducts().filter(p => !existing.has(p.id));
+  }
+
+  openAddProduct() {
+    this.addProductForm = { productId: '', usageMode: '1', notes: '' };
+    this.addProductSubmitted.set(false);
+    this.addProductError.set('');
+    this.showAddProductModal.set(true);
+    if (!this.allProducts().length) {
+      this.http.get<{ items: ProductOption[] }>(`${environment.apiUrl}/products?pageSize=200`).subscribe({
+        next: r => this.allProducts.set(r.items)
+      });
+    }
+  }
+
+  saveAddProduct() {
+    this.addProductSubmitted.set(true);
+    if (!this.addProductForm.productId) return;
+    this.addProductSaving.set(true);
+    this.addProductError.set('');
+    const customerId = this.customer()!.id;
+    this.http.post(`${environment.apiUrl}/customers/${customerId}/products`, {
+      productId: this.addProductForm.productId,
+      usageMode: Number(this.addProductForm.usageMode),
+      notes: this.addProductForm.notes.trim() || null
+    }).subscribe({
+      next: () => {
+        this.addProductSaving.set(false);
+        this.showAddProductModal.set(false);
+        this.http.get<CustomerDetail>(`${environment.apiUrl}/customers/${customerId}`).subscribe({
+          next: c => this.customer.set(c)
+        });
+      },
+      error: err => {
+        this.addProductSaving.set(false);
+        this.addProductError.set(err.error?.detail ?? 'Ürün eklenemedi');
+      }
+    });
+  }
 
   showEnvModal = signal(false);
   private createEnvCpId = '';

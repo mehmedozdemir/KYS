@@ -8,6 +8,7 @@ import { environment } from '../../../../environments/environment';
 interface TeamSummary {
   id: string;
   name: string;
+  code: string | null;
   description: string | null;
   memberCount: number;
   isActive: boolean;
@@ -22,7 +23,9 @@ interface PagedResult<T> {
 
 interface CreateTeamRequest {
   name: string;
+  code: string;
   description: string;
+  teamType: string;
 }
 
 @Component({
@@ -77,6 +80,9 @@ interface CreateTeamRequest {
                   <td class="name-cell">
                     <div class="team-avatar">{{ team.name[0] }}</div>
                     <span class="team-name">{{ team.name }}</span>
+                    @if (team.code) {
+                      <span class="code-tag">{{ team.code }}</span>
+                    }
                   </td>
                   <td class="desc-cell">{{ team.description ?? '—' }}</td>
                   <td>
@@ -119,16 +125,30 @@ interface CreateTeamRequest {
             @if (createError()) {
               <div class="alert-error">{{ createError() }}</div>
             }
+            <div class="form-row">
+              <div class="form-group">
+                <label>Ekip Adı <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="form.name" placeholder="ör. Backend Ekibi" [class.input-error]="submitted() && !form.name.trim()" />
+                @if (submitted() && !form.name.trim()) {
+                  <span class="field-error">Ad zorunludur</span>
+                }
+              </div>
+              <div class="form-group">
+                <label>Kısa Kod</label>
+                <input type="text" [(ngModel)]="form.code" placeholder="ör. BE" maxlength="20" (input)="form.code = form.code.toUpperCase()" />
+              </div>
+            </div>
             <div class="form-group">
-              <label>Ekip Adı <span class="required">*</span></label>
-              <input type="text" [(ngModel)]="form.name" placeholder="Ekip adı" />
-              @if (submitted() && !form.name.trim()) {
-                <span class="field-error">Ekip adı zorunludur</span>
-              }
+              <label>Ekip Tipi <span class="required">*</span></label>
+              <select [(ngModel)]="form.teamType" [class.input-error]="submitted() && !form.teamType">
+                <option value="Project">Project — Proje bazlı ekip</option>
+                <option value="Domain">Domain — Etki alanı ekibi</option>
+                <option value="Platform">Platform — Altyapı/platform ekibi</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Açıklama</label>
-              <textarea [(ngModel)]="form.description" placeholder="Kısa açıklama" rows="3"></textarea>
+              <textarea [(ngModel)]="form.description" placeholder="Kısa açıklama" rows="2"></textarea>
             </div>
           </div>
           <div class="modal-footer">
@@ -164,6 +184,7 @@ interface CreateTeamRequest {
     .name-cell { display: flex; align-items: center; gap: 0.625rem; }
     .team-avatar { width: 2rem; height: 2rem; border-radius: 0.375rem; background: #E0E7FF; color: #4F46E5; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; flex-shrink: 0; }
     .team-name { font-weight: 500; color: #111827; }
+    .code-tag { display: inline-flex; align-items: center; padding: 0.125rem 0.375rem; background: #EEF2FF; color: #4F46E5; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; }
     .desc-cell { color: #6B7280; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .member-count { display: flex; align-items: center; gap: 0.375rem; color: #6B7280; i { font-size: 0.75rem; } }
 
@@ -185,7 +206,9 @@ interface CreateTeamRequest {
     .close-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem; font-size: 1rem; &:hover { color: #374151; } }
     .modal-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 0.75rem; }
-    .form-group { display: flex; flex-direction: column; gap: 0.375rem; label { font-size: 0.875rem; font-weight: 500; color: #374151; } input, textarea { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 0.875rem; width: 100%; box-sizing: border-box; resize: vertical; &:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); } } }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.375rem; label { font-size: 0.875rem; font-weight: 500; color: #374151; } input, textarea, select { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 0.875rem; width: 100%; box-sizing: border-box; resize: vertical; background: white; &:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); } } }
+    .input-error { border-color: #EF4444 !important; }
     .required { color: #EF4444; }
     .field-error { font-size: 0.75rem; color: #EF4444; }
     .alert-error { padding: 0.75rem 1rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.5rem; color: #991B1B; font-size: 0.875rem; }
@@ -208,7 +231,7 @@ export class TeamListComponent implements OnInit {
   saving = signal(false);
   submitted = signal(false);
   createError = signal('');
-  form: CreateTeamRequest = { name: '', description: '' };
+  form: CreateTeamRequest = { name: '', code: '', description: '', teamType: 'Project' };
 
   ngOnInit() {
     this.searchSubject.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
@@ -239,12 +262,12 @@ export class TeamListComponent implements OnInit {
     this.showModal.set(false);
     this.submitted.set(false);
     this.createError.set('');
-    this.form = { name: '', description: '' };
+    this.form = { name: '', code: '', description: '', teamType: 'Project' };
   }
 
   createTeam() {
     this.submitted.set(true);
-    if (!this.form.name.trim()) return;
+    if (!this.form.name.trim() || !this.form.teamType) return;
     this.saving.set(true);
     this.createError.set('');
     this.http.post<TeamSummary>(`${environment.apiUrl}/teams`, this.form).subscribe({

@@ -1,0 +1,283 @@
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
+import { NgClass } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../environments/environment';
+
+interface PersonItem {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  title: string | null;
+  employmentStatus: number;
+  isPlatformUser: boolean;
+}
+
+interface SystemRole {
+  id: string;
+  name: string;
+  code: string;
+  permissions: string[];
+  assignedAt: string;
+}
+
+// Seeded system roles (fixed GUIDs from SystemRoleConfiguration)
+const ALL_SYSTEM_ROLES = [
+  { id: '00000000-0000-0000-0000-000000000001', name: 'Platform Yöneticisi', code: 'PlatformAdmin' },
+  { id: '00000000-0000-0000-0000-000000000002', name: 'Direktör', code: 'Director' },
+  { id: '00000000-0000-0000-0000-000000000003', name: 'Ekip Lideri', code: 'TeamLead' },
+  { id: '00000000-0000-0000-0000-000000000004', name: 'Geliştirici', code: 'Developer' },
+  { id: '00000000-0000-0000-0000-000000000005', name: 'Salt Okuma', code: 'ReadOnly' }
+];
+
+const ROLE_COLOR: Record<string, string> = {
+  PlatformAdmin: 'badge--admin', Director: 'badge--director',
+  TeamLead: 'badge--lead', Developer: 'badge--dev', ReadOnly: 'badge--readonly'
+};
+
+@Component({
+  selector: 'app-platform-users',
+  standalone: true,
+  imports: [RouterLink, NgClass, FormsModule],
+  template: `
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <div class="breadcrumb"><a routerLink="/admin">Admin</a><span>/</span><span>Platform Kullanıcıları</span></div>
+          <h1 class="page-title">Platform Kullanıcıları</h1>
+          <p class="page-subtitle">Platform erişimi olan kişiler ve sistem rolleri</p>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="toolbar">
+        <div class="search-box">
+          <i class="pi pi-search"></i>
+          <input type="text" placeholder="Kullanıcı ara..." [(ngModel)]="search" (input)="filterUsers()" />
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">Yükleniyor...</div>
+      } @else if (!filtered().length) {
+        <div class="empty-state">Platform erişimi olan kullanıcı bulunamadı.</div>
+      } @else {
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Kişi</th>
+                <th>Unvan</th>
+                <th>Sistem Rolleri</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of filtered(); track p.id) {
+                <tr>
+                  <td class="person-cell">
+                    <div class="avatar">{{ p.firstName[0] }}{{ p.lastName[0] }}</div>
+                    <div>
+                      <a [routerLink]="['/people', p.id]" class="person-name">{{ p.firstName }} {{ p.lastName }}</a>
+                      <p class="person-email">{{ p.email }}</p>
+                    </div>
+                  </td>
+                  <td class="text-muted">{{ p.title ?? '—' }}</td>
+                  <td>
+                    @let roles = rolesMap().get(p.id);
+                    @if (roles === undefined) {
+                      <button class="load-roles-btn" (click)="loadRoles(p.id)">Rolleri yükle</button>
+                    } @else if (!roles.length) {
+                      <span class="text-muted">Rol atanmamış</span>
+                    } @else {
+                      <div class="role-chips">
+                        @for (r of roles; track r.id) {
+                          <span class="role-chip" [ngClass]="roleColor(r.code)">
+                            {{ r.name }}
+                            <button class="remove-role-btn" (click)="removeRole(p.id, r.id)" title="Rolü kaldır">
+                              <i class="pi pi-times"></i>
+                            </button>
+                          </span>
+                        }
+                      </div>
+                    }
+                  </td>
+                  <td class="action-cell">
+                    <button class="btn-sm" (click)="openAssignRole(p.id)">
+                      <i class="pi pi-user-edit"></i> Rol Ekle
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- Assign Role Modal -->
+    @if (assignModal()) {
+      <div class="modal-backdrop" (click)="assignModal.set(null)">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Sistem Rolü Ata</h2>
+            <button class="close-btn" (click)="assignModal.set(null)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            @if (assignError()) {
+              <div class="alert-error">{{ assignError() }}</div>
+            }
+            @let currentRoles = rolesMap().get(assignModal()!) ?? [];
+            @let alreadyAssigned = currentRoleIds(assignModal()!);
+            <div class="role-list">
+              @for (r of ALL_SYSTEM_ROLES; track r.id) {
+                <div class="role-option" [class.assigned]="alreadyAssigned.has(r.id)">
+                  <div>
+                    <span class="role-chip" [ngClass]="roleColor(r.code)">{{ r.name }}</span>
+                    <p class="role-code">{{ r.code }}</p>
+                  </div>
+                  @if (alreadyAssigned.has(r.id)) {
+                    <span class="assigned-badge">Atanmış</span>
+                  } @else {
+                    <button class="btn btn-primary btn-sm-modal" [disabled]="assigning()" (click)="assignRole(r.id)">Ata</button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="assignModal.set(null)">Kapat</button>
+          </div>
+        </div>
+      </div>
+    }
+  `,
+  styles: [`
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem; }
+    .breadcrumb { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #6B7280; margin-bottom: 0.375rem; a { color: #3B82F6; text-decoration: none; } span { &:last-child { color: #374151; } } }
+    .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
+    .page-subtitle { font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem; }
+
+    .toolbar { margin-bottom: 1rem; }
+    .search-box { position: relative; max-width: 360px; i { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #9CA3AF; font-size: 0.875rem; } input { width: 100%; padding: 0.5rem 0.75rem 0.5rem 2.25rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 0.875rem; box-sizing: border-box; } }
+
+    .table-wrapper { background: white; border: 1px solid #E5E7EB; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .empty-state { text-align: center; padding: 3rem; color: #9CA3AF; font-size: 0.875rem; }
+    .data-table { width: 100%; border-collapse: collapse;
+      th { background: #F9FAFB; padding: 0.625rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB; }
+      td { padding: 0.75rem; font-size: 0.875rem; color: #374151; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+      tr:last-child td { border-bottom: none; }
+    }
+    .person-cell { display: flex; align-items: center; gap: 0.75rem; }
+    .avatar { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: #E0E7FF; color: #4F46E5; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .person-name { font-weight: 500; color: #111827; text-decoration: none; &:hover { color: #3B82F6; } }
+    .person-email { font-size: 0.8125rem; color: #9CA3AF; margin: 0; }
+    .text-muted { color: #9CA3AF; font-size: 0.8125rem; }
+    .role-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+    .role-chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.1875rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .badge--admin { background: #FEE2E2; color: #991B1B; }
+    .badge--director { background: #EDE9FE; color: #5B21B6; }
+    .badge--lead { background: #DBEAFE; color: #1D4ED8; }
+    .badge--dev { background: #D1FAE5; color: #065F46; }
+    .badge--readonly { background: #F3F4F6; color: #374151; }
+    .remove-role-btn { background: none; border: none; cursor: pointer; color: inherit; opacity: 0.6; padding: 0; font-size: 0.6875rem; line-height: 1; display: flex; &:hover { opacity: 1; } }
+    .load-roles-btn { background: none; border: none; color: #3B82F6; font-size: 0.8125rem; cursor: pointer; padding: 0; &:hover { text-decoration: underline; } }
+    .action-cell { text-align: right; }
+    .btn-sm { background: white; color: #374151; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.375rem 0.75rem; font-size: 0.8125rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.375rem; &:hover { background: #F9FAFB; } }
+
+    .btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; &:disabled { opacity: 0.6; cursor: not-allowed; } }
+    .btn-primary { background: #3B82F6; color: white; &:not(:disabled):hover { background: #2563EB; } }
+    .btn-secondary { background: white; color: #374151; border: 1px solid #D1D5DB; &:hover { background: #F3F4F6; } }
+    .btn-sm-modal { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal { background: white; border-radius: 0.75rem; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid #E5E7EB; h2 { font-size: 1.125rem; font-weight: 700; color: #111827; } }
+    .close-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem; font-size: 1rem; &:hover { color: #374151; } }
+    .modal-body { padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: 0; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; }
+    .role-list { display: flex; flex-direction: column; }
+    .role-option { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 0; border-bottom: 1px solid #F3F4F6; &:last-child { border-bottom: none; } &.assigned { opacity: 0.6; } }
+    .role-code { font-size: 0.75rem; color: #9CA3AF; margin: 0.25rem 0 0; }
+    .assigned-badge { font-size: 0.75rem; color: #6B7280; background: #F3F4F6; padding: 0.25rem 0.625rem; border-radius: 9999px; }
+    .alert-error { padding: 0.75rem 1rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.5rem; color: #991B1B; font-size: 0.875rem; margin-bottom: 0.5rem; }
+  `]
+})
+export class PlatformUsersComponent implements OnInit {
+  private http = inject(HttpClient);
+
+  readonly ALL_SYSTEM_ROLES = ALL_SYSTEM_ROLES;
+
+  users = signal<PersonItem[]>([]);
+  filtered = signal<PersonItem[]>([]);
+  loading = signal(true);
+  search = '';
+
+  rolesMap = signal<Map<string, SystemRole[]>>(new Map());
+  assignModal = signal<string | null>(null);
+  assigning = signal(false);
+  assignError = signal('');
+
+  ngOnInit() {
+    this.http.get<{ items: PersonItem[]; totalCount: number }>(`${environment.apiUrl}/people?pageSize=500`).subscribe({
+      next: r => {
+        const platform = r.items.filter(p => p.isPlatformUser);
+        this.users.set(platform);
+        this.filtered.set(platform);
+        this.loading.set(false);
+        // Auto-load roles for all platform users
+        platform.forEach(p => this.loadRoles(p.id));
+      },
+      error: () => this.loading.set(false)
+    });
+  }
+
+  filterUsers() {
+    const q = this.search.toLowerCase();
+    this.filtered.set(
+      this.users().filter(p =>
+        `${p.firstName} ${p.lastName}`.toLowerCase().includes(q) || p.email.toLowerCase().includes(q)
+      )
+    );
+  }
+
+  loadRoles(personId: string) {
+    this.http.get<SystemRole[]>(`${environment.apiUrl}/admin/users/${personId}/system-roles`).subscribe({
+      next: roles => {
+        this.rolesMap.update(m => { const nm = new Map(m); nm.set(personId, roles); return nm; });
+      },
+      error: () => {
+        this.rolesMap.update(m => { const nm = new Map(m); nm.set(personId, []); return nm; });
+      }
+    });
+  }
+
+  roleColor(code: string) { return ROLE_COLOR[code] ?? 'badge--readonly'; }
+
+  currentRoleIds(personId: string): Set<string> {
+    return new Set((this.rolesMap().get(personId) ?? []).map(r => r.id));
+  }
+
+  openAssignRole(personId: string) {
+    this.assignError.set('');
+    this.assignModal.set(personId);
+  }
+
+  assignRole(systemRoleId: string) {
+    const personId = this.assignModal()!;
+    this.assigning.set(true);
+    this.assignError.set('');
+    this.http.post(`${environment.apiUrl}/admin/users/${personId}/system-roles`, { systemRoleId }).subscribe({
+      next: () => { this.assigning.set(false); this.loadRoles(personId); },
+      error: err => { this.assigning.set(false); this.assignError.set(err.error?.detail ?? 'Rol atanamadı'); }
+    });
+  }
+
+  removeRole(personId: string, systemRoleId: string) {
+    this.http.delete(`${environment.apiUrl}/admin/users/${personId}/system-roles/${systemRoleId}`).subscribe({
+      next: () => this.loadRoles(personId)
+    });
+  }
+}

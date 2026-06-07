@@ -14,6 +14,7 @@ public sealed class CreateTeamCommandHandler(
         var team = new Team
         {
             Name = request.Name,
+            Code = request.Code?.ToUpperInvariant(),
             Description = request.Description,
             TeamType = request.TeamType
         };
