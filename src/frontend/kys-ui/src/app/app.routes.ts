@@ -44,6 +44,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/knowledge-base/kb.routes').then(m => m.KB_ROUTES)
       },
       {
+        path: 'environments',
+        loadChildren: () => import('./features/environments/environments.routes').then(m => m.ENVIRONMENTS_ROUTES)
+      },
+      {
         path: 'admin',
         loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES)
       }
