@@ -135,6 +135,14 @@ interface AuditLogList {
                 <i class="pi pi-building"></i>
                 <span>Müşteri Yönetimi</span>
               </a>
+              <a routerLink="/admin/shared-resources" class="link-card">
+                <i class="pi pi-share-alt"></i>
+                <span>Paylaşımlı Kaynaklar</span>
+              </a>
+              <a routerLink="/admin/resource-types" class="link-card">
+                <i class="pi pi-database"></i>
+                <span>Kaynak Tipleri</span>
+              </a>
             </div>
           </div>
         }
