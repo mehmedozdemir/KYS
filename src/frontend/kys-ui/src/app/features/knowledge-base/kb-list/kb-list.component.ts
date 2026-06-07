@@ -1,9 +1,239 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+
+// KbVisibility: 0=Internal, 1=TeamOnly, 2=Public
+const VIS_LABEL: Record<string, string> = { Internal: 'Dahili', TeamOnly: 'Ekip', Public: 'Herkese Açık' };
+const VIS_CSS: Record<string, string> = { Internal: 'badge--internal', TeamOnly: 'badge--team', Public: 'badge--public' };
+
+interface ArticleSummary {
+  id: string;
+  title: string;
+  visibility: string;
+  productId: string | null;
+  productName: string | null;
+  customerId: string | null;
+  customerName: string | null;
+  teamId: string | null;
+  teamName: string | null;
+  tags: string[];
+  updatedAt: string;
+}
+
+interface ArticleListResult {
+  items: ArticleSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
 
 @Component({
   selector: 'app-kb-list',
   standalone: true,
-  imports: [],
-  template: `<div class="page-content"><h1 style="font-size:1.5rem;font-weight:700;margin-bottom:1rem">Bilgi Bankası</h1><p style="color:#6B7280">Yakında...</p></div>`
+  imports: [RouterLink, FormsModule, DatePipe],
+  template: `
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Bilgi Bankası</h1>
+          <p class="page-subtitle">{{ totalCount() }} makale</p>
+        </div>
+        <a routerLink="/knowledge-base/new" class="btn btn-primary">
+          <i class="pi pi-plus"></i> Yeni Makale
+        </a>
+      </div>
+
+      <!-- Filters -->
+      <div class="toolbar">
+        <div class="search-box">
+          <i class="pi pi-search"></i>
+          <input type="text" placeholder="Makale ara..." [(ngModel)]="searchInput" (ngModelChange)="onSearch($event)" />
+        </div>
+        <select [(ngModel)]="filterTag" (ngModelChange)="onFilterChange()">
+          <option value="">Tüm etiketler</option>
+          @for (tag of tags(); track tag) {
+            <option [value]="tag">{{ tag }}</option>
+          }
+        </select>
+        <select [(ngModel)]="filterVis" (ngModelChange)="onFilterChange()">
+          <option value="">Tüm görünürlük</option>
+          <option value="Internal">Dahili</option>
+          <option value="TeamOnly">Ekip</option>
+          <option value="Public">Herkese Açık</option>
+        </select>
+      </div>
+
+      <!-- Active tag filter chips -->
+      @if (filterTag) {
+        <div class="filter-chips">
+          <span class="chip">
+            <i class="pi pi-tag"></i> {{ filterTag }}
+            <button (click)="filterTag = ''; onFilterChange()"><i class="pi pi-times"></i></button>
+          </span>
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="loading-state">Yükleniyor...</div>
+      } @else if (!articles().length) {
+        <div class="empty-state">
+          <i class="pi pi-book"></i>
+          <p>Makale bulunamadı.</p>
+        </div>
+      } @else {
+        <div class="article-list">
+          @for (a of articles(); track a.id) {
+            <a [routerLink]="['/knowledge-base', a.id]" class="article-card">
+              <div class="article-main">
+                <div class="article-header">
+                  <h3 class="article-title">{{ a.title }}</h3>
+                  <span class="badge" [class]="visCss(a.visibility)">{{ visLabel(a.visibility) }}</span>
+                </div>
+                <div class="article-meta">
+                  @if (a.productName) {
+                    <span class="meta-item"><i class="pi pi-box"></i> {{ a.productName }}</span>
+                  }
+                  @if (a.customerName) {
+                    <span class="meta-item"><i class="pi pi-building"></i> {{ a.customerName }}</span>
+                  }
+                  @if (a.teamName) {
+                    <span class="meta-item"><i class="pi pi-users"></i> {{ a.teamName }}</span>
+                  }
+                  <span class="meta-item muted"><i class="pi pi-clock"></i> {{ a.updatedAt | date:'dd.MM.yyyy' }}</span>
+                </div>
+                @if (a.tags.length) {
+                  <div class="tag-list">
+                    @for (tag of a.tags; track tag) {
+                      <span class="tag" (click)="setTagFilter(tag, $event)">{{ tag }}</span>
+                    }
+                  </div>
+                }
+              </div>
+              <i class="pi pi-chevron-right arrow"></i>
+            </a>
+          }
+        </div>
+        @if (totalCount() > pageSize) {
+          <div class="pagination">
+            <button class="page-btn" [disabled]="page() === 1" (click)="goToPage(page() - 1)">
+              <i class="pi pi-chevron-left"></i>
+            </button>
+            <span class="page-info">{{ page() }} / {{ totalPages() }}</span>
+            <button class="page-btn" [disabled]="page() === totalPages()" (click)="goToPage(page() + 1)">
+              <i class="pi pi-chevron-right"></i>
+            </button>
+          </div>
+        }
+      }
+    </div>
+  `,
+  styles: [`
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; }
+    .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
+    .page-subtitle { font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem; }
+
+    .toolbar { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap; align-items: center; }
+    .search-box {
+      position: relative; flex: 1; min-width: 200px; max-width: 320px;
+      i { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #9CA3AF; font-size: 0.875rem; }
+      input { width: 100%; padding: 0.5rem 0.75rem 0.5rem 2.25rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 0.875rem; box-sizing: border-box; }
+    }
+    select { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 0.875rem; color: #374151; background: white; }
+
+    .filter-chips { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+    .chip { display: inline-flex; align-items: center; gap: 0.375rem; background: #EEF2FF; color: #4338CA; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8125rem; button { background: none; border: none; cursor: pointer; color: #6366F1; padding: 0; font-size: 0.75rem; line-height: 1; } i:first-child { font-size: 0.75rem; } }
+
+    .loading-state { text-align: center; padding: 4rem; color: #9CA3AF; }
+    .empty-state { text-align: center; padding: 4rem; color: #9CA3AF; i { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; } p { font-size: 0.875rem; } }
+
+    .article-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .article-card {
+      background: white; border: 1px solid #E5E7EB; border-radius: 0.75rem;
+      padding: 1.25rem; display: flex; align-items: center; gap: 1rem;
+      text-decoration: none; transition: box-shadow 0.15s, border-color 0.15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      &:hover { border-color: #3B82F6; box-shadow: 0 2px 8px rgba(59,130,246,0.12); }
+    }
+    .article-main { flex: 1; min-width: 0; }
+    .article-header { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    .article-title { font-size: 1rem; font-weight: 600; color: #111827; flex: 1; min-width: 0; }
+    .article-meta { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    .meta-item { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: #374151; i { font-size: 0.75rem; color: #9CA3AF; } &.muted { color: #9CA3AF; } }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+    .tag { background: #F3F4F6; color: #374151; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; cursor: pointer; &:hover { background: #E5E7EB; } }
+    .arrow { color: #D1D5DB; font-size: 0.875rem; flex-shrink: 0; }
+
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1rem; }
+    .page-btn { background: none; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.375rem 0.625rem; cursor: pointer; color: #374151; &:disabled { opacity: 0.4; cursor: not-allowed; } &:not(:disabled):hover { background: #F3F4F6; } }
+    .page-info { font-size: 0.875rem; color: #6B7280; }
+
+    .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+    .badge--internal { background: #F3F4F6; color: #6B7280; }
+    .badge--team { background: #DBEAFE; color: #1E40AF; }
+    .badge--public { background: #D1FAE5; color: #065F46; }
+
+    .btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; text-decoration: none; }
+    .btn-primary { background: #3B82F6; color: white; &:hover { background: #2563EB; } }
+  `]
 })
-export class KbListComponent {}
+export class KbListComponent implements OnInit {
+  private http = inject(HttpClient);
+
+  articles = signal<ArticleSummary[]>([]);
+  tags = signal<string[]>([]);
+  loading = signal(true);
+  totalCount = signal(0);
+  page = signal(1);
+  readonly pageSize = 20;
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
+
+  searchInput = '';
+  filterTag = '';
+  filterVis = '';
+  private searchSubject = new Subject<string>();
+
+  visLabel(v: string) { return VIS_LABEL[v] ?? v; }
+  visCss(v: string) { return VIS_CSS[v] ?? ''; }
+
+  ngOnInit() {
+    this.searchSubject.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
+      this.page.set(1); this.load();
+    });
+    this.load();
+    this.loadTags();
+  }
+
+  onSearch(val: string) { this.searchSubject.next(val); }
+  onFilterChange() { this.page.set(1); this.load(); }
+
+  setTagFilter(tag: string, event: Event) {
+    event.preventDefault();
+    this.filterTag = this.filterTag === tag ? '' : tag;
+    this.page.set(1);
+    this.load();
+  }
+
+  load() {
+    this.loading.set(true);
+    const params: Record<string, string> = { page: String(this.page()), pageSize: String(this.pageSize) };
+    if (this.searchInput.trim()) params['search'] = this.searchInput.trim();
+    if (this.filterTag) params['tag'] = this.filterTag;
+    const qs = new URLSearchParams(params).toString();
+    this.http.get<ArticleListResult>(`${environment.apiUrl}/knowledge-base?${qs}`).subscribe({
+      next: r => { this.articles.set(r.items); this.totalCount.set(r.totalCount); this.loading.set(false); },
+      error: () => this.loading.set(false)
+    });
+  }
+
+  loadTags() {
+    this.http.get<string[]>(`${environment.apiUrl}/knowledge-base/tags`).subscribe({
+      next: t => this.tags.set(t)
+    });
+  }
+
+  goToPage(p: number) { this.page.set(p); this.load(); }
+}
