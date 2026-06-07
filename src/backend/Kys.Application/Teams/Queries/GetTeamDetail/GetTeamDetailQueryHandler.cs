@@ -14,14 +14,17 @@ public sealed class GetTeamDetailQueryHandler(ITeamRepository teamRepository)
 
         var members = team.Memberships
             .Select(m => new TeamMemberDto(
+                m.Id,
                 m.Person.Id,
                 m.Person.FullName,
+                m.Person.Email,
+                m.OrganizationRole.Id,
                 m.OrganizationRole.Name,
                 m.StartDate,
                 m.EndDate))
-            .OrderBy(m => m.FullName)
+            .OrderBy(m => m.PersonName)
             .ToList();
 
-        return new TeamDetailDto(team.Id, team.Name, team.Description, team.TeamType, members);
+        return new TeamDetailDto(team.Id, team.Name, team.Description, !team.IsDeleted, members);
     }
 }

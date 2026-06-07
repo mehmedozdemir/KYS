@@ -17,9 +17,13 @@ namespace Kys.Api.Controllers.v1;
 public sealed class TeamsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<TeamListDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
-        => Ok(await mediator.Send(new GetTeamsQuery(), ct));
+    [ProducesResponseType(typeof(PagedTeamsResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+        => Ok(await mediator.Send(new GetTeamsQuery(search, page, pageSize), ct));
 
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(TeamDetailDto), StatusCodes.Status200OK)]

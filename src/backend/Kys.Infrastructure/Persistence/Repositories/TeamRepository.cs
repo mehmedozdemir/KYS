@@ -22,4 +22,7 @@ public sealed class TeamRepository(AppDbContext db) : ITeamRepository
 
     public void Update(Team team)
         => db.Teams.Update(team);
+
+    public async Task<IReadOnlyList<OrganizationRole>> GetOrganizationRolesAsync(CancellationToken ct = default)
+        => await db.OrganizationRoles.OrderBy(r => r.Name).ToListAsync(ct);
 }

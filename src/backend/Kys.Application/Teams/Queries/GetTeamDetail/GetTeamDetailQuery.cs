@@ -8,14 +8,17 @@ public sealed record TeamDetailDto(
     Guid Id,
     string Name,
     string? Description,
-    string TeamType,
+    bool IsActive,
     IReadOnlyList<TeamMemberDto> Members
 );
 
 public sealed record TeamMemberDto(
+    Guid MembershipId,
     Guid PersonId,
-    string FullName,
-    string OrganizationRole,
+    string PersonName,
+    string PersonEmail,
+    Guid OrganizationRoleId,
+    string OrganizationRoleName,
     DateOnly StartDate,
     DateOnly? EndDate
 );

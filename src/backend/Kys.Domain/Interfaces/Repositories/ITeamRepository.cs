@@ -8,4 +8,5 @@ public interface ITeamRepository
     Task<IReadOnlyList<Team>> GetAllAsync(CancellationToken ct = default);
     Task AddAsync(Team team, CancellationToken ct = default);
     void Update(Team team);
+    Task<IReadOnlyList<OrganizationRole>> GetOrganizationRolesAsync(CancellationToken ct = default);
 }
