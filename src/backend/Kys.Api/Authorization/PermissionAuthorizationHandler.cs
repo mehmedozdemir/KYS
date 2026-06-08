@@ -8,7 +8,9 @@ public sealed class PermissionAuthorizationHandler : AuthorizationHandler<Permis
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        if (context.User.HasClaim("permission", requirement.Permission))
+        // "*" wildcard grants all permissions (PlatformAdmin role)
+        if (context.User.HasClaim("permission", "*") ||
+            context.User.HasClaim("permission", requirement.Permission))
             context.Succeed(requirement);
 
         return Task.CompletedTask;
