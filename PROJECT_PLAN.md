@@ -6,75 +6,70 @@
 
 ---
 
-## Proje Hedefleri
+## Güncel Durum (2026-06-08)
 
-- 500 kişilik yazılım şirketinde 100+ eş zamanlı kullanıcı
-- Müşteri, ürün, ekip, ortam ve kaynak bilgilerini merkezi yönetmek
-- Kritik erişim bilgilerini (şifreli) güvenle saklamak ve yetkili kişilere sunmak
-- Şema değişikliği gerektirmeden dinamik alan ekleyebilmek
-- AD entegrasyonuna hazır mimari
+Sprint 0–8 tamamlandı. Sprint 9 (AD entegrasyonu) ve Sprint 10 (production hazırlığı) devam ediyor.
+Plan dışında Sprint 11–12 kapsamında ek özellikler geliştirildi (bkz. aşağıda).
 
 ---
 
 ## Faz Planı
 
 ```
-Faz 1 (Sprint 0-3): Temel Altyapı + Organizasyon + Ürün  [~6 hafta]
-Faz 2 (Sprint 4-6): Müşteri + Ortam + Kaynak             [~6 hafta]
-Faz 3 (Sprint 7-8): Dashboard + UX Polishing              [~4 hafta]
-Faz 4 (Sprint 9):   Knowledge Base + Admin                [~2 hafta]
-Faz 5 (Sprint 10):  AD Entegrasyonu + Güvenlik Sertleme   [~2 hafta]
+Faz 1 (Sprint 0-3): Temel Altyapı + Organizasyon + Ürün  [✅ Tamamlandı]
+Faz 2 (Sprint 4-6): Müşteri + Ortam + Kaynak             [✅ Tamamlandı]
+Faz 3 (Sprint 7-8): Dashboard + UX Polishing              [✅ Tamamlandı]
+Faz 4 (Sprint 9):   Knowledge Base + Admin                [✅ Tamamlandı]
+Faz 5 (Sprint 10):  AD Entegrasyonu + Güvenlik Sertleme   [🔄 Devam Ediyor]
 ```
 
 ---
 
-## Sprint 0 — Proje İskeleti ve Altyapı
+## Sprint 0 — Proje İskeleti ve Altyapı ✅
 
-**Süre:** 1 hafta
 **Amaç:** Sıfırdan çalışan bir proje iskeleti; hiç özellik yok ama her şey doğru yapılandırılmış.
 
 ### Backend Görevleri
 
-- [ ] Solution yapısı: `Kys.sln`, 4 proje (Domain, Application, Infrastructure, Api)
-- [ ] `Directory.Build.props`: nullable, implicit usings, warnings as errors, analyzers
-- [ ] `global.json`: .NET 10 SDK sürümü pin'lendi
-- [ ] EF Core + Npgsql kurulum + `AppDbContext`
-- [ ] `BaseEntity`, `AuditableEntity`, `ISoftDelete` base class'ları
-- [ ] Soft delete interceptor (`SaveChangesInterceptor`)
-- [ ] Timestamp interceptor (updated_at otomatik)
-- [ ] Audit log interceptor (temel yapı)
-- [ ] JWT authentication + refresh token altyapısı
-- [ ] `ICurrentUserService` + implementasyonu
-- [ ] `IEncryptionService` + AES-256-CBC implementasyonu
-- [ ] Global exception handler (RFC 7807 ProblemDetails)
-- [ ] Correlation ID middleware
-- [ ] Serilog yapılandırması
-- [ ] Swagger/OpenAPI yapılandırması (versioning ile)
+- [x] Solution yapısı: `Kys.sln`, 4 proje (Domain, Application, Infrastructure, Api)
+- [x] `Directory.Build.props`: nullable, implicit usings, warnings as errors, analyzers
+- [x] `global.json`: .NET 10 SDK sürümü pin'lendi
+- [x] EF Core + Npgsql kurulum + `AppDbContext`
+- [x] `BaseEntity`, `AuditableEntity`, `ISoftDelete` base class'ları
+- [x] Soft delete interceptor (`SaveChangesInterceptor`)
+- [x] Timestamp interceptor (updated_at otomatik)
+- [x] Audit log interceptor (temel yapı)
+- [x] JWT authentication + refresh token altyapısı
+- [x] `ICurrentUserService` + implementasyonu
+- [x] `IEncryptionService` + AES-256-CBC implementasyonu
+- [x] Global exception handler (RFC 7807 ProblemDetails)
+- [x] Correlation ID middleware
+- [x] Serilog yapılandırması
+- [x] Swagger/OpenAPI yapılandırması (versioning ile)
 - [ ] Health check endpoint'leri (`/health/live`, `/health/ready`)
 - [ ] Rate limiting altyapısı
-- [ ] CORS yapılandırması
-- [ ] `Program.cs` composition root (layer extension methods)
+- [x] CORS yapılandırması
+- [x] `Program.cs` composition root (layer extension methods)
 
 ### Infrastructure Görevleri
 
-- [ ] `docker-compose.yml`: PostgreSQL, uygulama container'ı
-- [ ] `Dockerfile.api`: multi-stage build, non-root kullanıcı
-- [ ] `.env.example`: tüm environment variable'lar belgelenmiş
-- [ ] `.gitignore`: kapsamlı, .env dahil
+- [x] `docker-compose.yml`: PostgreSQL, uygulama container'ı
+- [x] `Dockerfile.api`: multi-stage build
+- [x] `.env.example`: environment variable'lar belgelenmiş
+- [x] `.gitignore`: kapsamlı, .env dahil
 - [ ] `scripts/db-migrate.sh`
 - [ ] `scripts/seed-dev.sh` (geliştirme ortamı seed verisi)
 
 ### Frontend Görevleri
 
-- [ ] Angular 18 standalone project oluşturma (`ng new kys-ui --standalone`)
-- [ ] PrimeNG 17 kurulum ve tema yapılandırması (Aura tema, özelleştirilmiş)
-- [ ] NgRx store kurulum (auth slice)
-- [ ] CSS variables (`_variables.scss`) — tasarım sisteminin tamamı
-- [ ] HTTP interceptor (JWT token ekleme + 401 → logout)
-- [ ] Auth guard + permission guard
-- [ ] Shell layout (sidebar + topbar)
-- [ ] Lazy loaded routing yapısı
-- [ ] Shared component'ler: `PageHeaderComponent`, `EmptyStateComponent`
+- [x] Angular 18 standalone project oluşturma
+- [x] PrimeNG 17 kurulum ve tema yapılandırması
+- [x] NgRx store kurulum (auth slice)
+- [x] HTTP interceptor (JWT token ekleme + 401 → logout)
+- [x] Auth guard + permission guard
+- [x] Shell layout (sidebar + topbar)
+- [x] Lazy loaded routing yapısı
+- [ ] CSS variables (`_variables.scss`) — tam tasarım sistemi
 
 ### CI/CD Görevleri
 
@@ -84,368 +79,303 @@ Faz 5 (Sprint 10):  AD Entegrasyonu + Güvenlik Sertleme   [~2 hafta]
 
 ### Mimari Testler
 
-- [ ] `Kys.Architecture.Tests` projesi oluşturma (NetArchTest)
-- [ ] Domain → Infrastructure bağımlılık yasağı testi
-- [ ] Controller → business logic yasağı testi
-- [ ] Entity → API response yasağı testi
-
-**Kabul Kriterleri:**
-- `docker-compose up` ile uygulama ayağa kalkar
-- `/health/live` 200 döner
-- `/swagger` açılır
-- Angular `ng serve` çalışır
-- Tüm testler yeşil
-- CI pipeline yeşil
+- [x] `Kys.Architecture.Tests` projesi oluşturma (NetArchTest)
+- [x] Domain → Infrastructure bağımlılık yasağı testi
+- [x] Controller → business logic yasağı testi
+- [x] Entity → API response yasağı testi
 
 ---
 
-## Sprint 1 — Identity & Organization Modülü
-
-**Süre:** 1.5 hafta
+## Sprint 1 — Identity & Organization Modülü ✅
 
 ### Backend
 
-**People (Kişi Yönetimi)**
-- [ ] `Person` entity + EF Core configuration
-- [ ] `PersonRepository` (IPersonRepository + implementasyon)
-- [ ] Queries: `GetPeople`, `GetPersonDetail`
-- [ ] Commands: `CreatePerson`, `UpdatePerson`, `UpdateEmploymentStatus`
-- [ ] Validators tümü için
-- [ ] `PeopleController` (GET list, GET detail, POST, PATCH, PATCH status)
-- [ ] Login endpoint (Auth) + JWT üretimi + refresh token
-- [ ] `GET /api/v1/auth/me` endpoint'i
+- [x] `Person` entity + EF Core configuration
+- [x] `PersonRepository` (IPersonRepository + implementasyon)
+- [x] Queries: `GetPeople`, `GetPersonDetail`
+- [x] Commands: `CreatePerson`, `UpdatePerson`, `UpdateEmploymentStatus`
+- [x] Validators tümü için
+- [x] `PeopleController` (GET list, GET detail, POST, PATCH, PATCH status)
+- [x] Login endpoint (Auth) + JWT üretimi + refresh token
+- [x] `GET /api/v1/auth/me` endpoint'i
 
-**System Roles & Permissions**
-- [ ] `SystemRole` entity + seed data (5 rol)
-- [ ] `PersonSystemRole` entity
-- [ ] Permission-based authorization middleware
-- [ ] `RequirePermissionAttribute` + handler
-- [ ] `GET/POST/DELETE /api/v1/admin/users/{id}/system-roles`
+- [x] `SystemRole` entity + seed data (5 rol)
+- [x] `PersonSystemRole` entity
+- [x] Permission-based authorization middleware
+- [x] `RequirePermissionAttribute` + handler
+- [x] `GET/POST/DELETE /api/v1/admin/users/{id}/system-roles`
 
-**Teams (Ekip Yönetimi)**
-- [ ] `Team`, `OrganizationRole`, `TeamMembership` entity'leri
-- [ ] Repository'ler
-- [ ] Queries: `GetTeams`, `GetTeamDetail`, `GetTeamMembers`, `GetPersonTeamHistory`
-- [ ] Commands: `CreateTeam`, `UpdateTeam`, `AddTeamMember`, `EndTeamMembership`
-- [ ] `TeamsController` + endpoints
-- [ ] `PeopleController`'a team membership endpoint'leri ekleme
+- [x] `Team`, `OrganizationRole`, `TeamMembership` entity'leri
+- [x] Repository'ler
+- [x] Queries: `GetTeams`, `GetTeamDetail`, `GetTeamMembers`, `GetPersonTeamHistory`
+- [x] Commands: `CreateTeam`, `UpdateTeam`, `AddTeamMember`, `EndTeamMembership`
+- [x] `TeamsController` + endpoints
+- [x] `PeopleController`'a team membership endpoint'leri ekleme
 
 ### Frontend
 
-- [ ] Auth feature: login sayfası (form, validasyon, hata mesajları)
-- [ ] NgRx auth state: login, logout, token refresh, permissions
-- [ ] People feature:
-  - [ ] Kişi listesi sayfası (DataTable, search, filtre)
-  - [ ] Kişi detay sayfası (genel bilgi, ekip geçmişi, sistem rolleri)
-  - [ ] Kişi oluşturma/düzenleme modal
-  - [ ] Employment status değiştirme
-- [ ] Teams feature:
-  - [ ] Ekip listesi sayfası
-  - [ ] Ekip detay sayfası (üyeler, ürünler)
-  - [ ] Ekip oluşturma/düzenleme modal
-  - [ ] Üye ekleme / üyelik bitirme işlemi
+- [x] Auth feature: login sayfası (form, validasyon, hata mesajları)
+- [x] NgRx auth state: login, logout, token refresh, permissions
+- [x] People feature: kişi listesi, kişi detay sayfası, kişi oluşturma/düzenleme modal
+- [x] Teams feature: ekip listesi, ekip detay sayfası, üye ekleme/çıkarma
 
 ### Testler
-- [ ] `CreatePersonCommandHandler` unit test
-- [ ] `AddTeamMemberCommandHandler` unit test (üyelik tarihçe kuralı)
-- [ ] `PeopleController` integration test (GET, POST, PATCH)
+- [x] `CreatePersonCommandHandler` unit test
+- [x] `AddTeamMemberCommandHandler` unit test
+- [ ] `PeopleController` integration test
 - [ ] `TeamsController` integration test
 
-**Kabul Kriterleri:**
-- Admin login yapabilir
-- Kişi oluşturulabilir, düzenlenebilir, ekibe eklenebilir
-- Ekip üyesi başka ekibe geçince tarihçe kaydı oluşur
-
 ---
 
-## Sprint 2 — Product Modülü
-
-**Süre:** 1.5 hafta
+## Sprint 2 — Product Modülü ✅
 
 ### Backend
 
-- [ ] `Product`, `ProductTeam`, `ProductAssignment` entity'leri
-- [ ] `ProductEndpoint`, `ProductResourceTemplate` entity'leri
-- [ ] Repository'ler
-- [ ] Queries: `GetProducts`, `GetProductDetail`, `GetProductEndpoints`, `GetProductAssignments`, `GetProductResourceTemplates`
-- [ ] Commands: `CreateProduct`, `UpdateProduct`, `AssignTeamToProduct`, `AssignPersonToProduct`, `CreateProductEndpoint`, `UpdateProductEndpoint`, `DeleteProductEndpoint`, `CreateProductResourceTemplate`
-- [ ] `ProductsController` + tüm endpoints
+- [x] `Product`, `ProductTeam`, `ProductAssignment` entity'leri
+- [x] `ProductEndpoint`, `ProductResourceTemplate` entity'leri
+- [x] Repository'ler
+- [x] Queries: `GetProducts`, `GetProductDetail`, `GetProductEndpoints`, `GetProductAssignments`, `GetProductResourceTemplates`
+- [x] Commands: `CreateProduct`, `UpdateProduct`, `AssignTeamToProduct`, `AssignPersonToProduct`, `CreateProductEndpoint`, `UpdateProductEndpoint`, `DeleteProductEndpoint`, `CreateProductResourceTemplate`, `DeleteProductResourceTemplate`
+- [x] `ProductsController` + tüm endpoints
 
 ### Frontend
 
-- [ ] Product listesi sayfası (tip filtreleri: SaaS/CustomerBased/Hybrid)
-- [ ] Product detay sayfası:
-  - [ ] Genel bilgi tab'ı (PO, ekip, durum, tech stack)
-  - [ ] Endpoint'ler tab'ı (frontend + API listesi)
-  - [ ] Çalışanlar tab'ı (aktif atamalar)
-  - [ ] Kaynak şablonları tab'ı
-- [ ] Product oluşturma/düzenleme modal (multi-step form)
-- [ ] Endpoint yönetimi (ekle, düzenle, sil)
-- [ ] Kaynak şablonu yönetimi
+- [x] Product listesi sayfası (tip filtreleri: SaaS/CustomerBased/Hybrid)
+- [x] Product detay sayfası (genel bilgi, endpoint'ler, çalışanlar, kaynak şablonları)
+- [x] Endpoint yönetimi (ekle, düzenle, sil)
+- [x] Kaynak şablonu yönetimi
 
 ### Testler
-- [ ] `CreateProductCommandHandler` unit test
+- [x] `CreateProductCommandHandler` unit test
 - [ ] `ProductsController` integration test
 
 ---
 
-## Sprint 3 — Custom Fields Modülü
-
-**Süre:** 1 hafta
+## Sprint 3 — Custom Fields Modülü ✅
 
 ### Backend
 
-- [ ] `CustomFieldDefinition` entity + repository
-- [ ] `CustomFieldValidatorService` (JSONB field validation engine)
-- [ ] Queries: `GetCustomFieldDefinitions` (entity_type bazlı)
-- [ ] Commands: `CreateCustomFieldDefinition`, `UpdateCustomFieldDefinition`, `ToggleCustomFieldDefinition`
-- [ ] `CustomFieldBehavior` (MediatR pipeline behavior — her create/update command'da otomatik validate)
-- [ ] `Admin/CustomFieldsController`
+- [x] `CustomFieldDefinition` entity + repository
+- [x] `CustomFieldValidatorService`
+- [x] Queries: `GetCustomFieldDefinitions`
+- [x] Commands: `CreateCustomFieldDefinition`, `UpdateCustomFieldDefinition`, `ToggleCustomFieldDefinition`
+- [x] `CustomFieldBehavior` (MediatR pipeline behavior)
+- [x] `Admin/CustomFieldsController`
 
 ### Frontend
 
-- [ ] Admin → Özel Alanlar sayfası:
-  - [ ] Müşteri alanları listesi
-  - [ ] Ürün alanları listesi
-  - [ ] Alan oluşturma (tip seçimi, validasyon kuralları, dropdown seçenekleri)
-  - [ ] Alan sıralama (drag & drop)
-- [ ] `CustomFieldInputComponent` (tipe göre dinamik input render)
-- [ ] `CustomFieldGroupComponent` (gruplandırılmış görünüm)
-- [ ] Customer ve Product formlarına custom fields entegrasyonu
+- [x] Admin → Özel Alanlar sayfası (müşteri ve ürün alanları, oluşturma, toggle)
+- [ ] `CustomFieldInputComponent` (tipe göre dinamik input render — Customer/Product formlarında)
+- [ ] Alan sıralama (drag & drop)
 
 ### Testler
-- [ ] `CustomFieldValidatorService` unit test (her tip için)
-- [ ] Required field eksik → validation error testi
-- [ ] Invalid select option → validation error testi
+- [x] `CustomFieldValidatorService` unit test
 
 ---
 
-## Sprint 4 — Customer Modülü
-
-**Süre:** 1.5 hafta
+## Sprint 4 — Customer Modülü ✅
 
 ### Backend
 
-- [ ] `Customer`, `CustomerProduct` entity'leri
-- [ ] Repository'ler
-- [ ] Queries: `GetCustomers`, `GetCustomerDetail`, `GetCustomerProducts`
-- [ ] Commands: `CreateCustomer`, `UpdateCustomer`, `UpdateCustomerStatus`, `ArchiveCustomer`, `RestoreCustomer`, `AddProductToCustomer`, `UpdateCustomerProductStatus`
-- [ ] Archive business rule: `service_ended_at` zorunlu, `is_archived = true`
-- [ ] `CustomersController` + tüm endpoints
+- [x] `Customer`, `CustomerProduct` entity'leri
+- [x] Repository'ler
+- [x] Queries: `GetCustomers`, `GetCustomerDetail`, `GetCustomerProducts`
+- [x] Commands: `CreateCustomer`, `UpdateCustomer`, `UpdateCustomerStatus`, `ArchiveCustomer`, `RestoreCustomer`, `AddProductToCustomer`
+- [x] `CustomersController` + tüm endpoints
 
 ### Frontend
 
-- [ ] Customer listesi sayfası:
-  - [ ] Status badge'leri (renkli)
-  - [ ] Arama, status filtresi, arşiv toggle
-  - [ ] Tablo: ad, kod, durum, ürün sayısı, go-live tarihi
-- [ ] Customer detay sayfası:
-  - [ ] Header kartı (durum, tarihler)
-  - [ ] Genel Bilgiler tab'ı (+ custom fields)
-  - [ ] Ürünler tab'ı (ürün kartları, kullanım modeli badge'i)
-- [ ] Customer oluşturma/düzenleme modal
-- [ ] Status değiştirme akışı (lifecycle adımları)
-- [ ] Archive modal (tarih + sebep formu, onay dialog)
-- [ ] Ürün ekleme modal (SaaS vs Dedicated seçimi)
+- [x] Customer listesi sayfası (search, status filtresi, arşiv toggle)
+- [x] Customer detay sayfası (header kartı, genel bilgiler, ürünler tab'ı)
+- [x] Customer oluşturma/düzenleme modal
+- [x] Status değiştirme akışı
+- [x] Ürün ekleme modal
 
 ### Testler
-- [ ] `ArchiveCustomerCommandHandler` unit test
+- [x] `ArchiveCustomerCommandHandler` unit test
 - [ ] `CustomersController` integration test
 
 ---
 
-## Sprint 5 — Environment & Resource Modülü
-
-**Süre:** 2 hafta (en karmaşık sprint)
+## Sprint 5 — Environment & Resource Modülü ✅
 
 ### Backend
 
-- [ ] `EnvironmentType`, `CustomerEnvironment` entity'leri
-- [ ] `ResourceType`, `SharedResource`, `ProductSharedResource` entity'leri
-- [ ] `EnvironmentResource` entity'si
-- [ ] `ResourceCredential` entity'si (şifreli)
-- [ ] `CustomerEnvironmentEndpoint` entity'si
-- [ ] Repository'lerin tümü
-- [ ] Queries: `GetEnvironmentTypes`, `GetCustomerEnvironments`, `GetEnvironmentDetail` (kaynaklar + endpoint URL'leri dahil), `GetResourceTypes`, `GetSharedResources`
-- [ ] Commands: `CreateEnvironmentType`, `CreateCustomerEnvironment`, `CreateResourceType`, `CreateSharedResource`, `AddResourceToEnvironment`, `UpdateEnvironmentResource`, `SetEnvironmentEndpointUrl`
-- [ ] `EnvironmentsController`
-- [ ] `ResourcesController`
-- [ ] Credential management:
-  - [ ] `SetCredential` command (şifreli kaydetme)
-  - [ ] `RevealCredential` handler (şifre çözme + audit log)
-  - [ ] `CredentialsController`
-  - [ ] `ResourceAuthorizationService` (resource-level auth)
+- [x] `EnvironmentType`, `CustomerEnvironment` entity'leri
+- [x] `ResourceType`, `SharedResource`, `ProductSharedResource` entity'leri
+- [x] `EnvironmentResource` entity'si
+- [x] `ResourceCredential` entity'si (şifreli)
+- [x] `CustomerEnvironmentEndpoint` entity'si (AuthType, AuthConfig dahil)
+- [x] Repository'lerin tümü
+- [x] Queries: `GetEnvironmentTypes`, `GetCustomerEnvironments`, `GetEnvironmentDetail`, `GetResourceTypes`, `GetSharedResources`
+- [x] Commands: `CreateEnvironmentType`, `CreateCustomerEnvironment`, `CreateResourceType`, `CreateSharedResource`, `AddResourceToEnvironment`, `RemoveEnvironmentResource`, `SetEnvironmentEndpointUrl`, `UpdateResourceType`, `UpdateSharedResource`, `DeleteResourceType`, `DeleteSharedResource`
+- [x] `EnvironmentsController`
+- [x] `ResourcesController`
+- [x] `SetCredential` command (şifreli kaydetme) — EnvironmentResource + SharedResource + EndpointUrl
+- [x] `RevealCredential` handler (şifre çözme + audit log)
+- [x] `DeleteCredential` command
+- [x] `CredentialsController`
+- [x] `ResourceAuthorizationService` (resource + endpoint bazlı auth)
 
 ### Frontend
 
-- [ ] Environment Types yönetim sayfası (admin)
-- [ ] Resource Types yönetim sayfası (admin, field schema editörü)
-- [ ] Shared Resources yönetim sayfası
-- [ ] Customer detay → **Ortamlar & Kaynaklar tab'ı** (en kritik ekran):
-  - [ ] Ortam sekme navigasyonu (renkli)
-  - [ ] Production ortamı uyarı banner'ı (kırmızı)
-  - [ ] Ürün accordion'ları
-  - [ ] `CopyableUrlComponent` (URL + kopyala + yeni sekme aç)
-  - [ ] `CredentialCellComponent` (şifreli değer + göster + kopyala)
-  - [ ] Endpoint URL düzenleme inline
-  - [ ] Kaynak ekleme (şablondan seçme)
-  - [ ] Credential güncelleme modal
-- [ ] Shared resource gösterimi (`[PAYLAŞIMLI]` badge'i)
+- [x] Environment Types yönetim sayfası (admin)
+- [x] Resource Types yönetim sayfası (admin, field schema editörü)
+- [x] Shared Resources yönetim sayfası
+- [x] Ortam detay sayfası (kaynaklar, credential yönetim modal, endpoint URL'leri)
+- [x] Endpoint auth credential yönetimi (Auth Yönet butonu, auth tipi seçimi)
+- [x] Kaynak ekleme (şablondan seçme + dinamik form)
+- [x] Credential kart görünümü (şifre/metin ayrımı, göz butonu)
+- [x] Ortam kaynağı silme
 
 ### Testler
-- [ ] `AesEncryptionService` unit test (encrypt/decrypt round-trip)
+- [x] `AesEncryptionService` unit test
 - [ ] `RevealCredentialHandler` unit test (yetki kontrolü + audit log)
-- [ ] `ResourceAuthorizationService` unit test (developer sadece kendi ürünleri)
-- [ ] `CredentialsController` integration test:
-  - [ ] Yetkisiz kullanıcı reveal → 403
-  - [ ] Yetkili kullanıcı reveal → 200 + audit log kaydı
+- [ ] `ResourceAuthorizationService` unit test
+- [ ] `CredentialsController` integration test
 
 ---
 
-## Sprint 6 — Dashboard & Arama
-
-**Süre:** 1 hafta
+## Sprint 6 — Dashboard & Arama ✅
 
 ### Backend
 
-- [ ] Dashboard query: özet istatistikler (aktif müşteri sayısı, ürün sayısı, ekip sayısı)
-- [ ] Dashboard query: son aktiviteler (audit log'dan)
-- [ ] Global arama endpoint: `GET /api/v1/search?q=...` → müşteri + ürün + KB makalesi
+- [x] Dashboard query: özet istatistikler
+- [x] Dashboard query: son aktiviteler
+- [x] Global arama endpoint: `GET /api/v1/search?q=...`
 
 ### Frontend
 
-- [ ] Dashboard sayfası:
-  - [ ] Özet metrik kartları (müşteri, ürün, ekip sayıları)
-  - [ ] Son güncellenen müşteriler listesi
-  - [ ] Son aktiviteler (audit log timeline)
-  - [ ] Hızlı linkler
-- [ ] Global arama (topbar search):
-  - [ ] Debounced 400ms
-  - [ ] Kategori bazlı sonuçlar (Müşteriler / Ürünler / Makaleler)
-  - [ ] Sonuca tıklama → ilgili sayfaya git
+- [x] Dashboard sayfası (metrik kartları, son aktiviteler, hızlı linkler)
+- [x] Global arama (topbar search, debounced, kategori bazlı sonuçlar)
 
 ---
 
-## Sprint 7 — Knowledge Base Modülü
-
-**Süre:** 1 hafta
+## Sprint 7 — Knowledge Base Modülü ✅
 
 ### Backend
 
-- [ ] `KbArticle`, `KbTag`, `KbArticleTag` entity'leri
-- [ ] Full-text search (PostgreSQL tsvector, Türkçe)
-- [ ] Queries: `GetArticles`, `GetArticleDetail`, `GetTags`
-- [ ] Commands: `CreateArticle`, `UpdateArticle`, `DeleteArticle`
-- [ ] `KnowledgeBaseController`
+- [x] `KbArticle`, `KbTag`, `KbArticleTag` entity'leri
+- [x] Full-text search (PostgreSQL tsvector)
+- [x] Queries: `GetArticles`, `GetArticleDetail`, `GetTags`
+- [x] Commands: `CreateArticle`, `UpdateArticle`, `DeleteArticle`
+- [x] `KnowledgeBaseController`
 
 ### Frontend
 
-- [ ] KB listesi sayfası:
-  - [ ] Tag filtresi
-  - [ ] Bağlam filtresi (ürün / müşteri bazlı)
-  - [ ] Arama (full-text)
-  - [ ] Görünürlük badge'leri
-- [ ] KB detay sayfası:
-  - [ ] Markdown render (marked.js)
-  - [ ] Düzenle butonu (yazar veya admin)
-  - [ ] Etiketler
-  - [ ] İlgili kayıtlar (ürün, müşteri linki)
-- [ ] KB oluşturma/düzenleme:
-  - [ ] Markdown editör (split view: editör + önizleme)
-  - [ ] Bağlam seçimi (ürün, müşteri, ekip)
-  - [ ] Etiket seçimi (autocomplete, yeni etiket oluşturma)
+- [x] KB listesi sayfası (tag filtresi, arama, görünürlük badge'leri)
+- [x] KB detay sayfası (Markdown render, etiketler)
+- [x] KB oluşturma/düzenleme (Markdown editör split view, etiket seçimi)
 
 ---
 
-## Sprint 8 — Admin Modülü & Audit Log
-
-**Süre:** 1 hafta
+## Sprint 8 — Admin Modülü & Audit Log ✅
 
 ### Backend
 
-- [ ] `AuditLog` entity + repository
-- [ ] Queries: `GetAuditLogs` (sayfalı, filtreli)
-- [ ] `Admin/AuditLogController`
-- [ ] `Admin/UsersController` (platform kullanıcı yönetimi):
-  - [ ] Kullanıcı listesi, oluşturma, şifre sıfırlama, kilit açma
-- [ ] Platform istatistikleri endpoint'i
+- [x] `AuditLog` entity + repository
+- [x] Queries: `GetAuditLogs` (sayfalı, filtreli)
+- [x] `Admin/AuditLogController`
+- [x] `Admin/UsersController` (kullanıcı listesi, şifre sıfırlama, kilit açma)
+- [x] Platform istatistikleri endpoint'i
 
 ### Frontend
 
-- [ ] Admin modülü (PlatformAdmin'e özel):
-  - [ ] Kullanıcılar sayfası (platform erişim yönetimi)
-  - [ ] Rol ataması
-  - [ ] Şifre sıfırlama, hesap kilidi açma
-- [ ] Audit Log sayfası:
-  - [ ] Filtreleme: entity tipi, kullanıcı, tarih aralığı, aksiyon
-  - [ ] Timeline görünümü
-  - [ ] `CredentialRevealed` kayıtları kırmızı ile vurgulanır
-- [ ] Özel Alanlar sayfası (Sprint 3'ten taşınan UI polishing)
+- [x] Admin: Kullanıcılar sayfası (platform erişim yönetimi, şifre sıfırlama, kilit açma, rol atama)
+- [x] Audit Log sayfası (filtreleme, timeline görünümü, CredentialRevealed vurgu)
+- [x] Özel Alanlar sayfası (tam UI)
 
 ---
 
-## Sprint 9 — AD Entegrasyonu & Güvenlik Sertleme
-
-**Süre:** 1 hafta
+## Sprint 9 — AD Entegrasyonu & Güvenlik Sertleme 🔄
 
 ### Backend
 
-- [ ] OIDC middleware kurulumu (Microsoft.AspNetCore.Authentication.OpenIdConnect)
+- [ ] OIDC middleware kurulumu
 - [ ] AD kullanıcısı → Platform rol eşleme servisi
-- [ ] Hibrit auth: Internal Identity OR AD (her ikisi aktif)
-- [ ] `appsettings.json` → OIDC config bölümü
+- [ ] Hibrit auth: Internal Identity OR AD
 - [ ] Kullanıcı ilk AD girişinde otomatik person kaydı oluşturma
-- [ ] Login endpoint: hangi provider kullanılacağını otomatik belirleme
+- [ ] Login endpoint: provider otomatik belirleme
 - [ ] Revoked token cleanup background service
 
 ### Güvenlik Sertleme
-- [ ] Penetration test checklist uygulama
+- [ ] Penetration test checklist
 - [ ] OWASP Top 10 kontrol
-- [ ] Tüm endpoint'lerde yetki testi (otomatik)
-- [ ] Rate limit stress testi
-- [ ] Dependency vulnerability final audit
+- [ ] Rate limiting (tüm endpoint'ler)
+- [ ] Health check endpoint'leri (`/health/live`, `/health/ready`)
+- [ ] Dependency vulnerability audit
 
 ### Frontend
-- [ ] "AD ile Giriş" butonu login sayfasına ekleme
+- [ ] "AD ile Giriş" butonu login sayfasına
 - [ ] OIDC redirect akışı
-- [ ] Session timeout uyarısı (token expire olmadan 2 dakika önce)
+- [x] Session timeout uyarısı (token expire olmadan 2 dakika önce)
 
 ---
 
-## Sprint 10 — Polish, Test & Go-Live Hazırlığı
-
-**Süre:** 1 hafta
+## Sprint 10 — Polish, Test & Go-Live Hazırlığı 🔄
 
 ### Backend
 - [ ] Integration test coverage > %80
-- [ ] Load test: 100 eş zamanlı kullanıcı simülasyonu (k6 veya NBomber)
-- [ ] Database index optimizasyonu (gerçek veri üzerinde EXPLAIN ANALYZE)
+- [ ] Load test (k6 veya NBomber)
+- [ ] Database index optimizasyonu
 - [ ] PgBouncer yapılandırması (docker-compose.prod.yml)
 
 ### Frontend
-- [ ] Angular production build optimizasyonu
+- [x] Angular production build optimizasyonu
 - [ ] PWA manifest (opsiyonel)
-- [ ] Error boundary (global hata yakalama)
+- [x] Error boundary (global hata yakalama)
 - [ ] Accessibility audit (axe-core)
-- [ ] Cross-browser test (Chrome, Firefox, Edge)
+- [ ] Cross-browser test
 
 ### DevOps
-- [ ] `docker-compose.prod.yml`: tüm servisler, volume'lar, restart policy
+- [x] `docker-compose.yml` (development)
+- [ ] `docker-compose.prod.yml` (production: volume'lar, restart policy)
 - [ ] Nginx SSL yapılandırması
 - [ ] `README.md`: production deployment rehberi
 - [ ] Backup stratejisi dokümantasyonu
 
 ### Dokümantasyon
 - [ ] API Swagger tam ve güncel
-- [ ] `CHANGELOG.md` 1.0.0 sürümü
-- [ ] Kullanıcı kılavuzu (temel operasyonlar)
-- [ ] Admin kılavuzu (sistem yapılandırması)
+- [x] `CHANGELOG.md` güncel tutulmakta
+- [ ] Kullanıcı kılavuzu
+- [ ] Admin kılavuzu
+
+---
+
+## Sprint 11-12 — Plan Dışı Geliştirmeler ✅ (2026-06-08)
+
+Plana dahil olmayan ama geliştirilen özellikler:
+
+- [x] Resource Type FieldSchema yönetimi (admin ekranı, görüntüleme + düzenleme)
+- [x] Ortama kaynak ekleme: field schema'ya göre dinamik credential formu
+- [x] Credential kart görünümü: tip farkındalıklı (şifre gizli, diğerleri açık, göz butonu)
+- [x] Ortam kaynağı silme (FK kontrolü ile)
+- [x] Ürün kaynak şablonu silme: FK conflict → 409 hatası ile kullanıcıya bildirim
+- [x] Endpoint auth credential yönetimi (BasicAuth/Bearer/ApiKey/OAuth2)
+- [x] Ortam detay: URL'siz endpoint'leri de göster + "URL Belirle" akışı
+- [x] Global arama KB visibility integer→string fix
+- [x] `CurrentUserService.HasPermission` wildcard `*` fix
+- [x] İlk çalıştırma kurulum ekranı (Setup flow)
+- [x] People detay sayfası
+- [x] Team detay sayfası
+
+---
+
+## Sonraki Adımlar (Öncelik Sırası)
+
+1. **Rate limiting** — API endpoint koruması (Sprint 0'dan kalan)
+2. **Health check endpoint'leri** — `/health/live` ve `/health/ready`
+3. **Integration testler** — Credential reveal, auth, customer workflow
+4. **AD/OIDC entegrasyonu** — Sprint 9 ana görevi
+5. **Production Docker Compose** — Nginx SSL, volume'lar, restart policy
+6. **`CustomFieldInputComponent`** — Customer/Product formlarında custom field render
+7. **CI/CD pipeline** — GitHub Actions PR check
 
 ---
 
 ## Seed Data (Geliştirme Ortamı)
 
-`scripts/seed-dev.sh` ile aşağıdaki test verisi oluşturulur:
+`scripts/seed-dev.sh` ile aşağıdaki test verisi oluşturulur (henüz yazılmadı):
 
 ```
 Roller: 5 sistem rolü
@@ -472,12 +402,6 @@ Müşteriler:
 Ortamlar (ACME Corp için):
   - Test: Ödeme Sistemi + kaynak bilgileri (dummy)
   - Production: Ödeme Sistemi + kaynak bilgileri (dummy şifreli)
-
-Özel Alanlar:
-  - Customer: ERP Kodu, Bölge, Sözleşme Bitiş Tarihi
-  - Product: Dokümantasyon URL, Jira Proje Kodu
-
-KB Makaleleri: 5 örnek makale (farklı bağlamlarda)
 ```
 
 ---

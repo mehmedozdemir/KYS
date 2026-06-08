@@ -7,26 +7,152 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ## [Unreleased]
 
-### Eklenecekler
-- Müşteri yönetimi (lifecycle, arşivleme, özel alanlar)
-- Ürün yönetimi (SaaS/Dedicated/Hybrid modeller, endpoint yönetimi)
-- Ekip ve kişi yönetimi (tarihçeli üyelik)
-- Ortam ve kaynak yönetimi (AES-256 şifreli credential)
-- Bilgi tabanı (Markdown, full-text arama)
-- Rol tabanlı erişim kontrolü (5 sistem rolü)
-- Audit log (her değişiklik ve credential görüntüleme)
-- Dinamik özel alan tanımı (JSONB)
+### Planlanan
 - AD/LDAP entegrasyonu (OIDC)
+- Production Docker Compose + Nginx SSL
+- Integration test coverage > %80
+- Load test (k6)
+- Database index optimizasyonu
 
 ---
 
-## [0.1.0] — TBD
+## [0.9.0] — 2026-06-08 (Sprint 11-12)
 
-### Eklenecek (Sprint 0)
-- Proje iskeleti (Clean Architecture)
-- JWT authentication altyapısı
-- AES-256 credential şifreleme servisi
-- Docker Compose yapılandırması
-- CI/CD pipeline
-- Angular 18 proje iskeleti
-- Temel layout (sidebar, topbar)
+### Eklendi
+- **Endpoint Auth Credential Yönetimi**: Ortam endpoint'leri için AES-256 şifreli auth credential desteği (BasicAuth/Bearer/ApiKey/OAuth2)
+- **Endpoint Bölümü Revize**: Tüm product endpoint'leri (URL girilmemiş olanlar dahil) ortam detay sayfasında gösteriliyor; "URL Belirle" akışı eklendi
+- **Auth Tipi Seçimi**: Endpoint URL düzenleme modal'ına auth tipi dropdown'u eklendi
+- **Resource Type FieldSchema Yönetimi**: Admin ekranında alan tanımı görüntüleme ve düzenleme (tip, label, zorunluluk, varsayılan değer)
+- **Dinamik Credential Formu**: Ortama kaynak eklenirken field schema'ya göre otomatik form oluşturma
+- **Credential Kart Görünümü**: Kaynak kartlarında key:value grid; şifre alanları gizli (göz butonu), diğerleri açık
+
+### Düzeltildi
+- `CurrentUserService.HasPermission` wildcard `*` desteği eklendi — PlatformAdmin credential reveal yapamıyordu
+- Global arama 500 hatası: `kb_articles.visibility` sütunu integer→varchar(30) dönüşümü (CASE mapping)
+- Ürün kaynak şablonu silme 500 hatası: FK constraint ihlali → 409 ConflictException ile düzgün ele alındı
+- Ortam kaynağı silme özelliği eklendi (trash butonu)
+
+### Migration
+- `Sprint11_SeedResourceTypes`: 8 varsayılan kaynak tipi seed (PostgreSQL, MSSQL, Redis, RabbitMQ vb.)
+- `Sprint11_FixKbVisibilityColumn`: kb_articles.visibility integer→varchar dönüşümü
+- `Sprint12_EndpointUrlCredentials`: resource_credentials tablosuna endpoint_url_id FK
+
+---
+
+## [0.8.0] — 2026-06-07 (Sprint 9-10)
+
+### Eklendi
+- **İlk Çalıştırma Kurulum Ekranı**: Sistem hiç kullanıcı yokken otomatik setup akışı
+- **Email Tabanlı Login**: Kullanıcı adı yerine email ile giriş
+- **Refresh Token**: 30 günlük refresh token + session timeout uyarısı
+- **Admin: Kullanıcı Yönetimi**: Şifre sıfırlama, hesap kilidi açma, sistem rolü atama
+- **Ekip Kodu Alanı**: Team entity'sine `Code` kolonu eklendi
+- **OrganizationRole Seed**: Varsayılan organizasyon rolleri migration ile eklendi
+- **Kişi Detay Sayfası**: Profil bilgileri, ekip geçmişi, sistem rolleri görünümü
+- **Ekip Detay Sayfası**: Üye yönetimi, ürün atamaları
+
+### Düzeltildi
+- Dapper snake_case → PascalCase mapping (tüm repository'ler)
+- Dashboard COUNT(*) → int cast sorunu
+- Admin 403 hatası: PermissionAuthorizationHandler wildcard `*` claim kontrolü
+
+---
+
+## [0.7.0] — 2026-06-06 (Sprint 7-8)
+
+### Eklendi
+- **Bilgi Tabanı (Knowledge Base)**: Makale listesi, detay (Markdown render), oluşturma/düzenleme editörü
+- **KB Etiketleri**: Tag yönetimi, filtreleme
+- **KB Görünürlük**: Internal / TeamOnly / Public seçenekleri
+- **Admin: Audit Log**: Tüm Create/Update/Delete işlemleri ve credential görüntüleme kayıtları
+- **Admin: Platform Kullanıcıları**: Kullanıcı listesi ve yönetim ekranı
+- **Admin: Özel Alanlar**: CustomFieldDefinition yönetim arayüzü
+- **Admin: Ortam Tipleri**: Renk kodlu ortam tipi yönetimi
+- **Admin: Kaynak Tipleri**: ResourceType CRUD ve FieldSchema yönetimi
+- **Admin: Paylaşımlı Kaynaklar**: SharedResource CRUD
+- **Global Arama**: Müşteri + ürün + KB makalesi full-text arama (debounced dropdown)
+- **Dashboard**: Özet metrik kartları, son aktiviteler
+
+---
+
+## [0.6.0] — 2026-06-05 (Sprint 5-6)
+
+### Eklendi
+- **Ortam & Kaynak Modülü** (en kritik modül):
+  - Ortam tipleri (Development, Test, UAT, Production)
+  - Müşteri ortamları oluşturma ve yönetme
+  - Ortama kaynak şablondan ekleme
+  - `ResourceCredential`: AES-256-CBC şifreli credential saklama
+  - Credential reveal: `GET /credentials/{id}/reveal` → şifre çözme + audit log
+  - `ResourceAuthorizationService`: kaynak bazlı yetkilendirme
+  - Endpoint URL yönetimi (`CustomerEnvironmentEndpoint`)
+  - Paylaşımlı kaynak (`SharedResource`) desteği
+- **Ortam Detay Sayfası**: Kaynaklar, credential yönetim modal, endpoint URL'leri
+
+---
+
+## [0.5.0] — 2026-06-05 (Sprint 4)
+
+### Eklendi
+- **Müşteri Modülü**: Müşteri listesi, detay, oluşturma/düzenleme
+- **Lifecycle Yönetimi**: Prospect → Onboarding → Active → Churned → Archived akışı
+- **Müşteri-Ürün İlişkisi**: SaaS/Dedicated/Hybrid kullanım modeli, ürün ekleme
+- **Arşivleme**: `is_archived`, `service_ended_at` iş kuralları
+
+---
+
+## [0.4.0] — 2026-06-05 (Sprint 3)
+
+### Eklendi
+- **Dinamik Özel Alanlar**: `CustomFieldDefinition` entity, JSONB `custom_fields` kolonu
+- **Custom Field Validation**: Tip kontrolü, zorunlu alan kontrolü, select seçenek doğrulama
+- **MediatR Behavior**: `CustomFieldValidationBehavior` — her create/update'de otomatik validate
+
+---
+
+## [0.3.0] — 2026-06-05 (Sprint 2)
+
+### Eklendi
+- **Ürün Modülü**: Ürün listesi, detay, oluşturma/düzenleme (SaaS/CustomerBased/Hybrid tipleri)
+- **Ürün Endpoint'leri**: Endpoint tanımlama ve yönetme
+- **Kaynak Şablonları**: `ProductResourceTemplate` — ürüne bağlı kaynak şablonu yönetimi
+- **Ekip-Ürün İlişkisi**: Ürüne ekip atama
+- **Kişi-Ürün Ataması**: Ürüne çalışan atama
+
+---
+
+## [0.2.0] — 2026-06-05 (Sprint 1)
+
+### Eklendi
+- **Identity Modülü**: Email tabanlı login, JWT access token, refresh token, `GET /auth/me`
+- **Kişi Yönetimi**: Listeleme, detay, oluşturma, güncelleme, istihdam durumu değiştirme
+- **Ekip Yönetimi**: Listeleme, detay, oluşturma, üye ekleme/çıkarma (tarihçeli)
+- **Sistem Rolleri**: 5 sistem rolü (PlatformAdmin, Direktör, EkipLideri, Geliştirici, SaltOkuma)
+- **Permission-Based Auth**: `RequirePermissionAttribute` + `PermissionAuthorizationHandler`
+- **OrganizationRole**: Ekip içi rol yönetimi
+- **TeamMembership Tarihçesi**: Üyelik değişimlerinde eski kayıt kapatılır, yeni açılır
+
+---
+
+## [0.1.0] — 2026-06-05 (Sprint 0)
+
+### Eklendi
+- Clean Architecture iskelet: Domain / Application / Infrastructure / Api katmanları
+- EF Core 10 + Npgsql + PostgreSQL; `AppDbContext`, naming conventions
+- `BaseEntity`, `AuditableEntity`, `ISoftDelete` base class'ları
+- Soft delete interceptor, timestamp interceptor, audit log interceptor
+- `IEncryptionService` + AES-256-CBC implementasyonu (`AesEncryptionService`)
+- `IJwtService` + implementasyonu (HS256, access + refresh token)
+- `ICurrentUserService` + implementasyonu (claim tabanlı)
+- Global exception handler (RFC 7807 ProblemDetails: 400/404/409/403/500)
+- Serilog yapılandırması (Console + File sink)
+- Swagger/OpenAPI (API versioning ile)
+- CORS yapılandırması
+- `IMemoryCache` altyapısı
+- Docker Compose (PostgreSQL + API + Angular + Nginx)
+- Angular 18 standalone proje iskeleti
+- NgRx auth state (login, logout, token refresh)
+- HTTP interceptor (JWT ekleme + 401 → logout)
+- Shell layout (sidebar + topbar)
+- Lazy loaded routing
+- `NetArchTest` mimari test projesi: Domain→Infrastructure bağımlılık yasağı
