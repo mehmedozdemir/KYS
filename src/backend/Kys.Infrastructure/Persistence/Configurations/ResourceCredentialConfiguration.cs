@@ -21,6 +21,10 @@ public sealed class ResourceCredentialConfiguration : IEntityTypeConfiguration<R
             .HasFilter("shared_resource_id IS NOT NULL")
             .IsUnique();
 
+        builder.HasIndex(x => new { x.EndpointUrlId, x.FieldKey })
+            .HasFilter("endpoint_url_id IS NOT NULL")
+            .IsUnique();
+
         builder.HasOne(x => x.EnvironmentResource)
             .WithMany(x => x.Credentials)
             .HasForeignKey(x => x.EnvironmentResourceId)
@@ -30,6 +34,12 @@ public sealed class ResourceCredentialConfiguration : IEntityTypeConfiguration<R
         builder.HasOne(x => x.SharedResourceNav)
             .WithMany()
             .HasForeignKey(x => x.SharedResourceId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
+
+        builder.HasOne(x => x.EndpointUrl)
+            .WithMany(x => x.Credentials)
+            .HasForeignKey(x => x.EndpointUrlId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
     }

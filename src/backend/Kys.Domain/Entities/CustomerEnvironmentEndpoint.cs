@@ -18,4 +18,5 @@ public sealed class CustomerEnvironmentEndpoint : AuditableEntity
     // Navigation
     public CustomerEnvironment CustomerEnvironment { get; set; } = null!;
     public ProductEndpoint ProductEndpoint { get; set; } = null!;
+    public ICollection<ResourceCredential> Credentials { get; set; } = [];
 }

@@ -7,6 +7,7 @@ public sealed class ResourceCredential
     // One of these is set
     public Guid? EnvironmentResourceId { get; set; }
     public Guid? SharedResourceId { get; set; }
+    public Guid? EndpointUrlId { get; set; }
 
     public string FieldKey { get; set; } = string.Empty;
     public string EncryptedValue { get; set; } = string.Empty;
@@ -21,4 +22,5 @@ public sealed class ResourceCredential
     // Navigation
     public EnvironmentResource? EnvironmentResource { get; set; }
     public SharedResource? SharedResourceNav { get; set; }
+    public CustomerEnvironmentEndpoint? EndpointUrl { get; set; }
 }

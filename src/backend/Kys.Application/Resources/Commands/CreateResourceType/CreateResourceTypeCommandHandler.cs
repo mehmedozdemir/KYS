@@ -17,7 +17,7 @@ public sealed class CreateResourceTypeCommandHandler(
             Category = request.Category,
             Icon = request.Icon,
             Description = request.Description,
-            FieldSchema = request.FieldSchema
+            FieldSchema = request.FieldSchema ?? []
         };
 
         await repository.AddResourceTypeAsync(resourceType, ct);

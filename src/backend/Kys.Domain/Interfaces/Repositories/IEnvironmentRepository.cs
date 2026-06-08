@@ -21,8 +21,10 @@ public interface IEnvironmentRepository
 
     // Credentials
     Task<ResourceCredential?> GetCredentialAsync(Guid environmentResourceId, string fieldKey, CancellationToken ct = default);
+    Task<ResourceCredential?> GetEndpointCredentialAsync(Guid endpointUrlId, string fieldKey, CancellationToken ct = default);
     Task AddCredentialAsync(ResourceCredential credential, CancellationToken ct = default);
     void UpdateCredential(ResourceCredential credential);
+    void DeleteCredential(ResourceCredential credential);
     Task<ResourceCredential?> GetCredentialByIdAsync(Guid id, CancellationToken ct = default);
 
     // CustomerEnvironmentEndpoint

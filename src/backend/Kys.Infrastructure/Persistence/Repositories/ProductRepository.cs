@@ -102,6 +102,15 @@ public sealed class ProductRepository(AppDbContext dbContext) : IProductReposito
             .OrderBy(rt => rt.SortOrder)
             .ToListAsync(ct);
 
+    public async Task<ProductResourceTemplate?> GetResourceTemplateByIdAsync(Guid id, CancellationToken ct = default)
+        => await dbContext.ProductResourceTemplates.FindAsync([id], ct);
+
     public async Task AddResourceTemplateAsync(ProductResourceTemplate template, CancellationToken ct = default)
         => await dbContext.ProductResourceTemplates.AddAsync(template, ct);
+
+    public void DeleteResourceTemplate(ProductResourceTemplate template)
+        => dbContext.ProductResourceTemplates.Remove(template);
+
+    public async Task<int> CountEnvironmentResourcesByTemplateAsync(Guid templateId, CancellationToken ct = default)
+        => await dbContext.EnvironmentResources.CountAsync(r => r.ProductResourceTemplateId == templateId && !r.IsDeleted, ct);
 }

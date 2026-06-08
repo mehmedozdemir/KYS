@@ -11,6 +11,7 @@ public sealed class KbArticleConfiguration : IEntityTypeConfiguration<KbArticle>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Title).IsRequired().HasMaxLength(300);
         builder.Property(x => x.Content).IsRequired();
+        builder.Property(x => x.Visibility).HasConversion<string>().HasMaxLength(30);
 
         builder.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.SetNull).IsRequired(false);

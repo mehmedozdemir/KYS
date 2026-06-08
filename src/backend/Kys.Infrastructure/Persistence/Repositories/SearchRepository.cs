@@ -85,7 +85,8 @@ public sealed class SearchRepository(NpgsqlDataSource dataSource) : ISearchRepos
         await conn.OpenAsync(ct);
 
         var results = await conn.QueryAsync<SearchResult>("""
-            SELECT id, title AS name, NULL AS sub_title, visibility AS status
+            SELECT id, title AS name, NULL AS sub_title,
+                   CASE visibility WHEN 0 THEN 'Internal' WHEN 1 THEN 'TeamOnly' WHEN 2 THEN 'Public' ELSE 'Internal' END AS status
             FROM kb_articles
             WHERE is_deleted = false
               AND (title ILIKE @Pattern OR content ILIKE @Pattern)

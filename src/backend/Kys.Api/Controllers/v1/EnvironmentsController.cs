@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Kys.Application.Environments.Commands.AddResourceToEnvironment;
 using Kys.Application.Environments.Commands.CreateCustomerEnvironment;
+using Kys.Application.Environments.Commands.RemoveEnvironmentResource;
 using Kys.Application.Environments.Commands.SetEnvironmentEndpointUrl;
 using Kys.Application.Environments.Queries.GetCustomerEnvironments;
 using Kys.Application.Environments.Queries.GetEnvironmentDetail;
@@ -57,6 +58,13 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
             request.ConnectionFields,
             request.Notes), ct);
         return Created($"api/v1/environments/{environmentId}/resources/{id}", new { id });
+    }
+
+    [HttpDelete("{environmentId:guid}/resources/{resourceId:guid}")]
+    public async Task<IActionResult> RemoveResource(Guid environmentId, Guid resourceId, CancellationToken ct)
+    {
+        await mediator.Send(new RemoveEnvironmentResourceCommand(resourceId), ct);
+        return NoContent();
     }
 
     [HttpPut("{environmentId:guid}/endpoints/{productEndpointId:guid}")]

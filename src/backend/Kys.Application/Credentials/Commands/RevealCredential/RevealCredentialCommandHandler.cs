@@ -25,6 +25,8 @@ public sealed class RevealCredentialCommandHandler(
             canAccess = await authorizationService.CanAccessEnvironmentResourceAsync(credential.EnvironmentResourceId.Value, ct);
         else if (credential.SharedResourceId.HasValue)
             canAccess = await authorizationService.CanAccessSharedResourceAsync(credential.SharedResourceId.Value, ct);
+        else if (credential.EndpointUrlId.HasValue)
+            canAccess = await authorizationService.CanAccessEndpointUrlAsync(credential.EndpointUrlId.Value, ct);
 
         if (!canAccess)
             throw new ForbiddenException("You do not have permission to view this credential.");

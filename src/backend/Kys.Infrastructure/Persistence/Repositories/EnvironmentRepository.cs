@@ -34,6 +34,11 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
                 .ThenInclude(r => r.Credentials)
             .Include(x => x.Endpoints)
                 .ThenInclude(e => e.ProductEndpoint)
+            .Include(x => x.Endpoints)
+                .ThenInclude(e => e.Credentials)
+            .Include(x => x.CustomerProduct)
+                .ThenInclude(cp => cp.Product)
+                    .ThenInclude(p => p.Endpoints)
             .Include(x => x.CustomerProduct)
                 .ThenInclude(cp => cp.Product)
                     .ThenInclude(p => p.ResourceTemplates)
@@ -58,11 +63,18 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
         => await db.ResourceCredentials
             .FirstOrDefaultAsync(x => x.EnvironmentResourceId == environmentResourceId && x.FieldKey == fieldKey, ct);
 
+    public async Task<ResourceCredential?> GetEndpointCredentialAsync(Guid endpointUrlId, string fieldKey, CancellationToken ct = default)
+        => await db.ResourceCredentials
+            .FirstOrDefaultAsync(x => x.EndpointUrlId == endpointUrlId && x.FieldKey == fieldKey, ct);
+
     public async Task AddCredentialAsync(ResourceCredential credential, CancellationToken ct = default)
         => await db.ResourceCredentials.AddAsync(credential, ct);
 
     public void UpdateCredential(ResourceCredential credential)
         => db.ResourceCredentials.Update(credential);
+
+    public void DeleteCredential(ResourceCredential credential)
+        => db.ResourceCredentials.Remove(credential);
 
     public async Task<ResourceCredential?> GetCredentialByIdAsync(Guid id, CancellationToken ct = default)
         => await db.ResourceCredentials.FindAsync([id], ct);

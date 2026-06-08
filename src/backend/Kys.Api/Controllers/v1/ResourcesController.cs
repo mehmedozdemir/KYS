@@ -1,6 +1,10 @@
 using Asp.Versioning;
 using Kys.Application.Resources.Commands.CreateResourceType;
 using Kys.Application.Resources.Commands.CreateSharedResource;
+using Kys.Application.Resources.Commands.DeleteResourceType;
+using Kys.Application.Resources.Commands.DeleteSharedResource;
+using Kys.Application.Resources.Commands.UpdateResourceType;
+using Kys.Application.Resources.Commands.UpdateSharedResource;
 using Kys.Application.Resources.Queries.GetResourceTypes;
 using Kys.Application.Resources.Queries.GetSharedResources;
 using Kys.Api.Authorization;
@@ -35,6 +39,45 @@ public sealed class ResourcesController(IMediator mediator) : ControllerBase
         return Created($"api/v1/resources/types/{id}", new { id });
     }
 
+    [HttpDelete("types/{id:guid}")]
+    [RequirePermission(SystemRole.Codes.PlatformAdmin)]
+    public async Task<IActionResult> DeleteType(Guid id, CancellationToken ct)
+    {
+        await mediator.Send(new DeleteResourceTypeCommand(id), ct);
+        return NoContent();
+    }
+
+    [HttpPatch("types/{id:guid}")]
+    [RequirePermission(SystemRole.Codes.PlatformAdmin)]
+    public async Task<IActionResult> UpdateType(Guid id, UpdateResourceTypeRequest request, CancellationToken ct)
+    {
+        await mediator.Send(new UpdateResourceTypeCommand(
+            id,
+            request.Name,
+            request.Category,
+            request.Icon,
+            request.Description,
+            request.IsActive,
+            request.FieldSchema), ct);
+        return NoContent();
+    }
+
+    [HttpPatch("shared/{id:guid}")]
+    [RequirePermission(SystemRole.Codes.PlatformAdmin)]
+    public async Task<IActionResult> UpdateSharedResource(Guid id, UpdateSharedResourceRequest request, CancellationToken ct)
+    {
+        await mediator.Send(new UpdateSharedResourceCommand(id, request.Name, request.Description, request.EnvironmentScope), ct);
+        return NoContent();
+    }
+
+    [HttpDelete("shared/{id:guid}")]
+    [RequirePermission(SystemRole.Codes.PlatformAdmin)]
+    public async Task<IActionResult> DeleteSharedResource(Guid id, CancellationToken ct)
+    {
+        await mediator.Send(new DeleteSharedResourceCommand(id), ct);
+        return NoContent();
+    }
+
     [HttpGet("shared")]
     public async Task<IActionResult> GetSharedResources([FromQuery] string? scope = null, CancellationToken ct = default)
         => Ok(await mediator.Send(new GetSharedResourcesQuery(scope), ct));
@@ -59,7 +102,20 @@ public sealed record CreateResourceTypeRequest(
     string? Category,
     string? Icon,
     string? Description,
-    Dictionary<string, object?> FieldSchema);
+    Dictionary<string, object?>? FieldSchema);
+
+public sealed record UpdateSharedResourceRequest(
+    string Name,
+    string? Description,
+    string? EnvironmentScope);
+
+public sealed record UpdateResourceTypeRequest(
+    string Name,
+    string? Category,
+    string? Icon,
+    string? Description,
+    bool IsActive,
+    Dictionary<string, object?>? FieldSchema = null);
 
 public sealed record CreateSharedResourceRequest(
     Guid ResourceTypeId,

@@ -12,4 +12,5 @@ public sealed record ResourceTypeDto(
     string? Category,
     string? Icon,
     string? Description,
-    bool IsActive);
+    bool IsActive,
+    Dictionary<string, object?> FieldSchema);

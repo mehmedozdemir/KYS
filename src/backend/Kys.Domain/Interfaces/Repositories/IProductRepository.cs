@@ -33,5 +33,8 @@ public interface IProductRepository
 
     // Resource templates
     Task<IReadOnlyList<ProductResourceTemplate>> GetResourceTemplatesAsync(Guid productId, CancellationToken ct = default);
+    Task<ProductResourceTemplate?> GetResourceTemplateByIdAsync(Guid id, CancellationToken ct = default);
     Task AddResourceTemplateAsync(ProductResourceTemplate template, CancellationToken ct = default);
+    void DeleteResourceTemplate(ProductResourceTemplate template);
+    Task<int> CountEnvironmentResourcesByTemplateAsync(Guid templateId, CancellationToken ct = default);
 }

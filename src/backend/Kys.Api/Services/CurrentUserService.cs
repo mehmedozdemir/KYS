@@ -22,5 +22,6 @@ public sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor)
     public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated == true;
 
     public bool HasPermission(string permission)
-        => Principal?.HasClaim("permission", permission) == true;
+        => Principal?.HasClaim("permission", "*") == true ||
+           Principal?.HasClaim("permission", permission) == true;
 }

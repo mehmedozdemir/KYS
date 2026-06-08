@@ -11,6 +11,13 @@ interface CredentialStub {
   lastRotatedAt: string | null;
 }
 
+interface FieldSchemaDef {
+  type: string;
+  label: string;
+  required: boolean;
+  default?: string | number;
+}
+
 interface EnvironmentResource {
   id: string;
   resourceTypeName: string;
@@ -22,17 +29,20 @@ interface EnvironmentResource {
   isActive: boolean;
   notes: string | null;
   credentials: CredentialStub[];
+  fieldSchema: Record<string, FieldSchemaDef>;
 }
 
 interface EndpointUrl {
-  id: string;
+  id: string | null;
   productEndpointId: string;
   endpointName: string;
   endpointType: string;
-  baseUrl: string;
+  baseUrl: string | null;
   swaggerUrl: string | null;
   healthCheckUrl: string | null;
+  authTypeName: string | null;
   isActive: boolean;
+  credentials: CredentialStub[];
 }
 
 interface AvailableTemplate {
@@ -41,6 +51,7 @@ interface AvailableTemplate {
   resourceTypeName: string;
   isRequired: boolean;
   canBeShared: boolean;
+  fieldSchema: Record<string, FieldSchemaDef>;
 }
 
 interface EnvironmentDetail {
@@ -153,19 +164,46 @@ interface EnvironmentDetail {
                       <button type="button" class="btn-cred" (click)="openCredModal(r)">
                         <i class="pi pi-key"></i> Credential Yönet
                       </button>
+                      <button type="button" class="btn-remove-resource" title="Kaynağı Kaldır"
+                        [disabled]="removingResourceId() === r.id"
+                        (click)="removeResource(r)">
+                        @if (removingResourceId() === r.id) {
+                          <i class="pi pi-spin pi-spinner"></i>
+                        } @else {
+                          <i class="pi pi-trash"></i>
+                        }
+                      </button>
                     </div>
                   </div>
                   @if (r.notes) {
                     <p class="resource-notes">{{ r.notes }}</p>
                   }
-                  @if (r.credentials.length) {
-                    <div class="cred-chips">
-                      @for (c of r.credentials; track c.id) {
-                        <span class="cred-chip">
-                          <i class="pi pi-lock"></i>
-                          {{ c.fieldKey }}
-                          <span class="cred-masked">***</span>
-                        </span>
+                  @let schemaEntries = resourceSchemaEntries(r);
+                  @if (schemaEntries.length) {
+                    <div class="cred-kv-grid">
+                      @for (entry of schemaEntries; track entry.key) {
+                        @let stub = credStubForKey(r, entry.key);
+                        <div class="cred-kv-item" [class.cred-kv-missing]="!stub">
+                          <span class="cred-kv-label">{{ entry.label }}</span>
+                          @if (!stub) {
+                            <span class="cred-kv-value cred-kv-empty">—</span>
+                          } @else if (entry.type === 'password') {
+                            <span class="cred-kv-value cred-kv-pw">
+                              {{ cardVisiblePasswords()[stub.id] ? (cardRevealedValues()[stub.id] ?? '••••••') : '••••••' }}
+                            </span>
+                            <button type="button" class="cred-kv-eye"
+                              [disabled]="cardRevealingIds()[stub.id]"
+                              (click)="toggleCardPassword(stub.id)">
+                              @if (cardRevealingIds()[stub.id]) {
+                                <i class="pi pi-spin pi-spinner"></i>
+                              } @else {
+                                <i class="pi" [ngClass]="cardVisiblePasswords()[stub.id] ? 'pi-eye-slash' : 'pi-eye'"></i>
+                              }
+                            </button>
+                          } @else {
+                            <span class="cred-kv-value">{{ cardRevealedValues()[stub.id] ?? '···' }}</span>
+                          }
+                        </div>
                       }
                     </div>
                   }
@@ -181,12 +219,12 @@ interface EnvironmentDetail {
           @if (!env()!.endpoints.length) {
             <div class="empty-card">
               <i class="pi pi-link"></i>
-              <p>Bu ortam için endpoint URL'si tanımlanmamış.</p>
+              <p>Bu ürün için henüz endpoint tanımlanmamış.</p>
             </div>
           } @else {
             <div class="endpoint-grid">
-              @for (ep of env()!.endpoints; track ep.id) {
-                <div class="endpoint-card" [class.inactive-card]="!ep.isActive">
+              @for (ep of env()!.endpoints; track ep.productEndpointId) {
+                <div class="endpoint-card" [class.inactive-card]="!ep.isActive" [class.ep-no-url]="!ep.baseUrl">
                   <div class="ep-header">
                     <div class="ep-icon">
                       <i class="pi" [ngClass]="epTypeIcon(ep.endpointType)"></i>
@@ -195,43 +233,67 @@ interface EnvironmentDetail {
                       <div class="ep-name">{{ ep.endpointName }}</div>
                       <div class="ep-type">{{ ep.endpointType }}</div>
                     </div>
-                    @if (!ep.isActive) {
-                      <span class="badge badge--inactive ep-status">Pasif</span>
-                    }
-                    <button type="button" class="btn-ep-edit" (click)="openEndpointEdit(ep)" title="URL'leri Düzenle">
-                      <i class="pi pi-pencil"></i>
-                    </button>
-                  </div>
-                  <div class="ep-urls">
-                    <div class="url-row">
-                      <span class="url-lbl">Base URL</span>
-                      <a [href]="ep.baseUrl" target="_blank" class="url-link" title="{{ ep.baseUrl }}">
-                        {{ ep.baseUrl }}<i class="pi pi-external-link"></i>
-                      </a>
-                      <button type="button" class="copy-btn" (click)="copy(ep.baseUrl)" title="Kopyala">
-                        <i class="pi pi-copy"></i>
+                    <div class="ep-badges">
+                      @if (!ep.isActive) {
+                        <span class="badge badge--inactive">Pasif</span>
+                      }
+                      @if (ep.authTypeName && ep.authTypeName !== 'None') {
+                        <span class="badge badge--auth">
+                          <i class="pi pi-lock"></i> {{ authTypeLabel(ep.authTypeName) }}
+                        </span>
+                      }
+                      @if (ep.credentials.length) {
+                        <span class="ep-cred-count">{{ ep.credentials.length }} cred</span>
+                      }
+                    </div>
+                    <div class="ep-actions">
+                      @if (ep.id) {
+                        <button type="button" class="btn-ep-auth" (click)="openEpCredModal(ep)" title="Auth Yönet">
+                          <i class="pi pi-key"></i>
+                        </button>
+                      }
+                      <button type="button" class="btn-ep-edit" (click)="openEndpointEdit(ep)" title="URL Düzenle">
+                        <i class="pi pi-pencil"></i>
                       </button>
                     </div>
-                    @if (ep.swaggerUrl) {
+                  </div>
+                  @if (ep.baseUrl) {
+                    <div class="ep-urls">
                       <div class="url-row">
-                        <span class="url-lbl">Swagger</span>
-                        <a [href]="ep.swaggerUrl" target="_blank" class="url-link">
-                          {{ ep.swaggerUrl }}<i class="pi pi-external-link"></i>
+                        <span class="url-lbl">Base URL</span>
+                        <a [href]="ep.baseUrl" target="_blank" class="url-link" title="{{ ep.baseUrl }}">
+                          {{ ep.baseUrl }}<i class="pi pi-external-link"></i>
                         </a>
-                        <button type="button" class="copy-btn" (click)="copy(ep.swaggerUrl!)" title="Kopyala">
+                        <button type="button" class="copy-btn" (click)="copy(ep.baseUrl)" title="Kopyala">
                           <i class="pi pi-copy"></i>
                         </button>
                       </div>
-                    }
-                    @if (ep.healthCheckUrl) {
-                      <div class="url-row">
-                        <span class="url-lbl">Health</span>
-                        <a [href]="ep.healthCheckUrl" target="_blank" class="url-link">
-                          {{ ep.healthCheckUrl }}<i class="pi pi-external-link"></i>
-                        </a>
-                      </div>
-                    }
-                  </div>
+                      @if (ep.swaggerUrl) {
+                        <div class="url-row">
+                          <span class="url-lbl">Swagger</span>
+                          <a [href]="ep.swaggerUrl" target="_blank" class="url-link">
+                            {{ ep.swaggerUrl }}<i class="pi pi-external-link"></i>
+                          </a>
+                          <button type="button" class="copy-btn" (click)="copy(ep.swaggerUrl!)" title="Kopyala">
+                            <i class="pi pi-copy"></i>
+                          </button>
+                        </div>
+                      }
+                      @if (ep.healthCheckUrl) {
+                        <div class="url-row">
+                          <span class="url-lbl">Health</span>
+                          <a [href]="ep.healthCheckUrl" target="_blank" class="url-link">
+                            {{ ep.healthCheckUrl }}<i class="pi pi-external-link"></i>
+                          </a>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="ep-no-url-hint">
+                      <i class="pi pi-info-circle"></i> URL henüz girilmemiş
+                      <button type="button" class="btn-set-url" (click)="openEndpointEdit(ep)">URL Belirle</button>
+                    </div>
+                  }
                 </div>
               }
             </div>
@@ -293,11 +355,49 @@ interface EnvironmentDetail {
               <label>Notlar</label>
               <input type="text" [(ngModel)]="addResourceForm.notes" placeholder="İsteğe bağlı..." />
             </div>
+
+            <!-- Dinamik credential alanları -->
+            @let tpl = selectedTemplate();
+            @if (tpl && addResourceSchemaKeys(tpl).length) {
+              <div class="cred-fields-section">
+                <div class="cred-fields-title">
+                  <i class="pi pi-key"></i>
+                  Bağlantı Bilgileri
+                  <span class="cred-fields-hint">(kaynak tipi: {{ tpl.resourceTypeName }})</span>
+                </div>
+                @for (key of addResourceSchemaKeys(tpl); track key) {
+                  @let def = tpl.fieldSchema[key];
+                  <div class="form-group">
+                    <label>
+                      {{ def.label }}
+                      @if (def.required) { <span class="required">*</span> }
+                      <code class="field-key-badge">{{ key }}</code>
+                    </label>
+                    @if (def.type === 'password') {
+                      <input type="password" autocomplete="new-password"
+                        [value]="addResourceCreds[key] ?? ''"
+                        (input)="addResourceCreds[key] = $any($event.target).value"
+                        [placeholder]="def.required ? 'Zorunlu alan' : 'İsteğe bağlı'" />
+                    } @else if (def.type === 'number') {
+                      <input type="number"
+                        [value]="addResourceCreds[key] ?? ''"
+                        (input)="addResourceCreds[key] = $any($event.target).value"
+                        [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : ''" />
+                    } @else {
+                      <input type="text"
+                        [value]="addResourceCreds[key] ?? ''"
+                        (input)="addResourceCreds[key] = $any($event.target).value"
+                        [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : (def.required ? 'Zorunlu alan' : 'İsteğe bağlı')" />
+                    }
+                  </div>
+                }
+              </div>
+            }
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" (click)="closeAddResource()">İptal</button>
             <button type="button" class="btn btn-primary" [disabled]="addResourceSaving()" (click)="saveResource()">
-              @if (addResourceSaving()) { Ekleniyor... } @else { Ekle }
+              @if (addResourceSaving()) { <i class="pi pi-spin pi-spinner"></i> Ekleniyor... } @else { Ekle }
             </button>
           </div>
         </div>
@@ -310,7 +410,7 @@ interface EnvironmentDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <div>
-              <h2>Endpoint URL Düzenle</h2>
+              <h2>{{ editingEp()!.baseUrl ? 'Endpoint URL Düzenle' : 'Endpoint URL Belirle' }}</h2>
               <p class="modal-subtitle">{{ editingEp()!.endpointName }} · {{ editingEp()!.endpointType }}</p>
             </div>
             <button type="button" class="modal-close" (click)="closeEpModal()"><i class="pi pi-times"></i></button>
@@ -335,6 +435,16 @@ interface EnvironmentDetail {
               <label>Health Check URL</label>
               <input type="url" [(ngModel)]="epForm.healthCheckUrl" placeholder="https://api.example.com/health" />
             </div>
+            <div class="form-group">
+              <label>Auth Tipi</label>
+              <select [(ngModel)]="epForm.authType">
+                <option value="None">Yok</option>
+                <option value="BasicAuth">Basic Auth (kullanıcı adı + şifre)</option>
+                <option value="BearerToken">Bearer Token</option>
+                <option value="ApiKey">API Key</option>
+                <option value="OAuth2">OAuth2 (client credentials)</option>
+              </select>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" (click)="closeEpModal()">İptal</button>
@@ -347,25 +457,32 @@ interface EnvironmentDetail {
     }
 
     <!-- Credential Yönetim Modal -->
-    @if (showCredModal() && credResource()) {
+    @if (showCredModal() && (credResource() || credEndpoint())) {
       <div class="modal-backdrop" (click)="closeCredModal()">
         <div class="modal modal--wide" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <div>
-              <h2>Credential Yönetimi</h2>
-              <p class="modal-subtitle">{{ credResource()!.templateName }} · {{ credResource()!.resourceTypeName }}</p>
+              <h2>{{ credEndpoint() ? 'Auth Credential Yönetimi' : 'Credential Yönetimi' }}</h2>
+              <p class="modal-subtitle">
+                {{ credResource() ? (credResource()!.templateName + ' · ' + credResource()!.resourceTypeName)
+                                  : (credEndpoint()!.endpointName + ' · ' + authTypeLabel(credEndpoint()!.authTypeName)) }}
+              </p>
             </div>
             <button type="button" class="modal-close" (click)="closeCredModal()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
 
             <!-- Mevcut Credential'lar -->
-            @if (credResource()!.credentials.length) {
+            @if (activeCredentials().length) {
               <div class="cred-section-title">Kayıtlı Credential'lar</div>
               <div class="cred-table">
-                @for (c of credResource()!.credentials; track c.id) {
+                @for (c of activeCredentials(); track c.id) {
                   <div class="cred-row">
-                    <span class="cred-key"><i class="pi pi-key"></i> {{ c.fieldKey }}</span>
+                    <span class="cred-key">
+                      <i class="pi pi-key"></i>
+                      {{ fieldLabel(c.fieldKey) }}
+                      <code class="cred-key-code">{{ c.fieldKey }}</code>
+                    </span>
                     <div class="cred-value-cell">
                       @if (revealedValues()[c.id]; as val) {
                         <span class="cred-revealed">{{ val }}</span>
@@ -381,40 +498,75 @@ interface EnvironmentDetail {
                     </div>
                     <div class="cred-meta">
                       @if (c.lastRotatedAt) {
-                        <span class="cred-rotated">Son güncelleme: {{ c.lastRotatedAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                        <span class="cred-rotated">{{ c.lastRotatedAt | date:'dd.MM.yyyy HH:mm' }}</span>
                       }
-                      <button type="button" class="btn-edit-cred" (click)="startEdit(c)">
-                        <i class="pi pi-pencil"></i> Güncelle
+                      <button type="button" class="btn-edit-cred" (click)="startEdit(c)" title="Güncelle">
+                        <i class="pi pi-pencil"></i>
+                      </button>
+                      <button type="button" class="btn-del-cred" (click)="deleteCredential(c.id)" title="Sil"
+                        [disabled]="deletingCredId() === c.id">
+                        @if (deletingCredId() === c.id) { <i class="pi pi-spin pi-spinner"></i> }
+                        @else { <i class="pi pi-trash"></i> }
                       </button>
                     </div>
                   </div>
                 }
               </div>
             } @else {
-              <p class="empty-creds">Bu kaynak için henüz credential tanımlanmamış.</p>
+              <p class="empty-creds">{{ credEndpoint() ? 'Bu endpoint için henüz auth credential tanımlanmamış.' : 'Bu kaynak için henüz credential tanımlanmamış.' }}</p>
+            }
+
+            <!-- FieldSchema'dan gelen tanımsız alanlar için hızlı ekleme -->
+            @if (undefinedSchemaFields().length && !editingCredKey) {
+              <div class="schema-hint">
+                <i class="pi pi-info-circle"></i>
+                Eksik alanlar:
+                @for (fk of undefinedSchemaFields(); track fk) {
+                  <button type="button" class="schema-field-chip" (click)="prefillField(fk)">
+                    + {{ fieldLabel(fk) }}
+                  </button>
+                }
+              </div>
             }
 
             <!-- Yeni / Güncelleme Formu -->
             <div class="cred-form-divider">
-              <span>{{ editingCredKey ? editingCredKey + ' güncelle' : 'Yeni Credential Ekle' }}</span>
+              <span>{{ editingCredKey ? (fieldLabel(editingCredKey) + ' güncelle') : 'Credential Ekle' }}</span>
               @if (editingCredKey) {
                 <button type="button" class="btn-cancel-edit" (click)="cancelEdit()">İptal</button>
               }
             </div>
             <div class="cred-form">
               <div class="form-group">
-                <label>Alan Adı (Field Key) <span class="required">*</span></label>
-                <input type="text" [(ngModel)]="credForm.fieldKey" placeholder="ör. password, connectionString, apiKey"
-                  [disabled]="!!editingCredKey" [class.input-error]="credSubmitted() && !credForm.fieldKey.trim()" />
+                <label>Alan Adı <span class="required">*</span></label>
+                @if (schemaKeys().length && !editingCredKey) {
+                  <select [(ngModel)]="credForm.fieldKey"
+                    [class.input-error]="credSubmitted() && !credForm.fieldKey.trim()">
+                    <option value="">Alan seçin</option>
+                    @for (fk of schemaKeys(); track fk) {
+                      <option [value]="fk">{{ fieldLabel(fk) }} ({{ fk }})</option>
+                    }
+                    <option value="__custom__">Özel alan...</option>
+                  </select>
+                } @else {
+                  <input type="text" [(ngModel)]="credForm.fieldKey"
+                    placeholder="ör. password, connectionString, apiKey"
+                    [disabled]="!!editingCredKey"
+                    [class.input-error]="credSubmitted() && !credForm.fieldKey.trim()" />
+                }
                 @if (credSubmitted() && !credForm.fieldKey.trim()) {
                   <span class="error-msg">Alan adı zorunludur</span>
+                }
+                @if (credForm.fieldKey === '__custom__') {
+                  <input type="text" [(ngModel)]="credForm.customFieldKey" placeholder="Alan adını girin"
+                    style="margin-top:0.375rem" />
                 }
               </div>
               <div class="form-group">
                 <label>Değer <span class="required">*</span></label>
                 <div class="password-input-wrap">
                   <input [type]="showNewValue ? 'text' : 'password'" [(ngModel)]="credForm.value"
-                    placeholder="Şifreli değer giriniz"
+                    placeholder="Değer giriniz"
                     [class.input-error]="credSubmitted() && !credForm.value.trim()" />
                   <button type="button" class="pw-toggle" (click)="showNewValue = !showNewValue">
                     <i class="pi" [class]="showNewValue ? 'pi-eye-slash' : 'pi-eye'"></i>
@@ -473,21 +625,41 @@ interface EnvironmentDetail {
     .resource-actions { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
     .cred-count { font-size: 0.75rem; color: #6B7280; background: #F3F4F6; padding: 0.125rem 0.5rem; border-radius: 9999px; }
     .btn-cred { background: white; color: #374151; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.25rem 0.75rem; font-size: 0.8125rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.375rem; &:hover { border-color: #F59E0B; color: #B45309; background: #FFFBEB; } }
+    .btn-remove-resource { background: none; border: 1px solid #E5E7EB; border-radius: 0.375rem; padding: 0.25rem 0.5rem; font-size: 0.8125rem; cursor: pointer; color: #9CA3AF; display: inline-flex; align-items: center; &:hover { border-color: #FCA5A5; color: #EF4444; background: #FEF2F2; } &:disabled { opacity: 0.5; cursor: not-allowed; } }
     .resource-notes { font-size: 0.8125rem; color: #6B7280; margin-top: 0.5rem; }
-    .cred-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.625rem; }
-    .cred-chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 9999px; font-size: 0.75rem; color: #92400E; i { font-size: 0.7rem; } }
-    .cred-masked { color: #D97706; font-family: monospace; font-size: 0.7rem; }
+    /* Key:value credential grid in resource cards */
+    .cred-kv-grid { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.625rem; }
+    .cred-kv-item { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.5rem 0.25rem 0.625rem; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 0.375rem; font-size: 0.75rem; }
+    .cred-kv-item.cred-kv-missing { background: #FFFBEB; border-color: #FDE68A; }
+    .cred-kv-label { color: #6B7280; font-weight: 500; }
+    .cred-kv-value { color: #111827; font-family: monospace; font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cred-kv-pw { letter-spacing: 0.05em; }
+    .cred-kv-empty { color: #D97706; font-family: inherit; }
+    .cred-kv-eye { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-size: 0.75rem; display: inline-flex; align-items: center; flex-shrink: 0; &:hover:not(:disabled) { color: #374151; background: #E5E7EB; } &:disabled { opacity: 0.5; cursor: default; } }
+
+    /* Dynamic credential fields in add-resource modal */
+    .cred-fields-section { background: #F8FAFF; border: 1px solid #DBEAFE; border-radius: 0.5rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .cred-fields-title { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: #1E40AF; i { color: #3B82F6; } }
+    .cred-fields-hint { font-size: 0.75rem; color: #6B7280; font-weight: 400; }
+    .field-key-badge { background: #EFF6FF; color: #1D4ED8; padding: 0.1rem 0.375rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.7rem; margin-left: 0.25rem; }
 
     /* Endpoint grid */
     .endpoint-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 0.75rem; }
     .endpoint-card { background: white; border: 1px solid #E5E7EB; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .ep-no-url { border-style: dashed; background: #FAFAFA; }
     .ep-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
     .ep-icon { width: 2rem; height: 2rem; background: #EEF2FF; color: #4F46E5; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.875rem; }
     .ep-title { flex: 1; min-width: 0; }
     .ep-name { font-weight: 600; color: #111827; font-size: 0.875rem; }
     .ep-type { font-size: 0.75rem; color: #9CA3AF; }
-    .ep-status { margin-left: auto; }
+    .ep-badges { display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
+    .ep-actions { display: flex; align-items: center; gap: 0.375rem; flex-shrink: 0; }
+    .ep-cred-count { font-size: 0.7rem; color: #6B7280; background: #F3F4F6; padding: 0.1rem 0.4rem; border-radius: 9999px; }
+    .badge--auth { background: #FEF3C7; color: #92400E; }
+    .btn-ep-auth { background: none; border: 1px solid #E5E7EB; border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: #9CA3AF; font-size: 0.75rem; flex-shrink: 0; &:hover { border-color: #F59E0B; color: #B45309; background: #FFFBEB; } }
     .btn-ep-edit { background: none; border: 1px solid #E5E7EB; border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: #9CA3AF; font-size: 0.75rem; flex-shrink: 0; &:hover { background: #F3F4F6; color: #374151; border-color: #D1D5DB; } }
+    .ep-no-url-hint { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #9CA3AF; padding: 0.5rem 0; i { font-size: 0.75rem; } }
+    .btn-set-url { background: none; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.2rem 0.625rem; font-size: 0.8125rem; cursor: pointer; color: #374151; margin-left: 0.25rem; &:hover { border-color: #3B82F6; color: #2563EB; background: #EFF6FF; } }
     .ep-urls { display: flex; flex-direction: column; gap: 0.5rem; }
     .url-row { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
     .url-lbl { font-size: 0.7rem; font-weight: 600; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; width: 3.5rem; }
@@ -528,6 +700,10 @@ interface EnvironmentDetail {
     .btn-edit-cred { background: none; border: none; cursor: pointer; color: #6B7280; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 0.25rem; &:hover { color: #374151; } }
     .empty-creds { font-size: 0.875rem; color: #9CA3AF; text-align: center; padding: 1rem; background: #F9FAFB; border: 1px dashed #E5E7EB; border-radius: 0.5rem; }
 
+    .cred-key-code { font-family: monospace; font-size: 0.7rem; background: #F3F4F6; color: #6B7280; padding: 0.1rem 0.3rem; border-radius: 0.2rem; }
+    .btn-del-cred { background: none; border: none; cursor: pointer; color: #EF4444; font-size: 0.8125rem; padding: 0.2rem; border-radius: 0.25rem; display: inline-flex; align-items: center; &:hover { background: #FEF2F2; } &:disabled { opacity: 0.5; cursor: not-allowed; } }
+    .schema-hint { display: flex; align-items: center; flex-wrap: wrap; gap: 0.375rem; padding: 0.625rem; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 0.5rem; font-size: 0.8125rem; color: #1D4ED8; i { flex-shrink: 0; } }
+    .schema-field-chip { background: white; color: #1D4ED8; border: 1px solid #BFDBFE; border-radius: 9999px; padding: 0.15rem 0.6rem; font-size: 0.75rem; cursor: pointer; &:hover { background: #DBEAFE; } }
     .cred-form-divider { display: flex; align-items: center; justify-content: space-between; font-size: 0.8125rem; font-weight: 600; color: #374151; border-top: 1px solid #E5E7EB; padding-top: 0.75rem; }
     .btn-cancel-edit { background: none; border: none; cursor: pointer; color: #9CA3AF; font-size: 0.8125rem; &:hover { color: #374151; } }
     .cred-form { display: flex; flex-direction: column; gap: 0.875rem; }
@@ -554,12 +730,14 @@ export class EnvironmentDetailComponent implements OnInit {
   addResourceSubmitted = signal(false);
   addResourceError = signal('');
   addResourceForm = { templateId: '', isShared: false, sharedResourceId: '', notes: '' };
+  addResourceCreds: Record<string, string> = {};
   selectedTemplate = signal<AvailableTemplate | null>(null);
   sharedResources = signal<{ id: string; name: string }[]>([]);
   private sharedResourcesLoaded = false;
 
   openAddResource() {
     this.addResourceForm = { templateId: '', isShared: false, sharedResourceId: '', notes: '' };
+    this.addResourceCreds = {};
     this.selectedTemplate.set(null);
     this.addResourceSubmitted.set(false);
     this.addResourceError.set('');
@@ -573,6 +751,69 @@ export class EnvironmentDetailComponent implements OnInit {
     this.selectedTemplate.set(t);
     this.addResourceForm.isShared = false;
     this.addResourceForm.sharedResourceId = '';
+    this.addResourceCreds = {};
+  }
+
+  addResourceSchemaKeys(tpl: AvailableTemplate): string[] {
+    return tpl.fieldSchema ? Object.keys(tpl.fieldSchema) : [];
+  }
+
+  resourceSchemaEntries(r: EnvironmentResource): { key: string; label: string; type: string }[] {
+    if (!r.fieldSchema) return [];
+    return Object.entries(r.fieldSchema).map(([key, def]) => ({
+      key,
+      label: (def as FieldSchemaDef).label ?? key,
+      type: (def as FieldSchemaDef).type ?? 'string'
+    }));
+  }
+
+  credForKey(r: EnvironmentResource, key: string): boolean {
+    return r.credentials.some(c => c.fieldKey === key);
+  }
+
+  credStubForKey(r: EnvironmentResource, key: string): CredentialStub | undefined {
+    return r.credentials.find(c => c.fieldKey === key);
+  }
+
+  // --- Card-level credential reveal state ---
+  cardRevealedValues = signal<Record<string, string>>({});
+  cardVisiblePasswords = signal<Record<string, boolean>>({});
+  cardRevealingIds = signal<Record<string, boolean>>({});
+
+  private autoRevealNonPasswordCreds(detail: EnvironmentDetail) {
+    this.cardRevealedValues.set({});
+    this.cardVisiblePasswords.set({});
+    this.cardRevealingIds.set({});
+    for (const resource of detail.resources) {
+      for (const cred of resource.credentials) {
+        const def = resource.fieldSchema?.[cred.fieldKey] as FieldSchemaDef | undefined;
+        if (def && def.type !== 'password') {
+          this.http.get<{ value: string }>(`${environment.apiUrl}/credentials/${cred.id}/reveal`).subscribe({
+            next: res => this.cardRevealedValues.update(v => ({ ...v, [cred.id]: res.value }))
+          });
+        }
+      }
+    }
+  }
+
+  toggleCardPassword(credId: string) {
+    if (this.cardVisiblePasswords()[credId]) {
+      this.cardVisiblePasswords.update(v => ({ ...v, [credId]: false }));
+      return;
+    }
+    if (this.cardRevealedValues()[credId] !== undefined) {
+      this.cardVisiblePasswords.update(v => ({ ...v, [credId]: true }));
+      return;
+    }
+    this.cardRevealingIds.update(v => ({ ...v, [credId]: true }));
+    this.http.get<{ value: string }>(`${environment.apiUrl}/credentials/${credId}/reveal`).subscribe({
+      next: res => {
+        this.cardRevealedValues.update(v => ({ ...v, [credId]: res.value }));
+        this.cardVisiblePasswords.update(v => ({ ...v, [credId]: true }));
+        this.cardRevealingIds.update(v => ({ ...v, [credId]: false }));
+      },
+      error: () => this.cardRevealingIds.update(v => ({ ...v, [credId]: false }))
+    });
   }
 
   onSharedChange() {
@@ -591,21 +832,59 @@ export class EnvironmentDetailComponent implements OnInit {
     this.addResourceSaving.set(true);
     this.addResourceError.set('');
     const envId = this.env()!.id;
-    this.http.post(`${environment.apiUrl}/environments/${envId}/resources`, {
+    this.http.post<{ id: string }>(`${environment.apiUrl}/environments/${envId}/resources`, {
       productResourceTemplateId: f.templateId,
       isShared: f.isShared,
       sharedResourceId: f.isShared ? f.sharedResourceId : null,
       connectionFields: {},
       notes: f.notes.trim() || null
     }).subscribe({
-      next: () => {
-        this.addResourceSaving.set(false);
-        this.closeAddResource();
-        this.load();
+      next: (res) => {
+        const credEntries = Object.entries(this.addResourceCreds).filter(([, v]) => v.trim());
+        if (credEntries.length) {
+          const requests = credEntries.map(([fieldKey, plainValue]) =>
+            this.http.put(`${environment.apiUrl}/credentials`, {
+              environmentResourceId: res.id,
+              sharedResourceId: null,
+              fieldKey,
+              plainValue
+            })
+          );
+          let remaining = requests.length;
+          requests.forEach(req => req.subscribe({
+            next: () => { if (--remaining === 0) this.finishAdd(res.id); },
+            error: () => { if (--remaining === 0) this.finishAdd(res.id); }
+          }));
+        } else {
+          this.finishAdd(res.id);
+        }
       },
       error: err => {
         this.addResourceSaving.set(false);
         this.addResourceError.set(err.error?.detail ?? 'Kaynak eklenemedi.');
+      }
+    });
+  }
+
+  removingResourceId = signal<string | null>(null);
+
+  removeResource(r: EnvironmentResource) {
+    if (!confirm(`"${r.templateName}" kaynağını ortamdan kaldırmak istediğinizden emin misiniz?`)) return;
+    this.removingResourceId.set(r.id);
+    const envId = this.env()!.id;
+    this.http.delete(`${environment.apiUrl}/environments/${envId}/resources/${r.id}`).subscribe({
+      next: () => { this.removingResourceId.set(null); this.load(); },
+      error: () => { this.removingResourceId.set(null); }
+    });
+  }
+
+  private finishAdd(newResourceId: string) {
+    this.addResourceSaving.set(false);
+    this.closeAddResource();
+    this.load((detail) => {
+      const newResource = detail.resources.find(r => r.id === newResourceId);
+      if (newResource && Object.keys(newResource.fieldSchema ?? {}).length) {
+        this.openCredModal(newResource);
       }
     });
   }
@@ -616,11 +895,16 @@ export class EnvironmentDetailComponent implements OnInit {
   epSaving = signal(false);
   epSubmitted = signal(false);
   epSaveError = signal('');
-  epForm = { baseUrl: '', swaggerUrl: '', healthCheckUrl: '' };
+  epForm = { baseUrl: '', swaggerUrl: '', healthCheckUrl: '', authType: 'None' };
 
   openEndpointEdit(ep: EndpointUrl) {
     this.editingEp.set(ep);
-    this.epForm = { baseUrl: ep.baseUrl, swaggerUrl: ep.swaggerUrl ?? '', healthCheckUrl: ep.healthCheckUrl ?? '' };
+    this.epForm = {
+      baseUrl: ep.baseUrl ?? '',
+      swaggerUrl: ep.swaggerUrl ?? '',
+      healthCheckUrl: ep.healthCheckUrl ?? '',
+      authType: ep.authTypeName ?? 'None'
+    };
     this.epSubmitted.set(false);
     this.epSaveError.set('');
     this.showEpModal.set(true);
@@ -639,7 +923,7 @@ export class EnvironmentDetailComponent implements OnInit {
       baseUrl: this.epForm.baseUrl.trim(),
       swaggerUrl: this.epForm.swaggerUrl.trim() || null,
       healthCheckUrl: this.epForm.healthCheckUrl.trim() || null,
-      authType: null,
+      authType: this.epForm.authType === 'None' ? null : this.epForm.authType,
       authConfig: {},
       notes: null
     }).subscribe({
@@ -655,9 +939,18 @@ export class EnvironmentDetailComponent implements OnInit {
     });
   }
 
+  authTypeLabel(name: string | null): string {
+    const labels: Record<string, string> = {
+      BasicAuth: 'Basic Auth', BearerToken: 'Bearer Token',
+      ApiKey: 'API Key', OAuth2: 'OAuth2', None: 'Auth Yok'
+    };
+    return name ? (labels[name] ?? name) : 'Auth Yok';
+  }
+
   // Credential modal state
   showCredModal = signal(false);
   credResource = signal<EnvironmentResource | null>(null);
+  credEndpoint = signal<EndpointUrl | null>(null);
   revealedValues = signal<Record<string, string>>({});
   revealLoading = signal<Record<string, boolean>>({});
   credSaving = signal(false);
@@ -665,7 +958,12 @@ export class EnvironmentDetailComponent implements OnInit {
   credError = signal('');
   editingCredKey = '';
   showNewValue = false;
-  credForm = { fieldKey: '', value: '' };
+  credForm = { fieldKey: '', customFieldKey: '', value: '' };
+  deletingCredId = signal<string | null>(null);
+
+  activeCredentials(): CredentialStub[] {
+    return this.credResource()?.credentials ?? this.credEndpoint()?.credentials ?? [];
+  }
 
   ngOnInit() {
     this.load();
@@ -674,7 +972,12 @@ export class EnvironmentDetailComponent implements OnInit {
   private load(onDone?: (d: EnvironmentDetail) => void) {
     const id = this.route.snapshot.paramMap.get('id');
     this.http.get<EnvironmentDetail>(`${environment.apiUrl}/environments/${id}`).subscribe({
-      next: d => { this.env.set(d); this.loading.set(false); onDone?.(d); },
+      next: d => {
+        this.env.set(d);
+        this.loading.set(false);
+        this.autoRevealNonPasswordCreds(d);
+        onDone?.(d);
+      },
       error: () => this.loading.set(false)
     });
   }
@@ -685,18 +988,94 @@ export class EnvironmentDetailComponent implements OnInit {
 
   openCredModal(r: EnvironmentResource) {
     this.credResource.set(r);
+    this.credEndpoint.set(null);
     this.revealedValues.set({});
     this.revealLoading.set({});
-    this.credForm = { fieldKey: '', value: '' };
+    this.credForm = { fieldKey: '', customFieldKey: '', value: '' };
     this.editingCredKey = '';
     this.credSubmitted.set(false);
     this.credError.set('');
     this.showCredModal.set(true);
   }
 
+  openEpCredModal(ep: EndpointUrl) {
+    this.credEndpoint.set(ep);
+    this.credResource.set(null);
+    this.revealedValues.set({});
+    this.revealLoading.set({});
+    this.credForm = { fieldKey: '', customFieldKey: '', value: '' };
+    this.editingCredKey = '';
+    this.credSubmitted.set(false);
+    this.credError.set('');
+    this.showCredModal.set(true);
+  }
+
+  schemaKeys(): string[] {
+    const resource = this.credResource();
+    if (resource) return Object.keys(resource.fieldSchema ?? {});
+    const ep = this.credEndpoint();
+    if (ep) {
+      if (ep.authTypeName === 'BasicAuth') return ['username', 'password'];
+      if (ep.authTypeName === 'BearerToken') return ['token'];
+      if (ep.authTypeName === 'ApiKey') return ['apiKey'];
+      if (ep.authTypeName === 'OAuth2') return ['clientId', 'clientSecret'];
+    }
+    return [];
+  }
+
+  fieldLabel(fieldKey: string): string {
+    const schema = this.credResource()?.fieldSchema;
+    if (schema?.[fieldKey]?.label) return schema[fieldKey].label;
+    const commonLabels: Record<string, string> = {
+      username: 'Kullanıcı Adı', password: 'Şifre', token: 'Token',
+      apiKey: 'API Anahtarı', clientId: 'Client ID', clientSecret: 'Client Secret'
+    };
+    return commonLabels[fieldKey] ?? fieldKey;
+  }
+
+  undefinedSchemaFields(): string[] {
+    const keys = this.schemaKeys();
+    if (!keys.length) return [];
+    const definedKeys = new Set(this.activeCredentials().map(c => c.fieldKey));
+    return keys.filter(k => !definedKeys.has(k));
+  }
+
+  prefillField(fieldKey: string) {
+    this.credForm = { fieldKey, customFieldKey: '', value: '' };
+    this.credSubmitted.set(false);
+    this.credError.set('');
+    this.showNewValue = false;
+  }
+
+  deleteCredential(credId: string) {
+    if (!confirm('Bu credential silinecek. Emin misiniz?')) return;
+    this.deletingCredId.set(credId);
+    const resourceId = this.credResource()?.id ?? null;
+    const endpointId = this.credEndpoint()?.id ?? null;
+    this.http.delete(`${environment.apiUrl}/credentials/${credId}`).subscribe({
+      next: () => {
+        this.deletingCredId.set(null);
+        this.load(d => {
+          if (resourceId) {
+            const updated = d.resources.find(r => r.id === resourceId);
+            if (updated) this.credResource.set(updated);
+          } else if (endpointId) {
+            const updated = d.endpoints.find(e => e.id === endpointId);
+            if (updated) this.credEndpoint.set(updated);
+          }
+        });
+      },
+      error: () => {
+        this.deletingCredId.set(null);
+        this.credError.set('Credential silinemedi.');
+      }
+    });
+  }
+
   closeCredModal() {
     this.showCredModal.set(false);
     this.credResource.set(null);
+    this.credEndpoint.set(null);
   }
 
   reveal(credId: string) {
@@ -725,7 +1104,7 @@ export class EnvironmentDetailComponent implements OnInit {
 
   startEdit(c: CredentialStub) {
     this.editingCredKey = c.fieldKey;
-    this.credForm = { fieldKey: c.fieldKey, value: '' };
+    this.credForm = { fieldKey: c.fieldKey, customFieldKey: '', value: '' };
     this.credSubmitted.set(false);
     this.credError.set('');
     this.showNewValue = false;
@@ -733,31 +1112,41 @@ export class EnvironmentDetailComponent implements OnInit {
 
   cancelEdit() {
     this.editingCredKey = '';
-    this.credForm = { fieldKey: '', value: '' };
+    this.credForm = { fieldKey: '', customFieldKey: '', value: '' };
     this.credSubmitted.set(false);
   }
 
   saveCredential() {
     this.credSubmitted.set(true);
-    if (!this.credForm.fieldKey.trim() || !this.credForm.value.trim()) return;
+    const resolvedKey = this.credForm.fieldKey === '__custom__'
+      ? this.credForm.customFieldKey.trim()
+      : this.credForm.fieldKey.trim();
+    if (!resolvedKey || !this.credForm.value.trim()) return;
 
     this.credSaving.set(true);
     this.credError.set('');
 
+    const resourceId = this.credResource()?.id ?? null;
+    const endpointId = this.credEndpoint()?.id ?? null;
     const body = {
-      environmentResourceId: this.credResource()!.id,
+      environmentResourceId: resourceId,
+      endpointUrlId: endpointId,
       sharedResourceId: null,
-      fieldKey: this.credForm.fieldKey.trim(),
+      fieldKey: resolvedKey,
       plainValue: this.credForm.value.trim()
     };
 
     this.http.put(`${environment.apiUrl}/credentials`, body).subscribe({
       next: () => {
         this.credSaving.set(false);
-        const resourceId = this.credResource()!.id;
         this.load(d => {
-          const updated = d.resources.find(r => r.id === resourceId);
-          if (updated) this.credResource.set(updated);
+          if (resourceId) {
+            const updated = d.resources.find(r => r.id === resourceId);
+            if (updated) this.credResource.set(updated);
+          } else if (endpointId) {
+            const updated = d.endpoints.find(e => e.id === endpointId);
+            if (updated) this.credEndpoint.set(updated);
+          }
         });
         this.cancelEdit();
       },

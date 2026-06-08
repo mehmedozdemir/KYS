@@ -325,6 +325,7 @@ interface ProductDetail {
                     <th>Şablon Adı</th>
                     <th>Zorunlu</th>
                     <th>Paylaşılabilir</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -347,6 +348,14 @@ interface ProductDetail {
                         } @else {
                           <span class="muted">Hayır</span>
                         }
+                      </td>
+                      <td style="text-align:right;width:48px">
+                        <button type="button" class="btn-icon-danger" title="Sil"
+                          [disabled]="deletingTemplateId() === t.id"
+                          (click)="deleteTemplate(t.id, t.name)">
+                          @if (deletingTemplateId() === t.id) { <i class="pi pi-spin pi-spinner"></i> }
+                          @else { <i class="pi pi-trash"></i> }
+                        </button>
                       </td>
                     </tr>
                   }
@@ -708,6 +717,7 @@ interface ProductDetail {
     .data-table { width: 100%; border-collapse: collapse; th { background: #F9FAFB; padding: 0.625rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB; } td { padding: 0.75rem; font-size: 0.875rem; color: #374151; border-bottom: 1px solid #F3F4F6; } tr:last-child td { border-bottom: none; } }
     .inactive-row td { opacity: 0.55; }
     .muted { color: #6B7280; }
+    .btn-icon-danger { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem; border-radius: 0.25rem; &:hover { color: #EF4444; background: #FEF2F2; } &:disabled { opacity: 0.5; cursor: not-allowed; } }
 
     .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
     .badge--active { background: #D1FAE5; color: #065F46; }
@@ -1072,6 +1082,7 @@ export class ProductDetailComponent implements OnInit {
   showTemplateModal = signal(false);
   templateSaving = signal(false);
   templateSubmitted = signal(false);
+  deletingTemplateId = signal<string | null>(null);
   templateError = signal('');
   templateForm = { resourceTypeId: '', name: '', isRequired: false, canBeShared: false };
   resourceTypes = signal<{ id: string; name: string; code: string }[]>([]);
@@ -1105,6 +1116,19 @@ export class ProductDetailComponent implements OnInit {
     }).subscribe({
       next: () => { this.templateSaving.set(false); this.showTemplateModal.set(false); this.reload(); },
       error: err => { this.templateSaving.set(false); this.templateError.set(err.error?.detail ?? 'Şablon eklenemedi'); }
+    });
+  }
+
+  deleteTemplate(templateId: string, templateName: string) {
+    if (!confirm(`"${templateName}" kaynak şablonunu silmek istediğinizden emin misiniz?`)) return;
+    this.deletingTemplateId.set(templateId);
+    const productId = this.route.snapshot.paramMap.get('id');
+    this.http.delete(`${environment.apiUrl}/products/${productId}/resource-templates/${templateId}`).subscribe({
+      next: () => { this.deletingTemplateId.set(null); this.reload(); },
+      error: (err) => {
+        this.deletingTemplateId.set(null);
+        alert(err.error?.detail ?? 'Şablon silinemedi.');
+      }
     });
   }
 

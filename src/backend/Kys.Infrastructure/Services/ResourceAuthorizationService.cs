@@ -38,11 +38,29 @@ public sealed class ResourceAuthorizationService(
 
         var userId = currentUser.UserId.Value;
 
-        // User can access if they are on a team assigned to any product that references this shared resource
         return await db.EnvironmentResources
             .Where(er => er.SharedResourceId == sharedResourceId)
             .AnyAsync(er =>
                 er.CustomerEnvironment.CustomerProduct.Product.Teams
+                    .Any(pt => pt.Team.Memberships
+                        .Any(m => m.PersonId == userId && m.EndDate == null)),
+                ct);
+    }
+
+    public async Task<bool> CanAccessEndpointUrlAsync(Guid endpointUrlId, CancellationToken ct = default)
+    {
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+            return false;
+
+        if (currentUser.HasPermission("Resources.ViewAll"))
+            return true;
+
+        var userId = currentUser.UserId.Value;
+
+        return await db.CustomerEnvironmentEndpoints
+            .Where(ep => ep.Id == endpointUrlId)
+            .AnyAsync(ep =>
+                ep.CustomerEnvironment.CustomerProduct.Product.Teams
                     .Any(pt => pt.Team.Memberships
                         .Any(m => m.PersonId == userId && m.EndDate == null)),
                 ct);

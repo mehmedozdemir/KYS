@@ -10,6 +10,6 @@ public sealed class GetResourceTypesQueryHandler(IResourceRepository repository)
     {
         var types = await repository.GetResourceTypesAsync(request.ActiveOnly, ct);
         return types.Select(t => new ResourceTypeDto(
-            t.Id, t.Name, t.Code, t.Category, t.Icon, t.Description, t.IsActive)).ToList();
+            t.Id, t.Name, t.Code, t.Category, t.Icon, t.Description, t.IsActive, t.FieldSchema)).ToList();
     }
 }

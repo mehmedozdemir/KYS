@@ -8,4 +8,4 @@ public sealed record CreateResourceTypeCommand(
     string? Category,
     string? Icon,
     string? Description,
-    Dictionary<string, object?> FieldSchema) : IRequest<Guid>;
+    Dictionary<string, object?>? FieldSchema) : IRequest<Guid>;

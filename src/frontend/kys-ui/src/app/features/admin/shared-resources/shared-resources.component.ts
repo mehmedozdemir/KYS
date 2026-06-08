@@ -68,6 +68,7 @@ interface ResourceType {
                 <th>Tip</th>
                 <th>Kapsam</th>
                 <th>Açıklama</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -90,6 +91,16 @@ interface ResourceType {
                     }
                   </td>
                   <td class="text-muted desc-cell">{{ r.description ?? '—' }}</td>
+                  <td class="actions-cell">
+                    <button class="btn-icon" title="Düzenle" (click)="openEdit(r)">
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button class="btn-icon btn-icon--danger" title="Sil" (click)="deleteResource(r)"
+                      [disabled]="deletingId() === r.id">
+                      @if (deletingId() === r.id) { <i class="pi pi-spin pi-spinner"></i> }
+                      @else { <i class="pi pi-trash"></i> }
+                    </button>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -98,12 +109,12 @@ interface ResourceType {
       }
     </div>
 
-    <!-- Create Modal -->
+    <!-- Create / Edit Modal -->
     @if (showModal()) {
       <div class="modal-backdrop" (click)="showModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Yeni Paylaşımlı Kaynak</h2>
+            <h2>{{ editingId() ? 'Kaynağı Düzenle' : 'Yeni Paylaşımlı Kaynak' }}</h2>
             <button class="modal-close" (click)="showModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -112,16 +123,18 @@ interface ResourceType {
               <input type="text" [(ngModel)]="form.name" placeholder="ör. Prod Redis Cluster" [class.input-error]="submitted() && !form.name.trim()" />
               @if (submitted() && !form.name.trim()) { <span class="error-msg">Ad zorunludur</span> }
             </div>
-            <div class="form-group">
-              <label>Kaynak Tipi <span class="required">*</span></label>
-              <select [(ngModel)]="form.resourceTypeId" [class.input-error]="submitted() && !form.resourceTypeId">
-                <option value="">Tip seçin...</option>
-                @for (t of resourceTypes(); track t.id) {
-                  <option [value]="t.id">{{ t.name }}{{ t.category ? ' (' + t.category + ')' : '' }}</option>
-                }
-              </select>
-              @if (submitted() && !form.resourceTypeId) { <span class="error-msg">Tip zorunludur</span> }
-            </div>
+            @if (!editingId()) {
+              <div class="form-group">
+                <label>Kaynak Tipi <span class="required">*</span></label>
+                <select [(ngModel)]="form.resourceTypeId" [class.input-error]="submitted() && !form.resourceTypeId">
+                  <option value="">Tip seçin...</option>
+                  @for (t of resourceTypes(); track t.id) {
+                    <option [value]="t.id">{{ t.name }}{{ t.category ? ' (' + t.category + ')' : '' }}</option>
+                  }
+                </select>
+                @if (submitted() && !form.resourceTypeId) { <span class="error-msg">Tip zorunludur</span> }
+              </div>
+            }
             <div class="form-group">
               <label>Ortam Kapsamı</label>
               <select [(ngModel)]="form.environmentScope">
@@ -141,7 +154,7 @@ interface ResourceType {
           <div class="modal-footer">
             <button class="btn-cancel" (click)="showModal.set(false)">İptal</button>
             <button class="btn-save" [disabled]="saving()" (click)="save()">
-              {{ saving() ? 'Kaydediliyor...' : 'Oluştur' }}
+              {{ saving() ? 'Kaydediliyor...' : (editingId() ? 'Güncelle' : 'Oluştur') }}
             </button>
           </div>
         </div>
@@ -170,6 +183,9 @@ interface ResourceType {
     .text-muted { color: #9CA3AF; }
     .desc-cell { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+    .actions-cell { width: 80px; text-align: right; white-space: nowrap; }
+    .btn-icon { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem; border-radius: 0.25rem; &:hover { color: #3B82F6; background: #EFF6FF; } &:disabled { opacity: 0.5; cursor: not-allowed; } }
+    .btn-icon--danger { &:hover { color: #EF4444 !important; background: #FEF2F2 !important; } }
     .btn-primary { display: inline-flex; align-items: center; gap: 0.375rem; background: #3B82F6; color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; &:hover { background: #2563EB; } }
 
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
@@ -196,9 +212,11 @@ export class SharedResourcesComponent implements OnInit {
   scopeFilter = '';
 
   showModal = signal(false);
+  editingId = signal<string | null>(null);
   submitted = signal(false);
   saving = signal(false);
   saveError = signal('');
+  deletingId = signal<string | null>(null);
   form = { name: '', resourceTypeId: '', environmentScope: '', description: '' };
 
   ngOnInit() {
@@ -218,7 +236,21 @@ export class SharedResourcesComponent implements OnInit {
   }
 
   openModal() {
+    this.editingId.set(null);
     this.form = { name: '', resourceTypeId: '', environmentScope: '', description: '' };
+    this.submitted.set(false);
+    this.saveError.set('');
+    this.showModal.set(true);
+  }
+
+  openEdit(r: SharedResource) {
+    this.editingId.set(r.id);
+    this.form = {
+      name: r.name,
+      resourceTypeId: '',
+      environmentScope: r.environmentScope ?? '',
+      description: r.description ?? ''
+    };
     this.submitted.set(false);
     this.saveError.set('');
     this.showModal.set(true);
@@ -226,17 +258,28 @@ export class SharedResourcesComponent implements OnInit {
 
   save() {
     this.submitted.set(true);
-    if (!this.form.name.trim() || !this.form.resourceTypeId) return;
+    const id = this.editingId();
+    if (!this.form.name.trim()) return;
+    if (!id && !this.form.resourceTypeId) return;
+
     this.saving.set(true);
     this.saveError.set('');
 
-    this.http.post(`${environment.apiUrl}/resources/shared`, {
-      resourceTypeId: this.form.resourceTypeId,
-      name: this.form.name.trim(),
-      description: this.form.description.trim() || null,
-      environmentScope: this.form.environmentScope || null,
-      connectionFields: {}
-    }).subscribe({
+    const req = id
+      ? this.http.patch(`${environment.apiUrl}/resources/shared/${id}`, {
+          name: this.form.name.trim(),
+          description: this.form.description.trim() || null,
+          environmentScope: this.form.environmentScope || null
+        })
+      : this.http.post(`${environment.apiUrl}/resources/shared`, {
+          resourceTypeId: this.form.resourceTypeId,
+          name: this.form.name.trim(),
+          description: this.form.description.trim() || null,
+          environmentScope: this.form.environmentScope || null,
+          connectionFields: {}
+        });
+
+    req.subscribe({
       next: () => {
         this.saving.set(false);
         this.showModal.set(false);
@@ -244,8 +287,17 @@ export class SharedResourcesComponent implements OnInit {
       },
       error: err => {
         this.saving.set(false);
-        this.saveError.set(err.error?.detail ?? 'Kaynak oluşturulamadı');
+        this.saveError.set(err.error?.detail ?? 'Kaynak kaydedilemedi');
       }
+    });
+  }
+
+  deleteResource(r: SharedResource) {
+    if (!confirm(`"${r.name}" kaynağı silinecek. Emin misiniz?`)) return;
+    this.deletingId.set(r.id);
+    this.http.delete(`${environment.apiUrl}/resources/shared/${r.id}`).subscribe({
+      next: () => { this.deletingId.set(null); this.load(); },
+      error: () => { this.deletingId.set(null); }
     });
   }
 }

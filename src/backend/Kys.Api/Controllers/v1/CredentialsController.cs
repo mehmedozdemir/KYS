@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Kys.Application.Credentials.Commands.DeleteCredential;
 using Kys.Application.Credentials.Commands.RevealCredential;
 using Kys.Application.Credentials.Commands.SetCredential;
 using Kys.Api.Authorization;
@@ -21,9 +22,18 @@ public sealed class CredentialsController(IMediator mediator) : ControllerBase
         var id = await mediator.Send(new SetCredentialCommand(
             request.EnvironmentResourceId,
             request.SharedResourceId,
+            request.EndpointUrlId,
             request.FieldKey,
             request.PlainValue), ct);
         return Ok(new { id });
+    }
+
+    [HttpDelete("{id:guid}")]
+    [RequirePermission("Credentials.Write")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await mediator.Send(new DeleteCredentialCommand(id), ct);
+        return NoContent();
     }
 
     [HttpGet("{id:guid}/reveal")]
@@ -38,5 +48,6 @@ public sealed class CredentialsController(IMediator mediator) : ControllerBase
 public sealed record SetCredentialRequest(
     Guid? EnvironmentResourceId,
     Guid? SharedResourceId,
+    Guid? EndpointUrlId,
     string FieldKey,
     string PlainValue);

@@ -24,7 +24,8 @@ public sealed record AvailableResourceTemplateDto(
     string Name,
     string ResourceTypeName,
     bool IsRequired,
-    bool CanBeShared);
+    bool CanBeShared,
+    Dictionary<string, object?> FieldSchema);
 
 public sealed record EnvironmentResourceDto(
     Guid Id,
@@ -36,7 +37,8 @@ public sealed record EnvironmentResourceDto(
     string? SharedResourceName,
     bool IsActive,
     string? Notes,
-    IReadOnlyList<CredentialStubDto> Credentials);
+    IReadOnlyList<CredentialStubDto> Credentials,
+    Dictionary<string, object?> FieldSchema);
 
 public sealed record CredentialStubDto(
     Guid Id,
@@ -44,11 +46,13 @@ public sealed record CredentialStubDto(
     DateTime? LastRotatedAt);
 
 public sealed record EndpointUrlDto(
-    Guid Id,
+    Guid? Id,
     Guid ProductEndpointId,
     string EndpointName,
     string EndpointType,
-    string BaseUrl,
+    string? BaseUrl,
     string? SwaggerUrl,
     string? HealthCheckUrl,
-    bool IsActive);
+    string? AuthTypeName,
+    bool IsActive,
+    IReadOnlyList<CredentialStubDto> Credentials);
