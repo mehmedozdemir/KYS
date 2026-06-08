@@ -11,4 +11,5 @@ public interface IPersonRepository
     Task AddAsync(Person person, CancellationToken ct = default);
     void Update(Person person);
     Task<bool> HasAnyPlatformUserAsync(CancellationToken ct = default);
+    Task<Person?> GetByRefreshTokenAsync(string refreshToken, CancellationToken ct = default);
 }

@@ -20,10 +20,12 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
             r.SharedResourceId,
             r.SharedResource?.Name,
             r.IsActive,
-            r.Notes)).ToList();
+            r.Notes,
+            r.Credentials.Select(c => new CredentialStubDto(c.Id, c.FieldKey, c.LastRotatedAt)).ToList())).ToList();
 
         var endpoints = env.Endpoints.Select(e => new EndpointUrlDto(
             e.Id,
+            e.ProductEndpointId,
             e.ProductEndpoint.Name,
             e.ProductEndpoint.EndpointType.ToString(),
             e.BaseUrl,
@@ -31,9 +33,16 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
             e.HealthCheckUrl,
             e.IsActive)).ToList();
 
+        var availableTemplates = env.CustomerProduct.Product.ResourceTemplates
+            .OrderBy(t => t.SortOrder)
+            .Select(t => new AvailableResourceTemplateDto(
+                t.Id, t.Name, t.ResourceType.Name, t.IsRequired, t.CanBeShared))
+            .ToList();
+
         return new EnvironmentDetailDto(
             env.Id,
             env.CustomerProductId,
+            env.CustomerProduct.ProductId,
             env.Name,
             env.EnvironmentType.Name,
             env.EnvironmentType.Code,
@@ -41,6 +50,7 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
             env.IsActive,
             env.Notes,
             resources,
-            endpoints);
+            endpoints,
+            availableTemplates);
     }
 }

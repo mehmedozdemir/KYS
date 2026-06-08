@@ -18,6 +18,10 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () => import('./platform-users/platform-users.component').then(m => m.PlatformUsersComponent)
   },
   {
+    path: 'audit-log',
+    loadComponent: () => import('./audit-log/audit-log.component').then(m => m.AuditLogComponent)
+  },
+  {
     path: 'shared-resources',
     loadComponent: () => import('./shared-resources/shared-resources.component').then(m => m.SharedResourcesComponent)
   },

@@ -21,6 +21,7 @@ public sealed class PersonConfiguration : IEntityTypeConfiguration<Person>
             .HasMaxLength(30)
             .IsRequired();
         builder.Property(p => p.Username).HasMaxLength(100);
+        builder.Property(p => p.RefreshToken).HasMaxLength(200);
         builder.Property(p => p.TerminationReason).HasMaxLength(1000);
 
         builder.Property(p => p.CustomFields)

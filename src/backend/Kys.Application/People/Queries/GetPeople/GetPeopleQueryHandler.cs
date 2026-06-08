@@ -28,7 +28,7 @@ public sealed class GetPeopleQueryHandler(IPersonRepository personRepository)
         var items = filtered
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(p => new PersonListDto(p.Id, p.FirstName, p.LastName, p.Email, p.Title, p.EmploymentStatus, p.IsPlatformUser))
+            .Select(p => new PersonListDto(p.Id, p.FirstName, p.LastName, p.Email, p.Title, p.EmploymentStatus, p.IsPlatformUser, p.IsLocked))
             .ToList();
 
         return new GetPeopleResult(items, total, request.Page, request.PageSize);

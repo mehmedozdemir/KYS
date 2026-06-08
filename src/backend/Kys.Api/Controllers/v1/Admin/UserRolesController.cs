@@ -2,6 +2,8 @@ using Asp.Versioning;
 using Kys.Api.Authorization;
 using Kys.Application.Admin.Commands.AssignSystemRole;
 using Kys.Application.Admin.Commands.RemoveSystemRole;
+using Kys.Application.Admin.Commands.ResetPassword;
+using Kys.Application.Admin.Commands.UnlockAccount;
 using Kys.Application.Admin.Queries.GetPersonSystemRoles;
 using Kys.Domain.Entities;
 using MediatR;
@@ -42,6 +44,25 @@ public sealed class UserRolesController(IMediator mediator) : ControllerBase
         await mediator.Send(new RemoveSystemRoleCommand(personId, systemRoleId), ct);
         return NoContent();
     }
+
+    [HttpPost("/api/v{version:apiVersion}/admin/users/{personId:guid}/reset-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ResetPassword(Guid personId, [FromBody] ResetPasswordRequest request, CancellationToken ct)
+    {
+        await mediator.Send(new ResetPasswordCommand(personId, request.NewPassword), ct);
+        return NoContent();
+    }
+
+    [HttpPost("/api/v{version:apiVersion}/admin/users/{personId:guid}/unlock")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Unlock(Guid personId, CancellationToken ct)
+    {
+        await mediator.Send(new UnlockAccountCommand(personId), ct);
+        return NoContent();
+    }
 }
 
 public sealed record AssignRoleRequest(Guid SystemRoleId);
+public sealed record ResetPasswordRequest(string NewPassword);

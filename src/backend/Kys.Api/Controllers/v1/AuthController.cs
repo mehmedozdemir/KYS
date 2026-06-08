@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Kys.Application.Auth.Commands.Login;
+using Kys.Application.Auth.Commands.RefreshToken;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,6 +16,12 @@ public sealed class AuthController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken ct)
+        => Ok(await mediator.Send(command, ct));
+
+    [HttpPost("refresh")]
+    [ProducesResponseType(typeof(RefreshTokenResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenCommand command, CancellationToken ct)
         => Ok(await mediator.Send(command, ct));
 
     [HttpGet("me")]

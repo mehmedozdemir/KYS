@@ -8,6 +8,7 @@ public sealed record GetEnvironmentDetailQuery(Guid EnvironmentId)
 public sealed record EnvironmentDetailDto(
     Guid Id,
     Guid CustomerProductId,
+    Guid ProductId,
     string Name,
     string EnvironmentTypeName,
     string EnvironmentTypeCode,
@@ -15,7 +16,15 @@ public sealed record EnvironmentDetailDto(
     bool IsActive,
     string? Notes,
     IReadOnlyList<EnvironmentResourceDto> Resources,
-    IReadOnlyList<EndpointUrlDto> Endpoints);
+    IReadOnlyList<EndpointUrlDto> Endpoints,
+    IReadOnlyList<AvailableResourceTemplateDto> AvailableTemplates);
+
+public sealed record AvailableResourceTemplateDto(
+    Guid Id,
+    string Name,
+    string ResourceTypeName,
+    bool IsRequired,
+    bool CanBeShared);
 
 public sealed record EnvironmentResourceDto(
     Guid Id,
@@ -26,10 +35,17 @@ public sealed record EnvironmentResourceDto(
     Guid? SharedResourceId,
     string? SharedResourceName,
     bool IsActive,
-    string? Notes);
+    string? Notes,
+    IReadOnlyList<CredentialStubDto> Credentials);
+
+public sealed record CredentialStubDto(
+    Guid Id,
+    string FieldKey,
+    DateTime? LastRotatedAt);
 
 public sealed record EndpointUrlDto(
     Guid Id,
+    Guid ProductEndpointId,
     string EndpointName,
     string EndpointType,
     string BaseUrl,

@@ -107,6 +107,7 @@ interface AddMemberRequest {
                   <th>Organizasyon Rolü</th>
                   <th>Başlangıç</th>
                   <th>Bitiş</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -128,6 +129,11 @@ interface AddMemberRequest {
                         <span class="badge badge--active">Devam ediyor</span>
                       }
                     </td>
+                    <td>
+                      @if (!m.endDate) {
+                        <button type="button" class="btn-end" (click)="openEndMembership(m)">Bitir</button>
+                      }
+                    </td>
                   </tr>
                 }
               </tbody>
@@ -136,6 +142,39 @@ interface AddMemberRequest {
         </div>
       }
     </div>
+
+    <!-- End Membership Modal -->
+    @if (showEndModal()) {
+      <div class="modal-backdrop" (click)="closeEndModal()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Üyeliği Bitir</h2>
+            <button type="button" class="close-btn" (click)="closeEndModal()"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            @if (endError()) {
+              <div class="alert-error">{{ endError() }}</div>
+            }
+            <p class="end-confirm-text">
+              <strong>{{ endingMember()?.personName }}</strong> adlı kişinin ekip üyeliği bitirilecek.
+            </p>
+            <div class="form-group">
+              <label>Bitiş Tarihi <span class="required">*</span></label>
+              <input type="date" [(ngModel)]="endDate" [class.input-error]="endSubmitted() && !endDate" />
+              @if (endSubmitted() && !endDate) {
+                <span class="field-error">Bitiş tarihi zorunludur</span>
+              }
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeEndModal()">İptal</button>
+            <button type="button" class="btn btn-danger" [disabled]="endSaving()" (click)="endMembership()">
+              {{ endSaving() ? 'Kaydediliyor...' : 'Üyeliği Bitir' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- Add Member Modal -->
     @if (showAddModal()) {
@@ -260,13 +299,18 @@ interface AddMemberRequest {
     .btn-primary { background: #3B82F6; color: white; &:not(:disabled):hover { background: #2563EB; } }
     .btn-secondary { background: white; color: #374151; border: 1px solid #D1D5DB; &:hover { background: #F3F4F6; } }
 
+    .btn-end { background: none; border: 1px solid #FECACA; color: #DC2626; border-radius: 0.375rem; padding: 0.25rem 0.625rem; font-size: 0.75rem; font-weight: 500; cursor: pointer; &:hover { background: #FEF2F2; } }
+    .end-confirm-text { font-size: 0.875rem; color: #374151; background: #FFF7ED; border: 1px solid #FED7AA; border-radius: 0.5rem; padding: 0.75rem; }
+
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-    .modal { background: white; border-radius: 0.75rem; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid #E5E7EB; h2 { font-size: 1.125rem; font-weight: 700; color: #111827; } }
+    .modal { background: white; border-radius: 0.75rem; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid #E5E7EB; flex-shrink: 0; h2 { font-size: 1.125rem; font-weight: 700; color: #111827; } }
     .close-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem; font-size: 1rem; &:hover { color: #374151; } }
-    .modal-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 0.75rem; }
+    .modal-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; flex: 1; min-height: 0; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0; }
+    .btn-danger { background: #DC2626 !important; color: white !important; &:not(:disabled):hover { background: #B91C1C !important; } }
     .form-group { display: flex; flex-direction: column; gap: 0.375rem; position: relative; label { font-size: 0.875rem; font-weight: 500; color: #374151; } input, select { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 0.875rem; width: 100%; box-sizing: border-box; &:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); } } }
+    .input-error { border-color: #EF4444 !important; }
     .required { color: #EF4444; }
     .field-error { font-size: 0.75rem; color: #EF4444; }
     .alert-error { padding: 0.75rem 1rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.5rem; color: #991B1B; font-size: 0.875rem; }
@@ -298,6 +342,43 @@ export class TeamDetailComponent implements OnInit {
   personOptions = signal<PersonOption[]>([]);
   selectedPersonName = signal('');
   addForm: AddMemberRequest = { personId: '', organizationRoleId: '', startDate: '' };
+
+  showEndModal = signal(false);
+  endSaving = signal(false);
+  endSubmitted = signal(false);
+  endError = signal('');
+  endDate = '';
+  endingMember = signal<TeamMember | null>(null);
+
+  openEndMembership(m: TeamMember) {
+    this.endingMember.set(m);
+    this.endDate = new Date().toISOString().slice(0, 10);
+    this.endSubmitted.set(false);
+    this.endError.set('');
+    this.showEndModal.set(true);
+  }
+
+  closeEndModal() { this.showEndModal.set(false); }
+
+  endMembership() {
+    this.endSubmitted.set(true);
+    if (!this.endDate) return;
+    this.endSaving.set(true);
+    this.endError.set('');
+    const teamId = this.route.snapshot.paramMap.get('id');
+    const personId = this.endingMember()!.personId;
+    this.http.delete(`${environment.apiUrl}/teams/${teamId}/members/${personId}?endDate=${this.endDate}`).subscribe({
+      next: () => {
+        this.endSaving.set(false);
+        this.closeEndModal();
+        this.http.get<TeamDetail>(`${environment.apiUrl}/teams/${teamId}`).subscribe(t => this.team.set(t));
+      },
+      error: err => {
+        this.endSaving.set(false);
+        this.endError.set(err.error?.detail ?? 'Üyelik sonlandırılamadı');
+      }
+    });
+  }
 
   activeMembers() {
     return (this.team()?.members ?? []).filter(m => !m.endDate);

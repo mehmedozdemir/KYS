@@ -4,6 +4,7 @@ using Kys.Domain.Interfaces.Repositories;
 using Kys.Domain.Interfaces.Services;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 
 namespace Kys.Application.Auth.Commands.Login;
 
@@ -11,7 +12,8 @@ public sealed class LoginCommandHandler(
     IPersonRepository personRepository,
     IPasswordHasher<Person> passwordHasher,
     IJwtService jwtService,
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    IConfiguration configuration
 ) : IRequestHandler<LoginCommand, LoginResult>
 {
     public async Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -38,17 +40,20 @@ public sealed class LoginCommandHandler(
         }
 
         person.RecordSuccessfulLogin();
-        personRepository.Update(person);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var permissions = person.SystemRoles
             .SelectMany(psr => psr.SystemRole.Permissions)
             .Distinct()
             .ToList();
 
+        var expiryMinutes = int.TryParse(configuration["Jwt:ExpiryMinutes"], out var exp) ? exp : 60;
         var accessToken = jwtService.GenerateAccessToken(person, permissions);
         var refreshToken = jwtService.GenerateRefreshToken();
 
-        return new LoginResult(accessToken, refreshToken, person.Id, person.FullName);
+        person.SetRefreshToken(refreshToken, DateTime.UtcNow.AddDays(30));
+        personRepository.Update(person);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new LoginResult(accessToken, refreshToken, expiryMinutes * 60, person.Id, person.FullName, permissions.AsReadOnly());
     }
 }

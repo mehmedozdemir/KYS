@@ -22,6 +22,8 @@ public sealed class Person : AuditableEntity
     public DateTime? LastLoginAt { get; set; }
     public bool IsLocked { get; set; }
     public int FailedLoginCount { get; set; }
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiresAt { get; set; }
 
     // Custom fields (JSONB)
     public Dictionary<string, object?> CustomFields { get; set; } = [];
@@ -43,6 +45,18 @@ public sealed class Person : AuditableEntity
     {
         FailedLoginCount = 0;
         LastLoginAt = DateTime.UtcNow;
+    }
+
+    public void SetRefreshToken(string token, DateTime expiresAt)
+    {
+        RefreshToken = token;
+        RefreshTokenExpiresAt = expiresAt;
+    }
+
+    public void ClearRefreshToken()
+    {
+        RefreshToken = null;
+        RefreshTokenExpiresAt = null;
     }
 
     public void Terminate(DateOnly terminationDate, string? reason)

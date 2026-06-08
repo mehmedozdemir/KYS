@@ -8,6 +8,17 @@ import { environment } from '../../../../environments/environment';
 // CustomerStatus: 0=Prospect,1=Onboarding,2=Active,3=Inactive,4=Churned
 // UsageMode: 0=SaaS,1=Dedicated
 // CustomerProductStatus: 0=Onboarding,1=Active,2=Inactive,3=Discontinued
+
+interface CustomFieldDef {
+  id: string;
+  fieldKey: string;
+  displayName: string;
+  fieldType: number;
+  isRequired: boolean;
+  defaultValue: string | null;
+  selectOptions: string[] | null;
+  groupName: string | null;
+}
 const CUST_STATUS: Record<number, string> = { 0: 'Potansiyel', 1: 'Onboarding', 2: 'Aktif', 3: 'Pasif', 4: 'Ayrıldı' };
 const CUST_STATUS_CSS: Record<number, string> = { 0: 'badge--prospect', 1: 'badge--onboarding', 2: 'badge--active', 3: 'badge--inactive', 4: 'badge--churned' };
 const USAGE_MODE: Record<number, string> = { 0: 'SaaS', 1: 'Dedicated' };
@@ -122,6 +133,12 @@ interface CustomerDetail {
             @if (customer()!.isArchived) {
               <span class="badge badge--archived">Arşivlendi</span>
             }
+            <button type="button" class="btn-edit" (click)="openStatusChange()">
+              <i class="pi pi-sync"></i> Durum
+            </button>
+            <button type="button" class="btn-edit" (click)="openEdit()">
+              <i class="pi pi-pencil"></i> Düzenle
+            </button>
           </div>
         </div>
 
@@ -171,6 +188,21 @@ interface CustomerDetail {
                 }
               }
             </div>
+
+            @if (customFieldDefs().length) {
+              <div class="custom-fields-section">
+                <h3>Özel Alanlar</h3>
+                <div class="info-grid">
+                  @for (def of customFieldDefs(); track def.id) {
+                    @let val = customer()!.customFields?.[def.fieldKey];
+                    <div class="info-item">
+                      <label>{{ def.displayName }}</label>
+                      <span>{{ cfDisplayValue(def, val) }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
 
             @if (customer()!.primaryContactName) {
               <div class="contact-card">
@@ -356,6 +388,147 @@ interface CustomerDetail {
       </div>
     }
 
+    <!-- Edit Customer Modal -->
+    @if (showEditModal()) {
+      <div class="modal-backdrop" (click)="showEditModal.set(false)">
+        <div class="modal modal--wide" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Müşteriyi Düzenle</h2>
+            <button type="button" class="modal-close" (click)="showEditModal.set(false)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            @if (editError()) {
+              <div class="alert-error">{{ editError() }}</div>
+            }
+            <div class="form-row">
+              <div class="form-group">
+                <label>Müşteri Adı <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="editForm.name" [class.input-error]="editSubmitted() && !editForm.name.trim()" />
+                @if (editSubmitted() && !editForm.name.trim()) {
+                  <span class="error-msg">Zorunlu alan</span>
+                }
+              </div>
+              <div class="form-group">
+                <label>Kısa Ad</label>
+                <input type="text" [(ngModel)]="editForm.shortName" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Sektör</label>
+                <input type="text" [(ngModel)]="editForm.sector" />
+              </div>
+              <div class="form-group">
+                <label>Ülke</label>
+                <input type="text" [(ngModel)]="editForm.country" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Şehir</label>
+                <input type="text" [(ngModel)]="editForm.city" />
+              </div>
+              <div class="form-group"></div>
+            </div>
+            <div class="form-group">
+              <label>Açıklama</label>
+              <textarea [(ngModel)]="editForm.description" rows="2"></textarea>
+            </div>
+            <div class="section-title" style="margin-top:0.5rem">Birincil İletişim</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Ad Soyad</label>
+                <input type="text" [(ngModel)]="editForm.primaryContactName" />
+              </div>
+              <div class="form-group">
+                <label>E-posta</label>
+                <input type="email" [(ngModel)]="editForm.primaryContactEmail" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Telefon</label>
+              <input type="tel" [(ngModel)]="editForm.primaryContactPhone" />
+            </div>
+            @if (customFieldDefs().length) {
+              <div class="section-title" style="margin-top:0.5rem">Özel Alanlar</div>
+              @for (def of customFieldDefs(); track def.id) {
+                <div class="form-group">
+                  <label>{{ def.displayName }} @if (def.isRequired) { <span class="required">*</span> }</label>
+                  @if (def.fieldType === 4) {
+                    <select [(ngModel)]="editCfValues[def.fieldKey]">
+                      <option value="">Seçiniz...</option>
+                      @for (opt of def.selectOptions ?? []; track opt) {
+                        <option [value]="opt">{{ opt }}</option>
+                      }
+                    </select>
+                  } @else if (def.fieldType === 3) {
+                    <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer">
+                      <input type="checkbox" [checked]="editCfValues[def.fieldKey] === 'true'" (change)="editCfValues[def.fieldKey] = $any($event.target).checked ? 'true' : 'false'" />
+                      Evet
+                    </label>
+                  } @else {
+                    <input [type]="cfInputType(def.fieldType)" [(ngModel)]="editCfValues[def.fieldKey]" [placeholder]="def.defaultValue ?? ''" />
+                  }
+                  @if (editSubmitted() && def.isRequired && !editCfValues[def.fieldKey]) {
+                    <span class="error-msg">{{ def.displayName }} zorunludur</span>
+                  }
+                </div>
+              }
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="showEditModal.set(false)">İptal</button>
+            <button type="button" class="btn-save" [disabled]="editSaving()" (click)="saveEdit()">
+              {{ editSaving() ? 'Kaydediliyor...' : 'Kaydet' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Status Change Modal -->
+    @if (showStatusModal()) {
+      <div class="modal-backdrop" (click)="showStatusModal.set(false)">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Durum Değiştir</h2>
+            <button type="button" class="modal-close" (click)="showStatusModal.set(false)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            @if (statusChangeError()) {
+              <div class="alert-error">{{ statusChangeError() }}</div>
+            }
+            <div class="form-group">
+              <label>Yeni Durum <span class="required">*</span></label>
+              <select [(ngModel)]="statusForm.newStatus">
+                <option value="0">Potansiyel</option>
+                <option value="1">Onboarding</option>
+                <option value="2">Aktif</option>
+                <option value="3">Pasif</option>
+                <option value="4">Ayrıldı (Churned)</option>
+              </select>
+            </div>
+            @if (+statusForm.newStatus === 4) {
+              <div class="form-group">
+                <label>Hizmet Bitiş Tarihi</label>
+                <input type="date" [(ngModel)]="statusForm.serviceEndedAt" />
+              </div>
+              <div class="form-group">
+                <label>Ayrılma Nedeni</label>
+                <textarea [(ngModel)]="statusForm.churnReason" rows="3" placeholder="İsteğe bağlı neden..."></textarea>
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="showStatusModal.set(false)">İptal</button>
+            <button type="button" class="btn-save" [disabled]="statusChangeSaving()" (click)="saveStatusChange()">
+              {{ statusChangeSaving() ? 'Kaydediliyor...' : 'Kaydet' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Create Environment Modal -->
     @if (showEnvModal()) {
       <div class="modal-backdrop" (click)="showEnvModal.set(false)">
@@ -410,7 +583,8 @@ interface CustomerDetail {
     .code-badge { background: #F3F4F6; color: #374151; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.8125rem; }
     .header-desc { font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem; }
     .header-meta { display: flex; gap: 0.5rem; font-size: 0.8125rem; color: #9CA3AF; margin-top: 0.25rem; }
-    .header-right { display: flex; gap: 0.5rem; flex-wrap: wrap; padding-top: 0.25rem; }
+    .header-right { display: flex; gap: 0.5rem; flex-wrap: wrap; padding-top: 0.25rem; align-items: center; }
+    .btn-edit { background: white; color: #374151; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.25rem 0.75rem; font-size: 0.8125rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.375rem; &:hover { background: #F9FAFB; border-color: #3B82F6; color: #3B82F6; } }
 
     .tabs { display: flex; gap: 0; border-bottom: 2px solid #E5E7EB; margin-bottom: 1.25rem; }
     .tab-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: none; border: none; font-size: 0.875rem; font-weight: 500; color: #6B7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.15s; &:hover { color: #374151; } &.active { color: #3B82F6; border-bottom-color: #3B82F6; } }
@@ -425,6 +599,7 @@ interface CustomerDetail {
     .span-full { grid-column: 1 / -1; }
     .link { color: #3B82F6; text-decoration: none; &:hover { text-decoration: underline; } }
 
+    .custom-fields-section { margin-top: 1rem; h3 { font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem; } }
     .contact-card { margin-top: 0.5rem; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 0.5rem; padding: 1rem; h3 { font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem; } }
     .contact-info { display: flex; align-items: flex-start; gap: 0.75rem; }
     .contact-avatar { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: #DBEAFE; color: #1D4ED8; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; flex-shrink: 0; }
@@ -479,11 +654,13 @@ interface CustomerDetail {
 
     /* Modal */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-    .modal { background: white; border-radius: 0.75rem; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal { background: white; border-radius: 0.75rem; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; }
+    .modal--wide { max-width: 560px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid #E5E7EB; h2 { font-size: 1.125rem; font-weight: 700; color: #111827; } }
     .modal-close { background: none; border: none; cursor: pointer; color: #6B7280; font-size: 1.25rem; padding: 0.25rem; border-radius: 0.375rem; &:hover { background: #F3F4F6; } }
-    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 0.75rem; }
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; flex: 1; min-height: 0; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0; }
+    .section-title { font-size: 0.8125rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; border-top: 1px solid #F3F4F6; padding-top: 0.75rem; }
     .form-group { display: flex; flex-direction: column; gap: 0.375rem; label { font-size: 0.8125rem; font-weight: 600; color: #374151; } input, select, textarea { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; width: 100%; box-sizing: border-box; resize: vertical; background: white; &:focus { outline: none; border-color: #3B82F6; } } }
     .input-error { border-color: #EF4444 !important; }
     .error-msg { font-size: 0.75rem; color: #EF4444; }
@@ -507,6 +684,41 @@ export class CustomerDetailComponent implements OnInit {
   envLoading = signal(false);
   envTypes = signal<EnvironmentType[]>([]);
   private envTypesLoaded = false;
+
+  // Status change state
+  showStatusModal = signal(false);
+  statusChangeSaving = signal(false);
+  statusChangeError = signal('');
+  statusForm = { newStatus: '2', serviceEndedAt: '', churnReason: '' };
+
+  openStatusChange() {
+    const c = this.customer()!;
+    this.statusForm = { newStatus: String(c.status), serviceEndedAt: '', churnReason: c.churnReason ?? '' };
+    this.statusChangeError.set('');
+    this.showStatusModal.set(true);
+  }
+
+  saveStatusChange() {
+    this.statusChangeSaving.set(true);
+    this.statusChangeError.set('');
+    const id = this.customer()!.id;
+    const newStatus = +this.statusForm.newStatus;
+    this.http.patch(`${environment.apiUrl}/customers/${id}/status`, {
+      newStatus,
+      serviceEndedAt: newStatus === 4 && this.statusForm.serviceEndedAt ? this.statusForm.serviceEndedAt : null,
+      churnReason: newStatus === 4 && this.statusForm.churnReason.trim() ? this.statusForm.churnReason.trim() : null
+    }).subscribe({
+      next: () => {
+        this.statusChangeSaving.set(false);
+        this.showStatusModal.set(false);
+        this.http.get<CustomerDetail>(`${environment.apiUrl}/customers/${id}`).subscribe(c => this.customer.set(c));
+      },
+      error: err => {
+        this.statusChangeSaving.set(false);
+        this.statusChangeError.set(err.error?.detail ?? 'Durum güncellenemedi');
+      }
+    });
+  }
 
   // Add product state
   showAddProductModal = signal(false);
@@ -554,6 +766,119 @@ export class CustomerDetailComponent implements OnInit {
       error: err => {
         this.addProductSaving.set(false);
         this.addProductError.set(err.error?.detail ?? 'Ürün eklenemedi');
+      }
+    });
+  }
+
+  // Custom fields
+  customFieldDefs = signal<CustomFieldDef[]>([]);
+  private cfDefsLoaded = false;
+  editCfValues: Record<string, string> = {};
+
+  private loadCustomFieldDefs(onDone?: () => void): void {
+    if (this.cfDefsLoaded) { onDone?.(); return; }
+    this.http.get<CustomFieldDef[]>(`${environment.apiUrl}/custom-field-definitions?entityType=0`).subscribe({
+      next: defs => {
+        this.customFieldDefs.set(defs);
+        this.cfDefsLoaded = true;
+        onDone?.();
+      }
+    });
+  }
+
+  cfInputType(fieldType: number): string {
+    switch (fieldType) {
+      case 1: return 'number';
+      case 2: return 'date';
+      case 5: return 'url';
+      case 6: return 'email';
+      default: return 'text';
+    }
+  }
+
+  cfDisplayValue(def: CustomFieldDef, val: unknown): string {
+    if (val === undefined || val === null || val === '') return '—';
+    if (def.fieldType === 3) return val ? 'Evet' : 'Hayır';
+    return String(val);
+  }
+
+  private buildCustomFields(defs: CustomFieldDef[], values: Record<string, string>): Record<string, unknown> | null {
+    const result: Record<string, unknown> = {};
+    let hasAny = false;
+    for (const def of defs) {
+      const raw = values[def.fieldKey];
+      if (!raw && raw !== 'false') continue;
+      hasAny = true;
+      if (def.fieldType === 1) result[def.fieldKey] = Number(raw);
+      else if (def.fieldType === 3) result[def.fieldKey] = raw === 'true';
+      else result[def.fieldKey] = raw;
+    }
+    return hasAny ? result : null;
+  }
+
+  // Edit state
+  showEditModal = signal(false);
+  editSaving = signal(false);
+  editSubmitted = signal(false);
+  editError = signal('');
+  editForm = { name: '', shortName: '', description: '', sector: '', country: '', city: '', primaryContactName: '', primaryContactEmail: '', primaryContactPhone: '' };
+
+  openEdit() {
+    const c = this.customer()!;
+    this.editForm = {
+      name: c.name,
+      shortName: c.shortName ?? '',
+      description: c.description ?? '',
+      sector: c.sector ?? '',
+      country: c.country ?? '',
+      city: c.city ?? '',
+      primaryContactName: c.primaryContactName ?? '',
+      primaryContactEmail: c.primaryContactEmail ?? '',
+      primaryContactPhone: c.primaryContactPhone ?? ''
+    };
+    this.editCfValues = {};
+    this.editSubmitted.set(false);
+    this.editError.set('');
+    this.loadCustomFieldDefs(() => {
+      const existing = c.customFields ?? {};
+      for (const def of this.customFieldDefs()) {
+        const val = existing[def.fieldKey];
+        if (val !== undefined && val !== null) {
+          this.editCfValues[def.fieldKey] = def.fieldType === 3 ? (val ? 'true' : 'false') : String(val);
+        }
+      }
+    });
+    this.showEditModal.set(true);
+  }
+
+  saveEdit() {
+    this.editSubmitted.set(true);
+    if (!this.editForm.name.trim()) return;
+    const requiredMissing = this.customFieldDefs().some(d => d.isRequired && !this.editCfValues[d.fieldKey]);
+    if (requiredMissing) return;
+    this.editSaving.set(true);
+    this.editError.set('');
+    const id = this.customer()!.id;
+    this.http.put(`${environment.apiUrl}/customers/${id}`, {
+      name: this.editForm.name.trim(),
+      shortName: this.editForm.shortName.trim() || null,
+      description: this.editForm.description.trim() || null,
+      sector: this.editForm.sector.trim() || null,
+      country: this.editForm.country.trim() || null,
+      city: this.editForm.city.trim() || null,
+      primaryContactName: this.editForm.primaryContactName.trim() || null,
+      primaryContactEmail: this.editForm.primaryContactEmail.trim() || null,
+      primaryContactPhone: this.editForm.primaryContactPhone.trim() || null,
+      customFields: this.buildCustomFields(this.customFieldDefs(), this.editCfValues)
+    }).subscribe({
+      next: () => {
+        this.editSaving.set(false);
+        this.showEditModal.set(false);
+        this.http.get<CustomerDetail>(`${environment.apiUrl}/customers/${id}`).subscribe(c => this.customer.set(c));
+      },
+      error: err => {
+        this.editSaving.set(false);
+        this.editError.set(err.error?.detail ?? 'Güncelleme başarısız');
       }
     });
   }
@@ -678,7 +1003,7 @@ export class CustomerDetailComponent implements OnInit {
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     this.http.get<CustomerDetail>(`${environment.apiUrl}/customers/${id}`).subscribe({
-      next: c => { this.customer.set(c); this.loading.set(false); },
+      next: c => { this.customer.set(c); this.loading.set(false); this.loadCustomFieldDefs(); },
       error: () => this.loading.set(false)
     });
   }

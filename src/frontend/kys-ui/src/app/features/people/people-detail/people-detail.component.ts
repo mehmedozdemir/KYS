@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 
 interface PersonDetail {
@@ -28,7 +29,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
 @Component({
   selector: 'app-people-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule],
   template: `
     <div class="page-content">
       @if (loading()) {
@@ -70,6 +71,12 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
             @if (person()!.isLocked) {
               <span class="badge badge--churned">Kilitli</span>
             }
+            <button type="button" class="btn-edit" (click)="openStatusChange()">
+              <i class="pi pi-sync"></i> Durum
+            </button>
+            <button type="button" class="btn-edit" (click)="openEdit()">
+              <i class="pi pi-pencil"></i> Düzenle
+            </button>
           </div>
         </div>
 
@@ -170,6 +177,101 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
         }
       }
     </div>
+
+    <!-- Employment Status Modal -->
+    @if (showStatusModal()) {
+      <div class="modal-backdrop" (click)="showStatusModal.set(false)">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Çalışma Durumu Değiştir</h2>
+            <button type="button" class="close-btn" (click)="showStatusModal.set(false)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            @if (statusError()) {
+              <div class="alert-error">{{ statusError() }}</div>
+            }
+            <div class="form-group">
+              <label>Yeni Durum <span class="req">*</span></label>
+              <select [(ngModel)]="statusForm.newStatus" style="padding:0.5rem 0.75rem;border:1px solid #D1D5DB;border-radius:0.375rem;font-size:0.875rem;width:100%;box-sizing:border-box;">
+                <option value="0">Aktif</option>
+                <option value="1">İzinde</option>
+                <option value="2">İstifa</option>
+                <option value="3">Ayrıldı</option>
+              </select>
+            </div>
+            @if (+statusForm.newStatus === 2 || +statusForm.newStatus === 3) {
+              <div class="form-group">
+                <label>Ayrılma Tarihi</label>
+                <input type="date" [(ngModel)]="statusForm.terminationDate" />
+              </div>
+              <div class="form-group">
+                <label>Ayrılma Nedeni</label>
+                <input type="text" [(ngModel)]="statusForm.terminationReason" placeholder="İsteğe bağlı..." />
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="showStatusModal.set(false)">İptal</button>
+            <button type="button" class="btn btn-primary" [disabled]="statusSaving()" (click)="saveStatusChange()">
+              {{ statusSaving() ? 'Kaydediliyor...' : 'Kaydet' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Edit Modal -->
+    @if (showEditModal()) {
+      <div class="modal-backdrop" (click)="showEditModal.set(false)">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Kişiyi Düzenle</h2>
+            <button type="button" class="close-btn" (click)="showEditModal.set(false)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            @if (editError()) {
+              <div class="alert-error">{{ editError() }}</div>
+            }
+            <div class="form-row">
+              <div class="form-group">
+                <label>Ad <span class="req">*</span></label>
+                <input type="text" [(ngModel)]="editForm.firstName" [class.input-error]="editSubmitted() && !editForm.firstName.trim()" />
+                @if (editSubmitted() && !editForm.firstName.trim()) {
+                  <span class="field-error">Zorunlu alan</span>
+                }
+              </div>
+              <div class="form-group">
+                <label>Soyad <span class="req">*</span></label>
+                <input type="text" [(ngModel)]="editForm.lastName" [class.input-error]="editSubmitted() && !editForm.lastName.trim()" />
+                @if (editSubmitted() && !editForm.lastName.trim()) {
+                  <span class="field-error">Zorunlu alan</span>
+                }
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Unvan</label>
+                <input type="text" [(ngModel)]="editForm.title" placeholder="ör. Senior Developer" />
+              </div>
+              <div class="form-group">
+                <label>Telefon</label>
+                <input type="tel" [(ngModel)]="editForm.phone" placeholder="ör. +90 555 123 4567" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>İşe Başlama Tarihi</label>
+              <input type="date" [(ngModel)]="editForm.hireDate" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="showEditModal.set(false)">İptal</button>
+            <button type="button" class="btn btn-primary" [disabled]="editSaving()" (click)="saveEdit()">
+              {{ editSaving() ? 'Kaydediliyor...' : 'Kaydet' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .loading-state { text-align: center; padding: 4rem; color: #9CA3AF; }
@@ -202,7 +304,8 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       span { font-size: 0.8125rem; color: #6B7280; display: flex; align-items: center; gap: 0.375rem; }
       i { font-size: 0.75rem; }
     }
-    .header-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; padding-top: 0.25rem; }
+    .header-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; padding-top: 0.25rem; align-items: center; }
+    .btn-edit { background: white; color: #374151; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.25rem 0.75rem; font-size: 0.8125rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.375rem; &:hover { background: #F9FAFB; border-color: #3B82F6; color: #3B82F6; } }
 
     .tabs {
       display: flex; gap: 0; border-bottom: 2px solid #E5E7EB;
@@ -270,6 +373,22 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       background: #EEF2FF; color: #4F46E5;
       padding: 0.125rem 0.5rem; border-radius: 9999px;
     }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; &:disabled { opacity: 0.6; cursor: not-allowed; } }
+    .btn-primary { background: #3B82F6 !important; color: #ffffff !important; &:not(:disabled):hover { background: #2563EB !important; } }
+    .btn-secondary { background: white; color: #374151; border: 1px solid #D1D5DB; &:hover { background: #F3F4F6; } }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal { background: white; border-radius: 0.75rem; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid #E5E7EB; flex-shrink: 0; h2 { font-size: 1.125rem; font-weight: 700; color: #111827; } }
+    .close-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem; font-size: 1rem; &:hover { color: #374151; } }
+    .modal-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; flex: 1; min-height: 0; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.375rem; label { font-size: 0.875rem; font-weight: 500; color: #374151; } input { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; width: 100%; box-sizing: border-box; &:focus { outline: none; border-color: #3B82F6; } } }
+    .input-error { border-color: #EF4444 !important; }
+    .field-error { font-size: 0.75rem; color: #EF4444; }
+    .req { color: #EF4444; }
+    .alert-error { padding: 0.75rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.375rem; color: #991B1B; font-size: 0.8125rem; }
   `]
 })
 export class PeopleDetailComponent implements OnInit {
@@ -280,11 +399,91 @@ export class PeopleDetailComponent implements OnInit {
   loading = signal(true);
   activeTab = signal<'info' | 'teams' | 'roles'>('info');
 
+  showStatusModal = signal(false);
+  statusSaving = signal(false);
+  statusError = signal('');
+  statusForm = { newStatus: '0', terminationDate: '', terminationReason: '' };
+
+  openStatusChange() {
+    const p = this.person()!;
+    this.statusForm = { newStatus: String(p.employmentStatus), terminationDate: '', terminationReason: '' };
+    this.statusError.set('');
+    this.showStatusModal.set(true);
+  }
+
+  saveStatusChange() {
+    this.statusSaving.set(true);
+    this.statusError.set('');
+    const id = this.route.snapshot.paramMap.get('id');
+    const newStatus = +this.statusForm.newStatus;
+    const needsTermination = newStatus === 2 || newStatus === 3;
+    this.http.patch(`${environment.apiUrl}/people/${id}/employment-status`, {
+      newStatus,
+      terminationDate: needsTermination && this.statusForm.terminationDate ? this.statusForm.terminationDate : null,
+      terminationReason: needsTermination && this.statusForm.terminationReason.trim() ? this.statusForm.terminationReason.trim() : null
+    }).subscribe({
+      next: () => {
+        this.statusSaving.set(false);
+        this.showStatusModal.set(false);
+        this.http.get<PersonDetail>(`${environment.apiUrl}/people/${id}`).subscribe(p => this.person.set(p));
+      },
+      error: err => {
+        this.statusSaving.set(false);
+        this.statusError.set(err.error?.detail ?? 'Durum güncellenemedi');
+      }
+    });
+  }
+
+  showEditModal = signal(false);
+  editSaving = signal(false);
+  editSubmitted = signal(false);
+  editError = signal('');
+  editForm = { firstName: '', lastName: '', title: '', phone: '', hireDate: '' };
+
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     this.http.get<PersonDetail>(`${environment.apiUrl}/people/${id}`).subscribe({
       next: p => { this.person.set(p); this.loading.set(false); },
       error: () => this.loading.set(false)
+    });
+  }
+
+  openEdit() {
+    const p = this.person()!;
+    this.editForm = {
+      firstName: p.firstName,
+      lastName: p.lastName,
+      title: p.title ?? '',
+      phone: p.phone ?? '',
+      hireDate: p.hireDate ? p.hireDate.slice(0, 10) : ''
+    };
+    this.editSubmitted.set(false);
+    this.editError.set('');
+    this.showEditModal.set(true);
+  }
+
+  saveEdit() {
+    this.editSubmitted.set(true);
+    if (!this.editForm.firstName.trim() || !this.editForm.lastName.trim()) return;
+    this.editSaving.set(true);
+    this.editError.set('');
+    const id = this.route.snapshot.paramMap.get('id');
+    this.http.patch(`${environment.apiUrl}/people/${id}`, {
+      firstName: this.editForm.firstName.trim(),
+      lastName: this.editForm.lastName.trim(),
+      title: this.editForm.title.trim() || null,
+      phone: this.editForm.phone.trim() || null,
+      hireDate: this.editForm.hireDate || null
+    }).subscribe({
+      next: () => {
+        this.editSaving.set(false);
+        this.showEditModal.set(false);
+        this.http.get<PersonDetail>(`${environment.apiUrl}/people/${id}`).subscribe(p => this.person.set(p));
+      },
+      error: err => {
+        this.editSaving.set(false);
+        this.editError.set(err.error?.detail ?? 'Güncelleme başarısız');
+      }
     });
   }
 

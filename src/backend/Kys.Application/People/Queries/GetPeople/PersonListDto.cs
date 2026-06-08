@@ -9,7 +9,8 @@ public sealed record PersonListDto(
     string Email,
     string? Title,
     EmploymentStatus EmploymentStatus,
-    bool IsPlatformUser
+    bool IsPlatformUser,
+    bool IsLocked
 );
 
 public sealed record GetPeopleResult(

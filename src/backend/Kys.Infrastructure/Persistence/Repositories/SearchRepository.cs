@@ -1,15 +1,14 @@
 using Dapper;
 using Kys.Domain.Interfaces.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace Kys.Infrastructure.Persistence.Repositories;
 
-public sealed class SearchRepository(AppDbContext db) : ISearchRepository
+public sealed class SearchRepository(NpgsqlDataSource dataSource) : ISearchRepository
 {
     public async Task<IReadOnlyList<SearchResult>> SearchCustomersAsync(string query, int limit, CancellationToken ct = default)
     {
-        await using var conn = new NpgsqlConnection(db.Database.GetConnectionString());
+        await using var conn = dataSource.CreateConnection();
         await conn.OpenAsync(ct);
 
         var results = await conn.QueryAsync<SearchResult>("""
@@ -27,7 +26,7 @@ public sealed class SearchRepository(AppDbContext db) : ISearchRepository
 
     public async Task<IReadOnlyList<SearchResult>> SearchProductsAsync(string query, int limit, CancellationToken ct = default)
     {
-        await using var conn = new NpgsqlConnection(db.Database.GetConnectionString());
+        await using var conn = dataSource.CreateConnection();
         await conn.OpenAsync(ct);
 
         var results = await conn.QueryAsync<SearchResult>("""
@@ -44,7 +43,7 @@ public sealed class SearchRepository(AppDbContext db) : ISearchRepository
 
     public async Task<IReadOnlyList<SearchResult>> SearchPeopleAsync(string query, int limit, CancellationToken ct = default)
     {
-        await using var conn = new NpgsqlConnection(db.Database.GetConnectionString());
+        await using var conn = dataSource.CreateConnection();
         await conn.OpenAsync(ct);
 
         var results = await conn.QueryAsync<SearchResult>("""
@@ -65,7 +64,7 @@ public sealed class SearchRepository(AppDbContext db) : ISearchRepository
 
     public async Task<IReadOnlyList<SearchResult>> SearchTeamsAsync(string query, int limit, CancellationToken ct = default)
     {
-        await using var conn = new NpgsqlConnection(db.Database.GetConnectionString());
+        await using var conn = dataSource.CreateConnection();
         await conn.OpenAsync(ct);
 
         var results = await conn.QueryAsync<SearchResult>("""
@@ -82,7 +81,7 @@ public sealed class SearchRepository(AppDbContext db) : ISearchRepository
 
     public async Task<IReadOnlyList<SearchResult>> SearchKbArticlesAsync(string query, int limit, CancellationToken ct = default)
     {
-        await using var conn = new NpgsqlConnection(db.Database.GetConnectionString());
+        await using var conn = dataSource.CreateConnection();
         await conn.OpenAsync(ct);
 
         var results = await conn.QueryAsync<SearchResult>("""

@@ -1,15 +1,14 @@
 using Dapper;
 using Kys.Domain.Interfaces.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace Kys.Infrastructure.Persistence.Repositories;
 
-public sealed class DashboardRepository(AppDbContext db) : IDashboardRepository
+public sealed class DashboardRepository(NpgsqlDataSource dataSource) : IDashboardRepository
 {
     public async Task<DashboardStatsResult> GetStatsAsync(CancellationToken ct = default)
     {
-        await using var conn = new NpgsqlConnection(db.Database.GetConnectionString());
+        await using var conn = dataSource.CreateConnection();
         await conn.OpenAsync(ct);
 
         var result = await conn.QuerySingleAsync<DashboardStatsResult>("""
@@ -29,7 +28,7 @@ public sealed class DashboardRepository(AppDbContext db) : IDashboardRepository
 
     public async Task<IReadOnlyList<RecentActivityResult>> GetRecentActivitiesAsync(int count, CancellationToken ct = default)
     {
-        await using var conn = new NpgsqlConnection(db.Database.GetConnectionString());
+        await using var conn = dataSource.CreateConnection();
         await conn.OpenAsync(ct);
 
         var results = await conn.QueryAsync<RecentActivityResult>("""

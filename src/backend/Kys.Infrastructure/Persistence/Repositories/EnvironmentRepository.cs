@@ -30,8 +30,14 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
             .Include(x => x.Resources)
                 .ThenInclude(r => r.ProductResourceTemplate)
                     .ThenInclude(t => t.ResourceType)
+            .Include(x => x.Resources)
+                .ThenInclude(r => r.Credentials)
             .Include(x => x.Endpoints)
                 .ThenInclude(e => e.ProductEndpoint)
+            .Include(x => x.CustomerProduct)
+                .ThenInclude(cp => cp.Product)
+                    .ThenInclude(p => p.ResourceTemplates)
+                        .ThenInclude(rt => rt.ResourceType)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public async Task AddCustomerEnvironmentAsync(CustomerEnvironment environment, CancellationToken ct = default)

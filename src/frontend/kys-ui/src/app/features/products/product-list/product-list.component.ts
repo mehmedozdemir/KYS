@@ -5,6 +5,16 @@ import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+interface CustomFieldDef {
+  id: string;
+  fieldKey: string;
+  displayName: string;
+  fieldType: number;
+  isRequired: boolean;
+  defaultValue: string | null;
+  selectOptions: string[] | null;
+}
+
 // 0=SaaS, 1=CustomerBased, 2=Hybrid | 0=Active, 1=Deprecated, 2=Discontinued
 const TYPE_LABELS: Record<number, string> = { 0: 'SaaS', 1: 'Müşteriye Özel', 2: 'Hibrit' };
 const TYPE_CSS: Record<number, string> = { 0: 'badge--saas', 1: 'badge--custom', 2: 'badge--hybrid' };
@@ -47,7 +57,7 @@ interface CreateProductForm {
           <h1 class="page-title">Ürünler</h1>
           <p class="page-subtitle">{{ totalCount() }} ürün</p>
         </div>
-        <button class="btn btn-primary" (click)="showModal.set(true)">
+        <button class="btn btn-primary" (click)="openModal()">
           <i class="pi pi-plus"></i> Yeni Ürün
         </button>
       </div>
@@ -155,10 +165,57 @@ interface CreateProductForm {
                 <option [value]="2">Hibrit — SaaS + özel ortam</option>
               </select>
             </div>
+            <div class="form-group" style="position:relative">
+              <label>Ürün Sahibi</label>
+              <input type="text" placeholder="İsim veya e-posta ara..."
+                [(ngModel)]="poSearch" (ngModelChange)="searchPo($event)" [disabled]="!!poPersonId" />
+              @if (poOptions().length) {
+                <div class="dropdown">
+                  @for (p of poOptions(); track p.id) {
+                    <div class="dropdown-item" (click)="selectPo(p)">
+                      <span class="di-name">{{ p.name }}</span>
+                      <span class="di-email">{{ p.email }}</span>
+                    </div>
+                  }
+                </div>
+              }
+              @if (poPersonId) {
+                <div class="selected-hint">
+                  <i class="pi pi-check-circle"></i> {{ poName }}
+                  <button type="button" class="clear-btn" (click)="clearPo()">×</button>
+                </div>
+              }
+            </div>
             <div class="form-group">
               <label>Açıklama</label>
               <textarea [(ngModel)]="form.description" placeholder="Ürün hakkında kısa açıklama" rows="3"></textarea>
             </div>
+            @if (customFieldDefs().length) {
+              <div class="section-title">Özel Alanlar</div>
+              @for (def of customFieldDefs(); track def.id) {
+                <div class="form-group">
+                  <label>{{ def.displayName }} @if (def.isRequired) { <span class="required">*</span> }</label>
+                  @if (def.fieldType === 4) {
+                    <select [(ngModel)]="cfValues[def.fieldKey]">
+                      <option value="">Seçiniz...</option>
+                      @for (opt of def.selectOptions ?? []; track opt) {
+                        <option [value]="opt">{{ opt }}</option>
+                      }
+                    </select>
+                  } @else if (def.fieldType === 3) {
+                    <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer">
+                      <input type="checkbox" [checked]="cfValues[def.fieldKey] === 'true'" (change)="cfValues[def.fieldKey] = $any($event.target).checked ? 'true' : 'false'" />
+                      Evet
+                    </label>
+                  } @else {
+                    <input [type]="cfInputType(def.fieldType)" [(ngModel)]="cfValues[def.fieldKey]" [placeholder]="def.defaultValue ?? ''" />
+                  }
+                  @if (submitted() && def.isRequired && !cfValues[def.fieldKey]) {
+                    <span class="field-error">{{ def.displayName }} zorunludur</span>
+                  }
+                </div>
+              }
+            }
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" (click)="closeModal()">İptal</button>
@@ -224,6 +281,13 @@ interface CreateProductForm {
     .required { color: #EF4444; }
     .field-error { font-size: 0.75rem; color: #EF4444; }
     .alert-error { padding: 0.75rem 1rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.5rem; color: #991B1B; font-size: 0.875rem; }
+    .section-title { font-size: 0.8125rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; border-top: 1px solid #F3F4F6; padding-top: 0.75rem; margin-top: 0.25rem; }
+    .dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #E5E7EB; border-radius: 0.5rem; z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.12); max-height: 180px; overflow-y: auto; margin-top: 2px; }
+    .dropdown-item { padding: 0.5rem 0.75rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.125rem; &:hover { background: #F3F4F6; } }
+    .di-name { font-size: 0.875rem; font-weight: 500; color: #111827; }
+    .di-email { font-size: 0.75rem; color: #9CA3AF; }
+    .selected-hint { font-size: 0.8125rem; color: #059669; display: flex; align-items: center; gap: 0.375rem; margin-top: 0.375rem; }
+    .clear-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; font-size: 1rem; padding: 0 0.25rem; line-height: 1; &:hover { color: #EF4444; } }
   `]
 })
 export class ProductListComponent implements OnInit {
@@ -246,6 +310,71 @@ export class ProductListComponent implements OnInit {
   submitted = signal(false);
   createError = signal('');
   form: CreateProductForm = { name: '', code: '', productType: 0, description: '' };
+
+  poSearch = '';
+  poPersonId = '';
+  poName = '';
+  poOptions = signal<{ id: string; name: string; email: string }[]>([]);
+
+  searchPo(query: string): void {
+    if (!query.trim()) { this.poOptions.set([]); return; }
+    this.http.get<{ items: { id: string; firstName: string; lastName: string; email: string }[] }>(
+      `${environment.apiUrl}/people?search=${encodeURIComponent(query)}&pageSize=8`
+    ).subscribe({ next: r => this.poOptions.set(r.items.map(p => ({ id: p.id, name: `${p.firstName} ${p.lastName}`, email: p.email }))) });
+  }
+
+  selectPo(p: { id: string; name: string; email: string }): void {
+    this.poPersonId = p.id;
+    this.poName = p.name;
+    this.poSearch = '';
+    this.poOptions.set([]);
+  }
+
+  clearPo(): void {
+    this.poPersonId = '';
+    this.poName = '';
+    this.poSearch = '';
+    this.poOptions.set([]);
+  }
+
+  customFieldDefs = signal<CustomFieldDef[]>([]);
+  private cfLoaded = false;
+  cfValues: Record<string, string> = {};
+
+  openModal(): void {
+    this.showModal.set(true);
+    if (!this.cfLoaded) {
+      this.http.get<CustomFieldDef[]>(`${environment.apiUrl}/custom-field-definitions?entityType=1`).subscribe({
+        next: defs => { this.customFieldDefs.set(defs); this.cfLoaded = true; }
+      });
+    }
+  }
+
+  cfInputType(fieldType: number): string {
+    switch (fieldType) {
+      case 1: return 'number';
+      case 2: return 'date';
+      case 5: return 'url';
+      case 6: return 'email';
+      default: return 'text';
+    }
+  }
+
+  private buildCustomFields(): Record<string, unknown> | null {
+    const defs = this.customFieldDefs();
+    if (!defs.length) return null;
+    const result: Record<string, unknown> = {};
+    let hasAny = false;
+    for (const def of defs) {
+      const raw = this.cfValues[def.fieldKey];
+      if (!raw && raw !== 'false') continue;
+      hasAny = true;
+      if (def.fieldType === 1) result[def.fieldKey] = Number(raw);
+      else if (def.fieldType === 3) result[def.fieldKey] = raw === 'true';
+      else result[def.fieldKey] = raw;
+    }
+    return hasAny ? result : null;
+  }
 
   typeLabel(t: number) { return TYPE_LABELS[t] ?? t; }
   typeCss(t: number) { return TYPE_CSS[t] ?? ''; }
@@ -284,19 +413,25 @@ export class ProductListComponent implements OnInit {
     this.showModal.set(false);
     this.submitted.set(false);
     this.createError.set('');
+    this.cfValues = {};
+    this.clearPo();
     this.form = { name: '', code: '', productType: 0, description: '' };
   }
 
   create() {
     this.submitted.set(true);
     if (!this.form.name.trim() || !this.form.code.trim()) return;
+    const requiredMissing = this.customFieldDefs().some(d => d.isRequired && !this.cfValues[d.fieldKey]);
+    if (requiredMissing) return;
     this.saving.set(true);
     this.createError.set('');
     const body = {
       name: this.form.name,
       code: this.form.code.toUpperCase(),
       productType: Number(this.form.productType),
-      description: this.form.description || null
+      description: this.form.description || null,
+      poPersonId: this.poPersonId || null,
+      customFields: this.buildCustomFields()
     };
     this.http.post(`${environment.apiUrl}/products`, body).subscribe({
       next: () => { this.saving.set(false); this.closeModal(); this.page.set(1); this.load(); },

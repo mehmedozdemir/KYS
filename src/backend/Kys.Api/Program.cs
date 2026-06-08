@@ -50,8 +50,8 @@ try
         });
     }
 
-    app.UseHttpsRedirection();
     app.UseCors("AllowFrontend");
+    app.UseHttpsRedirection();
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();

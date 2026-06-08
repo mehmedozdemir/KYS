@@ -8,9 +8,9 @@ public sealed class TeamRepository(AppDbContext db) : ITeamRepository
 {
     public async Task<Team?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await db.Teams
-            .Include(t => t.Memberships.Where(m => m.EndDate == null))
+            .Include(t => t.Memberships)
                 .ThenInclude(m => m.Person)
-            .Include(t => t.Memberships.Where(m => m.EndDate == null))
+            .Include(t => t.Memberships)
                 .ThenInclude(m => m.OrganizationRole)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 

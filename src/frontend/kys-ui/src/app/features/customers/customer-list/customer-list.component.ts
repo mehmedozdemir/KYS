@@ -5,13 +5,27 @@ import { FormsModule } from '@angular/forms';
 import { NgClass, DatePipe } from '@angular/common';
 import { environment } from '../../../../environments/environment';
 
+const STATUS_LABEL: Record<number, string> = { 0: 'Potansiyel', 1: 'Onboarding', 2: 'Aktif', 3: 'Pasif', 4: 'Ayrıldı' };
+const STATUS_CSS: Record<number, string> = { 0: 'badge--prospect', 1: 'badge--onboarding', 2: 'badge--active', 3: 'badge--inactive', 4: 'badge--churned' };
+
+interface CustomFieldDef {
+  id: string;
+  fieldKey: string;
+  displayName: string;
+  fieldType: number; // 0=Text,1=Number,2=Date,3=Boolean,4=Select,5=Url,6=Email
+  isRequired: boolean;
+  defaultValue: string | null;
+  selectOptions: string[] | null;
+  groupName: string | null;
+}
+
 interface Customer {
   id: string;
   name: string;
   code: string;
-  status: string;
-  industry: string;
-  goLiveDate: string | null;
+  shortName: string | null;
+  status: number;
+  productionLiveAt: string | null;
   productCount: number;
   isArchived: boolean;
 }
@@ -24,7 +38,7 @@ interface Customer {
     <div class="page-content">
       <div class="flex-between" style="margin-bottom:1.5rem">
         <h1 style="font-size:1.5rem;font-weight:700;color:#111827">Müşteriler</h1>
-        <button class="btn-primary-sm" (click)="showModal.set(true)">
+        <button class="btn-primary-sm" (click)="openModal()">
           <i class="pi pi-plus"></i> Yeni Müşteri
         </button>
       </div>
@@ -36,11 +50,11 @@ interface Customer {
           class="search-input" />
         <select [(ngModel)]="statusFilter" (ngModelChange)="onSearch()" class="select-input">
           <option value="">Tüm Durumlar</option>
-          <option value="Active">Aktif</option>
-          <option value="Onboarding">Onboarding</option>
-          <option value="Pilot">Pilot</option>
-          <option value="Suspended">Askıya Alındı</option>
-          <option value="Churned">Churn</option>
+          <option value="0">Potansiyel</option>
+          <option value="1">Onboarding</option>
+          <option value="2">Aktif</option>
+          <option value="3">Pasif</option>
+          <option value="4">Ayrıldı</option>
         </select>
         <label class="checkbox-label">
           <input type="checkbox" [(ngModel)]="includeArchived" (ngModelChange)="onSearch()" />
@@ -54,7 +68,6 @@ interface Customer {
             <tr>
               <th>Müşteri</th>
               <th>Durum</th>
-              <th>Sektör</th>
               <th>Go-Live</th>
               <th>Ürünler</th>
             </tr>
@@ -64,18 +77,17 @@ interface Customer {
               <tr [routerLink]="['/customers', c.id]" class="table-row">
                 <td>
                   <div style="font-weight:500;color:#111827">{{ c.name }}</div>
-                  <div style="font-size:0.75rem;color:#6B7280">{{ c.code }}</div>
+                  <div style="font-size:0.75rem;color:#6B7280">{{ c.code }}{{ c.shortName ? ' · ' + c.shortName : '' }}</div>
                 </td>
                 <td>
-                  <span [ngClass]="'badge badge--' + c.status.toLowerCase()">{{ statusLabel(c.status) }}</span>
+                  <span class="badge" [ngClass]="statusCss(c.status)">{{ statusLabel(c.status) }}</span>
                 </td>
-                <td>{{ c.industry || '—' }}</td>
-                <td>{{ c.goLiveDate ? (c.goLiveDate | date:'dd.MM.yyyy') : '—' }}</td>
+                <td>{{ c.productionLiveAt ? (c.productionLiveAt | date:'dd.MM.yyyy') : '—' }}</td>
                 <td>{{ c.productCount }}</td>
               </tr>
             }
             @empty {
-              <tr><td colspan="5" style="text-align:center;color:#9CA3AF;padding:2rem">Müşteri bulunamadı.</td></tr>
+              <tr><td colspan="4" style="text-align:center;color:#9CA3AF;padding:2rem">Müşteri bulunamadı.</td></tr>
             }
           </tbody>
         </table>
@@ -88,7 +100,7 @@ interface Customer {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>Yeni Müşteri</h2>
-            <button class="modal-close" (click)="closeModal()"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="closeModal()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <div class="form-row">
@@ -142,13 +154,42 @@ interface Customer {
                 <input type="email" [(ngModel)]="form.primaryContactEmail" />
               </div>
             </div>
+            @if (customFieldDefs().length) {
+              <div class="section-title">Özel Alanlar</div>
+              @for (def of customFieldDefs(); track def.id) {
+                <div class="form-group">
+                  <label>{{ def.displayName }} @if (def.isRequired) { <span class="required">*</span> }</label>
+                  @if (def.fieldType === 4) {
+                    <select [(ngModel)]="cfValues[def.fieldKey]">
+                      <option value="">Seçiniz...</option>
+                      @for (opt of def.selectOptions ?? []; track opt) {
+                        <option [value]="opt">{{ opt }}</option>
+                      }
+                    </select>
+                  } @else if (def.fieldType === 3) {
+                    <label class="checkbox-label" style="font-weight:400">
+                      <input type="checkbox" [checked]="cfValues[def.fieldKey] === 'true'" (change)="cfValues[def.fieldKey] = $any($event.target).checked ? 'true' : 'false'" />
+                      Evet
+                    </label>
+                  } @else {
+                    <input
+                      [type]="cfInputType(def.fieldType)"
+                      [(ngModel)]="cfValues[def.fieldKey]"
+                      [placeholder]="def.defaultValue ?? ''" />
+                  }
+                  @if (submitted() && def.isRequired && !cfValues[def.fieldKey]) {
+                    <span class="error-msg">{{ def.displayName }} zorunludur</span>
+                  }
+                </div>
+              }
+            }
             @if (saveError()) {
               <div class="alert-error">{{ saveError() }}</div>
             }
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="closeModal()">İptal</button>
-            <button class="btn btn-primary" [disabled]="saving()" (click)="save()">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">İptal</button>
+            <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
               {{ saving() ? 'Kaydediliyor...' : 'Oluştur' }}
             </button>
           </div>
@@ -211,7 +252,7 @@ interface Customer {
     .modal {
       background: white; border-radius: 0.75rem; width: 100%; max-width: 560px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column;
-      max-height: 90vh;
+      max-height: 90vh; overflow: hidden;
     }
     .modal-header {
       display: flex; justify-content: space-between; align-items: center;
@@ -219,8 +260,8 @@ interface Customer {
       h2 { font-size: 1.125rem; font-weight: 700; color: #111827; }
     }
     .modal-close { background: none; border: none; cursor: pointer; color: #6B7280; font-size: 1.25rem; padding: 0.25rem; border-radius: 0.375rem; &:hover { background: #F3F4F6; } }
-    .modal-body { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
-    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 0.75rem; }
+    .modal-body { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; flex: 1; min-height: 0; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0; }
 
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .form-group {
@@ -238,9 +279,15 @@ interface Customer {
     .required { color: #EF4444; }
     .section-title { font-size: 0.8125rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; border-top: 1px solid #F3F4F6; padding-top: 0.75rem; }
     .alert-error { padding: 0.75rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.375rem; color: #991B1B; font-size: 0.8125rem; }
-    .btn { padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; &:disabled { opacity: 0.6; cursor: not-allowed; } }
-    .btn-primary { background: #3B82F6; color: white; &:not(:disabled):hover { background: #2563EB; } }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; line-height: 1.5; &:disabled { opacity: 0.6; cursor: not-allowed; } }
+    .btn-primary { background: #3B82F6 !important; color: #ffffff !important; &:not(:disabled):hover { background: #2563EB !important; } }
     .btn-secondary { background: white; color: #374151; border: 1px solid #D1D5DB; &:hover { background: #F3F4F6; } }
+    .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .badge--prospect { background: #F3F4F6; color: #6B7280; }
+    .badge--onboarding { background: #DBEAFE; color: #1E40AF; }
+    .badge--active { background: #D1FAE5; color: #065F46; }
+    .badge--inactive { background: #FEF3C7; color: #92400E; }
+    .badge--churned { background: #FEE2E2; color: #991B1B; }
   `]
 })
 export class CustomerListComponent implements OnInit {
@@ -257,6 +304,10 @@ export class CustomerListComponent implements OnInit {
   submitted = signal(false);
   saving = signal(false);
   saveError = signal('');
+
+  customFieldDefs = signal<CustomFieldDef[]>([]);
+  private cfLoaded = false;
+  cfValues: Record<string, string> = {};
 
   form = {
     name: '',
@@ -294,10 +345,20 @@ export class CustomerListComponent implements OnInit {
     });
   }
 
+  openModal(): void {
+    this.showModal.set(true);
+    if (!this.cfLoaded) {
+      this.http.get<CustomFieldDef[]>(`${environment.apiUrl}/custom-field-definitions?entityType=0`).subscribe({
+        next: defs => { this.customFieldDefs.set(defs); this.cfLoaded = true; }
+      });
+    }
+  }
+
   closeModal(): void {
     this.showModal.set(false);
     this.submitted.set(false);
     this.saveError.set('');
+    this.cfValues = {};
     this.form = {
       name: '', code: '', shortName: '', sector: '',
       country: '', city: '', description: '',
@@ -305,9 +366,37 @@ export class CustomerListComponent implements OnInit {
     };
   }
 
+  cfInputType(fieldType: number): string {
+    switch (fieldType) {
+      case 1: return 'number';
+      case 2: return 'date';
+      case 5: return 'url';
+      case 6: return 'email';
+      default: return 'text';
+    }
+  }
+
+  private buildCustomFields(): Record<string, unknown> | null {
+    const defs = this.customFieldDefs();
+    if (!defs.length) return null;
+    const result: Record<string, unknown> = {};
+    let hasAny = false;
+    for (const def of defs) {
+      const raw = this.cfValues[def.fieldKey];
+      if (!raw && raw !== 'false') continue;
+      hasAny = true;
+      if (def.fieldType === 1) result[def.fieldKey] = Number(raw);
+      else if (def.fieldType === 3) result[def.fieldKey] = raw === 'true';
+      else result[def.fieldKey] = raw;
+    }
+    return hasAny ? result : null;
+  }
+
   save(): void {
     this.submitted.set(true);
     if (!this.form.name.trim() || !this.form.code.trim()) return;
+    const requiredMissing = this.customFieldDefs().some(d => d.isRequired && !this.cfValues[d.fieldKey]);
+    if (requiredMissing) return;
 
     this.saving.set(true);
     this.saveError.set('');
@@ -323,7 +412,7 @@ export class CustomerListComponent implements OnInit {
       primaryContactName: this.form.primaryContactName.trim() || null,
       primaryContactEmail: this.form.primaryContactEmail.trim() || null,
       primaryContactPhone: null,
-      customFields: null,
+      customFields: this.buildCustomFields(),
     };
 
     this.http.post<{ id: string }>(`${environment.apiUrl}/customers`, body).subscribe({
@@ -339,11 +428,6 @@ export class CustomerListComponent implements OnInit {
     });
   }
 
-  statusLabel(status: string): string {
-    const map: Record<string, string> = {
-      Active: 'Aktif', Onboarding: 'Onboarding', Pilot: 'Pilot',
-      Suspended: 'Askıda', Churned: 'Churn', Archived: 'Arşiv'
-    };
-    return map[status] ?? status;
-  }
+  statusLabel(s: number) { return STATUS_LABEL[s] ?? String(s); }
+  statusCss(s: number) { return STATUS_CSS[s] ?? ''; }
 }

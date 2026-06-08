@@ -23,10 +23,12 @@ public static class DependencyInjection
         services.AddScoped<TimestampInterceptor>();
         services.AddScoped<AuditLogInterceptor>();
 
-        var dataSource = new Npgsql.NpgsqlDataSourceBuilder(
+        var dataSource = new NpgsqlDataSourceBuilder(
                 configuration.GetConnectionString("DefaultConnection"))
             .EnableDynamicJson()
             .Build();
+
+        services.AddSingleton(dataSource);
 
         services.AddDbContext<AppDbContext>((sp, options) =>
         {

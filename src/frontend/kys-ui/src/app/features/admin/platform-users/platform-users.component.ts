@@ -13,6 +13,7 @@ interface PersonItem {
   title: string | null;
   employmentStatus: number;
   isPlatformUser: boolean;
+  isLocked: boolean;
 }
 
 interface SystemRole {
@@ -86,6 +87,9 @@ const ROLE_COLOR: Record<string, string> = {
                   </td>
                   <td class="text-muted">{{ p.title ?? '—' }}</td>
                   <td>
+                    @if (p.isLocked) {
+                      <span class="locked-badge"><i class="pi pi-lock"></i> Kilitli</span>
+                    }
                     @let roles = rolesMap().get(p.id);
                     @if (roles === undefined) {
                       <button class="load-roles-btn" (click)="loadRoles(p.id)">Rolleri yükle</button>
@@ -105,9 +109,19 @@ const ROLE_COLOR: Record<string, string> = {
                     }
                   </td>
                   <td class="action-cell">
-                    <button class="btn-sm" (click)="openAssignRole(p.id)">
-                      <i class="pi pi-user-edit"></i> Rol Ekle
-                    </button>
+                    <div class="action-group">
+                      <button class="btn-sm" (click)="openAssignRole(p.id)">
+                        <i class="pi pi-user-edit"></i> Rol Ekle
+                      </button>
+                      <button class="btn-sm" (click)="openResetPassword(p.id, p.firstName + ' ' + p.lastName)">
+                        <i class="pi pi-key"></i> Şifre
+                      </button>
+                      @if (p.isLocked) {
+                        <button class="btn-sm btn-warning" (click)="unlockAccount(p.id)">
+                          <i class="pi pi-lock-open"></i> Kilidi Aç
+                        </button>
+                      }
+                    </div>
                   </td>
                 </tr>
               }
@@ -149,6 +163,47 @@ const ROLE_COLOR: Record<string, string> = {
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" (click)="assignModal.set(null)">Kapat</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Reset Password Modal -->
+    @if (resetModal()) {
+      <div class="modal-backdrop" (click)="resetModal.set(null)">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Şifre Sıfırla — {{ resetModal()!.name }}</h2>
+            <button class="close-btn" (click)="resetModal.set(null)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body" style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem">
+            @if (resetError()) {
+              <div class="alert-error">{{ resetError() }}</div>
+            }
+            @if (resetSuccess()) {
+              <div class="alert-success">Şifre başarıyla sıfırlandı.</div>
+            }
+            <div style="display:flex;flex-direction:column;gap:0.375rem">
+              <label style="font-size:0.875rem;font-weight:500;color:#374151">Yeni Şifre *</label>
+              <input type="password" [(ngModel)]="newPassword"
+                style="padding:0.5rem 0.75rem;border:1px solid #D1D5DB;border-radius:0.375rem;font-size:0.875rem"
+                placeholder="En az 8 karakter" />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.375rem">
+              <label style="font-size:0.875rem;font-weight:500;color:#374151">Şifre Tekrar *</label>
+              <input type="password" [(ngModel)]="confirmPassword"
+                style="padding:0.5rem 0.75rem;border:1px solid #D1D5DB;border-radius:0.375rem;font-size:0.875rem"
+                placeholder="Şifreyi tekrar girin" />
+              @if (resetSubmitted() && newPassword !== confirmPassword) {
+                <span style="font-size:0.75rem;color:#EF4444">Şifreler eşleşmiyor</span>
+              }
+            </div>
+          </div>
+          <div class="modal-footer" style="padding:1rem 1.5rem;border-top:1px solid #E5E7EB;display:flex;justify-content:flex-end;gap:0.75rem">
+            <button class="btn btn-secondary" (click)="resetModal.set(null)">İptal</button>
+            <button class="btn btn-primary" [disabled]="resetSaving()" (click)="saveResetPassword()">
+              {{ resetSaving() ? 'Kaydediliyor...' : 'Şifreyi Sıfırla' }}
+            </button>
           </div>
         </div>
       </div>
@@ -203,6 +258,10 @@ const ROLE_COLOR: Record<string, string> = {
     .role-code { font-size: 0.75rem; color: #9CA3AF; margin: 0.25rem 0 0; }
     .assigned-badge { font-size: 0.75rem; color: #6B7280; background: #F3F4F6; padding: 0.25rem 0.625rem; border-radius: 9999px; }
     .alert-error { padding: 0.75rem 1rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.5rem; color: #991B1B; font-size: 0.875rem; margin-bottom: 0.5rem; }
+    .alert-success { padding: 0.75rem 1rem; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 0.5rem; color: #166534; font-size: 0.875rem; }
+    .locked-badge { display: inline-flex; align-items: center; gap: 0.25rem; background: #FEF3C7; color: #92400E; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 9999px; margin-bottom: 0.25rem; }
+    .action-group { display: flex; gap: 0.375rem; justify-content: flex-end; flex-wrap: wrap; }
+    .btn-warning { border-color: #F59E0B; color: #92400E; &:hover { background: #FEF3C7; } }
   `]
 })
 export class PlatformUsersComponent implements OnInit {
@@ -278,6 +337,55 @@ export class PlatformUsersComponent implements OnInit {
   removeRole(personId: string, systemRoleId: string) {
     this.http.delete(`${environment.apiUrl}/admin/users/${personId}/system-roles/${systemRoleId}`).subscribe({
       next: () => this.loadRoles(personId)
+    });
+  }
+
+  // --- Reset Password ---
+  resetModal = signal<{ id: string; name: string } | null>(null);
+  resetSaving = signal(false);
+  resetSubmitted = signal(false);
+  resetError = signal('');
+  resetSuccess = signal(false);
+  newPassword = '';
+  confirmPassword = '';
+
+  openResetPassword(personId: string, name: string) {
+    this.newPassword = '';
+    this.confirmPassword = '';
+    this.resetSubmitted.set(false);
+    this.resetError.set('');
+    this.resetSuccess.set(false);
+    this.resetModal.set({ id: personId, name });
+  }
+
+  saveResetPassword() {
+    this.resetSubmitted.set(true);
+    if (!this.newPassword || this.newPassword !== this.confirmPassword) return;
+    this.resetSaving.set(true);
+    this.resetError.set('');
+    this.resetSuccess.set(false);
+    const personId = this.resetModal()!.id;
+    this.http.post(`${environment.apiUrl}/admin/users/${personId}/reset-password`, { newPassword: this.newPassword }).subscribe({
+      next: () => {
+        this.resetSaving.set(false);
+        this.resetSuccess.set(true);
+        this.newPassword = '';
+        this.confirmPassword = '';
+      },
+      error: err => {
+        this.resetSaving.set(false);
+        this.resetError.set(err.error?.detail ?? 'Şifre sıfırlanamadı');
+      }
+    });
+  }
+
+  // --- Unlock Account ---
+  unlockAccount(personId: string) {
+    this.http.post(`${environment.apiUrl}/admin/users/${personId}/unlock`, {}).subscribe({
+      next: () => {
+        this.users.update(list => list.map(p => p.id === personId ? { ...p, isLocked: false } : p));
+        this.filterUsers();
+      }
     });
   }
 }

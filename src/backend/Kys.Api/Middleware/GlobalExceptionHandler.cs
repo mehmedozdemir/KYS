@@ -22,6 +22,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                          .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray())),
 
             NotFoundException nfe => (StatusCodes.Status404NotFound, nfe.Message, (Dictionary<string, string[]>?)null),
+            UnauthorizedException ue => (StatusCodes.Status401Unauthorized, ue.Message, (Dictionary<string, string[]>?)null),
             ForbiddenException fe => (StatusCodes.Status403Forbidden, fe.Message, (Dictionary<string, string[]>?)null),
             ConflictException ce => (StatusCodes.Status409Conflict, ce.Message, (Dictionary<string, string[]>?)null),
             DomainException de => (StatusCodes.Status400BadRequest, de.Message, (Dictionary<string, string[]>?)null),
@@ -62,6 +63,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
     {
         422 => "Validation Error",
         404 => "Not Found",
+        401 => "Unauthorized",
         409 => "Conflict",
         403 => "Forbidden",
         400 => "Bad Request",

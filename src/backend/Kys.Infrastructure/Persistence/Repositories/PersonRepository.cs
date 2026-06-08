@@ -32,4 +32,9 @@ public sealed class PersonRepository(AppDbContext db) : IPersonRepository
 
     public async Task<bool> HasAnyPlatformUserAsync(CancellationToken ct = default)
         => await db.People.AnyAsync(p => p.IsPlatformUser, ct);
+
+    public async Task<Person?> GetByRefreshTokenAsync(string refreshToken, CancellationToken ct = default)
+        => await db.People
+            .Include(p => p.SystemRoles).ThenInclude(psr => psr.SystemRole)
+            .FirstOrDefaultAsync(p => p.RefreshToken == refreshToken, ct);
 }
