@@ -13,13 +13,13 @@ public sealed class DashboardRepository(NpgsqlDataSource dataSource) : IDashboar
 
         var result = await conn.QuerySingleAsync<DashboardStatsResult>("""
             SELECT
-                COUNT(*) FILTER (WHERE c.status = 'Active'     AND c.is_deleted = false) AS active_customer_count,
-                COUNT(*) FILTER (WHERE c.status = 'Onboarding' AND c.is_deleted = false) AS onboarding_customer_count,
-                (SELECT COUNT(*) FROM products WHERE is_deleted = false)                 AS total_product_count,
-                (SELECT COUNT(*) FROM products WHERE status = 'Active' AND is_deleted = false) AS active_product_count,
-                (SELECT COUNT(*) FROM teams WHERE is_deleted = false)                    AS total_team_count,
-                (SELECT COUNT(*) FROM people WHERE is_deleted = false)                   AS total_person_count,
-                (SELECT COUNT(*) FROM people WHERE employment_status = 'Active' AND is_deleted = false) AS active_person_count
+                COUNT(*) FILTER (WHERE c.status = 'Active'     AND c.is_deleted = false)::int AS active_customer_count,
+                COUNT(*) FILTER (WHERE c.status = 'Onboarding' AND c.is_deleted = false)::int AS onboarding_customer_count,
+                (SELECT COUNT(*) FROM products WHERE is_deleted = false)::int                 AS total_product_count,
+                (SELECT COUNT(*) FROM products WHERE status = 'Active' AND is_deleted = false)::int AS active_product_count,
+                (SELECT COUNT(*) FROM teams WHERE is_deleted = false)::int                    AS total_team_count,
+                (SELECT COUNT(*) FROM people WHERE is_deleted = false)::int                   AS total_person_count,
+                (SELECT COUNT(*) FROM people WHERE employment_status = 'Active' AND is_deleted = false)::int AS active_person_count
             FROM customers c
             """);
 
