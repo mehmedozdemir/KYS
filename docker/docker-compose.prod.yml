@@ -1,0 +1,74 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: kys-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: kys
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d kys"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: kys-api-prod
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=kys;Username=${DB_USER};Password=${DB_PASSWORD}
+      - Jwt__Secret=${JWT_SECRET:?JWT_SECRET is required}
+      - Jwt__Issuer=${JWT_ISSUER:-kys-api}
+      - Jwt__Audience=${JWT_AUDIENCE:-kys-clients}
+      - Jwt__ExpiryMinutes=${JWT_EXPIRY_MINUTES:-60}
+      - Encryption__Key=${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      - Encryption__IV=${ENCRYPTION_IV:?ENCRYPTION_IV is required}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/live || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  ui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ui
+    container_name: kys-ui-prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${SSL_CERT_PATH:?SSL_CERT_PATH is required}:/etc/nginx/certs/cert.pem:ro
+      - ${SSL_KEY_PATH:?SSL_KEY_PATH is required}:/etc/nginx/certs/key.pem:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  internal:
+    driver: bridge

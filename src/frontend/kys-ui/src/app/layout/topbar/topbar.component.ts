@@ -1,31 +1,97 @@
-import { Component, inject } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
+import { Component, inject, HostListener, signal, ElementRef } from '@angular/core';
+import { AsyncPipe, NgClass } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { selectCurrentUser } from '../../core/store/auth/auth.selectors';
 import { logout } from '../../core/store/auth/auth.actions';
+import { environment } from '../../../environments/environment';
+
+interface SearchItem { id: string; name: string; subTitle: string | null; category: string; status: string | null; }
+interface SearchResult { customers: SearchItem[]; products: SearchItem[]; people: SearchItem[]; teams: SearchItem[]; articles: SearchItem[]; }
+
+const CATEGORY_LABEL: Record<string, string> = {
+  Customer: 'Müşteri', Product: 'Ürün', Person: 'Kişi', Team: 'Ekip', Article: 'KB Makalesi'
+};
+const CATEGORY_ICON: Record<string, string> = {
+  Customer: 'pi-building', Product: 'pi-box', Person: 'pi-user', Team: 'pi-users', Article: 'pi-book'
+};
+const CATEGORY_ROUTE: Record<string, string> = {
+  Customer: '/customers', Product: '/products', Person: '/people', Team: '/teams', Article: '/knowledge-base'
+};
 
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [FormsModule, AsyncPipe],
+  imports: [FormsModule, AsyncPipe, NgClass],
   template: `
     <header class="topbar">
-      <div class="topbar__search">
-        <i class="pi pi-search"></i>
+      <div class="topbar__search" [class.topbar__search--active]="showDropdown()">
+        <i class="pi pi-search search-icon"></i>
         <input
+          #searchInput
           type="text"
           placeholder="Ara... (müşteri, ürün, kişi)"
           [(ngModel)]="searchQuery"
-          (keyup.enter)="onSearch()" />
+          (ngModelChange)="onQueryChange($event)"
+          (keyup.enter)="onEnter()"
+          (keyup.escape)="closeDropdown()"
+          (focus)="onFocus()"
+          autocomplete="off" />
+        @if (searching()) {
+          <i class="pi pi-spin pi-spinner search-spinner"></i>
+        } @else if (searchQuery.length > 0) {
+          <button class="clear-btn" (click)="clearSearch()"><i class="pi pi-times"></i></button>
+        }
+
+        @if (showDropdown() && searchQuery.length >= 3) {
+          <div class="search-dropdown">
+            @if (hasResults()) {
+              @for (group of resultGroups(); track group.category) {
+                <div class="result-group">
+                  <div class="result-group-header">
+                    <i [class]="'pi ' + group.icon"></i>
+                    {{ group.label }}
+                    <span class="result-count">{{ group.items.length }}</span>
+                  </div>
+                  @for (item of group.items; track item.id) {
+                    <button class="result-item" (click)="navigate(item)">
+                      <span class="result-name">{{ item.name }}</span>
+                      @if (item.subTitle) {
+                        <span class="result-sub">{{ item.subTitle }}</span>
+                      }
+                      @if (item.status) {
+                        <span class="result-status">{{ item.status }}</span>
+                      }
+                    </button>
+                  }
+                </div>
+              }
+              <div class="dropdown-footer">
+                <button class="view-all-btn" (click)="onEnter()">
+                  <i class="pi pi-search"></i>
+                  Tüm sonuçları gör
+                </button>
+              </div>
+            } @else if (!searching()) {
+              <div class="no-results">
+                <i class="pi pi-inbox"></i>
+                <span>"{{ searchQuery }}" için sonuç bulunamadı</span>
+              </div>
+            }
+          </div>
+        }
       </div>
 
       <div class="topbar__right">
         @if (user$ | async; as user) {
           <span class="topbar__user">{{ user.fullName }}</span>
         }
-        <button class="topbar__logout" (click)="onLogout()">
+        <button class="topbar__logout" (click)="onLogout()" title="Çıkış Yap">
           <i class="pi pi-sign-out"></i>
         </button>
       </div>
@@ -33,54 +99,87 @@ import { logout } from '../../core/store/auth/auth.actions';
   `,
   styles: [`
     .topbar {
-      height: 64px;
-      background: white;
-      border-bottom: 1px solid #E5E7EB;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 1.5rem;
-      flex-shrink: 0;
+      height: 64px; background: white; border-bottom: 1px solid #E5E7EB;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem; flex-shrink: 0; position: relative; z-index: 100;
     }
+
     .topbar__search {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: #F3F4F6;
-      border-radius: 0.5rem;
-      padding: 0.5rem 1rem;
-      width: 400px;
+      position: relative; display: flex; align-items: center; gap: 0.5rem;
+      background: #F3F4F6; border-radius: 0.5rem; padding: 0.5rem 1rem;
+      width: 420px; border: 1px solid transparent; transition: all 0.15s;
 
-      i { color: #9CA3AF; font-size: 0.875rem; }
-
-      input {
-        background: transparent;
-        border: none;
-        outline: none;
-        font-size: 0.875rem;
-        color: #374151;
-        width: 100%;
-        &::placeholder { color: #9CA3AF; }
+      &--active, &:focus-within {
+        background: white; border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
       }
     }
-    .topbar__right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+    .search-icon { color: #9CA3AF; font-size: 0.875rem; flex-shrink: 0; }
+    .search-spinner { color: #3B82F6; font-size: 0.75rem; flex-shrink: 0; }
+    .clear-btn {
+      background: none; border: none; cursor: pointer; color: #9CA3AF;
+      padding: 0; font-size: 0.75rem; line-height: 1; flex-shrink: 0;
+      &:hover { color: #374151; }
     }
-    .topbar__user {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #374151;
+    input {
+      background: transparent; border: none; outline: none;
+      font-size: 0.875rem; color: #374151; width: 100%;
+      &::placeholder { color: #9CA3AF; }
     }
+
+    .search-dropdown {
+      position: absolute; top: calc(100% + 0.5rem); left: 0; right: 0;
+      background: white; border: 1px solid #E5E7EB; border-radius: 0.75rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.12); max-height: 480px;
+      overflow-y: auto; z-index: 200;
+    }
+
+    .result-group { padding: 0.5rem 0; border-bottom: 1px solid #F3F4F6; &:last-of-type { border-bottom: none; } }
+    .result-group-header {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.375rem 1rem; font-size: 0.6875rem; font-weight: 700;
+      color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.06em;
+      i { font-size: 0.75rem; }
+    }
+    .result-count {
+      margin-left: auto; background: #F3F4F6; color: #9CA3AF;
+      border-radius: 9999px; padding: 0 0.375rem; font-size: 0.6875rem;
+    }
+
+    .result-item {
+      display: flex; align-items: center; gap: 0.5rem; width: 100%;
+      padding: 0.5rem 1rem; background: none; border: none; text-align: left;
+      cursor: pointer; font-size: 0.875rem; color: #374151;
+      &:hover { background: #F9FAFB; }
+    }
+    .result-name { font-weight: 500; flex-shrink: 0; }
+    .result-sub { font-size: 0.8125rem; color: #9CA3AF; margin-left: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .result-status {
+      margin-left: auto; flex-shrink: 0; font-size: 0.6875rem;
+      background: #F3F4F6; color: #6B7280; padding: 0.125rem 0.5rem; border-radius: 9999px;
+    }
+
+    .dropdown-footer {
+      padding: 0.5rem; border-top: 1px solid #F3F4F6;
+    }
+    .view-all-btn {
+      width: 100%; padding: 0.5rem 1rem; background: none; border: none;
+      cursor: pointer; font-size: 0.8125rem; color: #3B82F6; font-weight: 500;
+      border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      &:hover { background: #EFF6FF; }
+    }
+
+    .no-results {
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      padding: 2rem 1rem; color: #9CA3AF; font-size: 0.875rem;
+      i { font-size: 1.5rem; }
+    }
+
+    .topbar__right { display: flex; align-items: center; gap: 1rem; }
+    .topbar__user { font-size: 0.875rem; font-weight: 500; color: #374151; }
     .topbar__logout {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #6B7280;
-      font-size: 1rem;
-      padding: 0.25rem;
-      border-radius: 0.25rem;
+      background: none; border: none; cursor: pointer; color: #6B7280;
+      font-size: 1rem; padding: 0.25rem; border-radius: 0.25rem;
       &:hover { color: #EF4444; }
     }
   `]
@@ -88,13 +187,97 @@ import { logout } from '../../core/store/auth/auth.actions';
 export class TopbarComponent {
   private store = inject(Store);
   private router = inject(Router);
+  private http = inject(HttpClient);
+  private el = inject(ElementRef);
 
   user$ = this.store.select(selectCurrentUser);
   searchQuery = '';
+  showDropdown = signal(false);
+  searching = signal(false);
+  results = signal<SearchResult | null>(null);
 
-  onSearch(): void {
+  private searchSubject = new Subject<string>();
+
+  constructor() {
+    this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      switchMap(query => {
+        if (query.length < 3) {
+          this.searching.set(false);
+          return of(null);
+        }
+        this.searching.set(true);
+        return this.http.get<SearchResult>(`${environment.apiUrl}/search?q=${encodeURIComponent(query)}&limit=5`).pipe(
+          catchError(() => of(null))
+        );
+      })
+    ).subscribe(res => {
+      this.searching.set(false);
+      this.results.set(res);
+    });
+  }
+
+  onQueryChange(q: string) {
+    if (q.length >= 3) {
+      this.showDropdown.set(true);
+      this.searching.set(true);
+    } else {
+      this.showDropdown.set(false);
+      this.results.set(null);
+    }
+    this.searchSubject.next(q);
+  }
+
+  onFocus() {
+    if (this.searchQuery.length >= 3) this.showDropdown.set(true);
+  }
+
+  onEnter() {
     if (this.searchQuery.trim().length >= 2) {
+      this.closeDropdown();
       this.router.navigate(['/search'], { queryParams: { q: this.searchQuery.trim() } });
+    }
+  }
+
+  clearSearch() {
+    this.searchQuery = '';
+    this.showDropdown.set(false);
+    this.results.set(null);
+  }
+
+  closeDropdown() {
+    this.showDropdown.set(false);
+  }
+
+  navigate(item: SearchItem) {
+    const base = CATEGORY_ROUTE[item.category] ?? '/';
+    this.router.navigate([base, item.id]);
+    this.clearSearch();
+  }
+
+  hasResults(): boolean {
+    const r = this.results();
+    if (!r) return false;
+    return (r.customers.length + r.products.length + r.people.length + r.teams.length + (r.articles?.length ?? 0)) > 0;
+  }
+
+  resultGroups() {
+    const r = this.results();
+    if (!r) return [];
+    return [
+      { category: 'Customer', label: CATEGORY_LABEL['Customer'], icon: CATEGORY_ICON['Customer'], items: r.customers },
+      { category: 'Product', label: CATEGORY_LABEL['Product'], icon: CATEGORY_ICON['Product'], items: r.products },
+      { category: 'Person', label: CATEGORY_LABEL['Person'], icon: CATEGORY_ICON['Person'], items: r.people },
+      { category: 'Team', label: CATEGORY_LABEL['Team'], icon: CATEGORY_ICON['Team'], items: r.teams },
+      { category: 'Article', label: CATEGORY_LABEL['Article'], icon: CATEGORY_ICON['Article'], items: r.articles ?? [] },
+    ].filter(g => g.items.length > 0);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.el.nativeElement.contains(event.target)) {
+      this.closeDropdown();
     }
   }
 
