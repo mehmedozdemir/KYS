@@ -1,3 +1,4 @@
+using Dapper;
 using Kys.Domain.Entities;
 using Npgsql;
 using Kys.Domain.Interfaces.Repositories;
@@ -19,6 +20,9 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // Allow Dapper to map snake_case DB columns to PascalCase C# properties
+        DefaultTypeMap.MatchNamesWithUnderscores = true;
+
         services.AddScoped<SoftDeleteInterceptor>();
         services.AddScoped<TimestampInterceptor>();
         services.AddScoped<AuditLogInterceptor>();
