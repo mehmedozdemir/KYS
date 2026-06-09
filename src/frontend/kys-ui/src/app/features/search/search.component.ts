@@ -73,7 +73,7 @@ const CATEGORY_ICON: Record<string, string> = {
       @if (!loading() && query.length >= 2) {
         @if (totalCount() === 0) {
           <div class="empty-state">
-            <i class="pi pi-search" style="font-size:2rem;color:#D1D5DB"></i>
+            <i class="pi pi-search" style="font-size:2rem;color:var(--border-strong)"></i>
             <p>"{{ query }}" için sonuç bulunamadı.</p>
           </div>
         } @else {
@@ -106,7 +106,7 @@ const CATEGORY_ICON: Record<string, string> = {
         }
       } @else if (query.length === 0) {
         <div class="empty-state">
-          <i class="pi pi-search" style="font-size:2rem;color:#D1D5DB"></i>
+          <i class="pi pi-search" style="font-size:2rem;color:var(--border-strong)"></i>
           <p>Aramak istediğiniz terimi yazın.</p>
         </div>
       }
@@ -116,36 +116,36 @@ const CATEGORY_ICON: Record<string, string> = {
     .search-header { margin-bottom: 1.5rem; }
     .search-bar {
       display: flex; align-items: center; gap: 0.75rem;
-      background: white; border: 2px solid #3B82F6; border-radius: 0.75rem;
+      background: var(--surface); border: 2px solid var(--primary); border-radius: 0.75rem;
       padding: 0.75rem 1rem; box-shadow: 0 4px 12px rgba(59,130,246,0.1);
-      i { color: #9CA3AF; font-size: 1.125rem; flex-shrink: 0; }
+      i { color: var(--text-subtle); font-size: 1.125rem; flex-shrink: 0; }
     }
-    .search-input { border: none; outline: none; font-size: 1rem; color: #111827; width: 100%; background: transparent; }
-    .result-summary { font-size: 0.875rem; color: #6B7280; margin-top: 0.625rem; padding-left: 0.25rem; }
+    .search-input { border: none; outline: none; font-size: 1rem; color: var(--text-strong); width: 100%; background: transparent; }
+    .result-summary { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.625rem; padding-left: 0.25rem; }
 
-    .empty-state { text-align: center; padding: 4rem; color: #9CA3AF; p { margin-top: 0.75rem; font-size: 0.875rem; } }
+    .empty-state { text-align: center; padding: 4rem; color: var(--text-subtle); p { margin-top: 0.75rem; font-size: 0.875rem; } }
 
     .results-container { display: flex; flex-direction: column; gap: 1.25rem; }
-    .result-group { background: white; border: 1px solid #E5E7EB; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .result-group { background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
     .group-header {
       display: flex; align-items: center; gap: 0.625rem;
-      padding: 0.75rem 1rem; background: #F9FAFB; border-bottom: 1px solid #E5E7EB;
-      font-size: 0.8125rem; font-weight: 600; color: #374151;
-      i { color: #6B7280; }
+      padding: 0.75rem 1rem; background: var(--surface-2); border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem; font-weight: 600; color: var(--text);
+      i { color: var(--text-muted); }
     }
-    .count { margin-left: auto; background: #E5E7EB; color: #6B7280; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; }
+    .count { margin-left: auto; background: var(--border); color: var(--text-muted); padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; }
 
     .result-list { display: flex; flex-direction: column; }
     .result-item {
       display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
       padding: 0.75rem 1rem; text-decoration: none;
-      border-bottom: 1px solid #F3F4F6;
+      border-bottom: 1px solid var(--surface-3);
       &:last-child { border-bottom: none; }
-      &:hover { background: #F9FAFB; }
+      &:hover { background: var(--surface-2); }
     }
-    .result-name { font-size: 0.875rem; font-weight: 500; color: #111827; }
-    .result-sub { font-size: 0.8125rem; color: #6B7280; }
-    .result-status { font-size: 0.75rem; color: #9CA3AF; background: #F3F4F6; padding: 0.125rem 0.5rem; border-radius: 9999px; margin-left: auto; }
+    .result-name { font-size: 0.875rem; font-weight: 500; color: var(--text-strong); }
+    .result-sub { font-size: 0.8125rem; color: var(--text-muted); }
+    .result-status { font-size: 0.75rem; color: var(--text-subtle); background: var(--surface-3); padding: 0.125rem 0.5rem; border-radius: 9999px; margin-left: auto; }
   `]
 })
 export class SearchComponent implements OnInit {

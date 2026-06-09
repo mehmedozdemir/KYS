@@ -70,7 +70,7 @@ import { SessionTimeoutService } from '../../core/services/session-timeout.servi
       z-index: 9999;
     }
     .timeout-modal {
-      background: white;
+      background: var(--surface);
       border-radius: 1rem;
       padding: 2rem;
       width: 100%;
@@ -82,8 +82,8 @@ import { SessionTimeoutService } from '../../core/services/session-timeout.servi
       width: 4rem;
       height: 4rem;
       border-radius: 50%;
-      background: #FEF3C7;
-      color: #D97706;
+      background: var(--warning-soft-bg);
+      color: var(--warning-strong);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -93,15 +93,15 @@ import { SessionTimeoutService } from '../../core/services/session-timeout.servi
     .timeout-title {
       font-size: 1.25rem;
       font-weight: 700;
-      color: #111827;
+      color: var(--text-strong);
       margin: 0 0 0.75rem;
     }
     .timeout-body {
       font-size: 0.9375rem;
-      color: #6B7280;
+      color: var(--text-muted);
       margin: 0 0 1.5rem;
       line-height: 1.6;
-      strong { color: #D97706; font-size: 1.125rem; }
+      strong { color: var(--warning-strong); font-size: 1.125rem; }
     }
     .timeout-actions {
       display: flex;
@@ -110,9 +110,9 @@ import { SessionTimeoutService } from '../../core/services/session-timeout.servi
     }
     .btn-logout {
       padding: 0.625rem 1.25rem;
-      border: 1px solid #D1D5DB;
-      background: white;
-      color: #374151;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text);
       border-radius: 0.5rem;
       font-size: 0.9375rem;
       font-weight: 500;
@@ -120,12 +120,12 @@ import { SessionTimeoutService } from '../../core/services/session-timeout.servi
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      &:hover { background: #F9FAFB; }
+      &:hover { background: var(--surface-2); }
     }
     .btn-extend {
       padding: 0.625rem 1.25rem;
       border: none;
-      background: #3B82F6;
+      background: var(--primary);
       color: white;
       border-radius: 0.5rem;
       font-size: 0.9375rem;
@@ -134,7 +134,7 @@ import { SessionTimeoutService } from '../../core/services/session-timeout.servi
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      &:hover { background: #2563EB; }
+      &:hover { background: var(--primary-hover); }
     }
   `]
 })

@@ -45,7 +45,7 @@ interface Customer {
   template: `
     <div class="page-content">
       <div class="flex-between" style="margin-bottom:1.5rem">
-        <h1 style="font-size:1.5rem;font-weight:700;color:#111827">Müşteriler</h1>
+        <h1 style="font-size:1.5rem;font-weight:700;color:var(--text-strong)">Müşteriler</h1>
         <button class="btn-primary-sm" (click)="openModal()">
           <i class="pi pi-plus"></i> Yeni Müşteri
         </button>
@@ -85,8 +85,8 @@ interface Customer {
             @for (c of customers; track c.id) {
               <tr [routerLink]="['/customers', c.id]" class="table-row">
                 <td>
-                  <div style="font-weight:500;color:#111827">{{ c.name }}</div>
-                  <div style="font-size:0.75rem;color:#6B7280">{{ c.code }}{{ c.shortName ? ' · ' + c.shortName : '' }}</div>
+                  <div style="font-weight:500;color:var(--text-strong)">{{ c.name }}</div>
+                  <div style="font-size:0.75rem;color:var(--text-muted)">{{ c.code }}{{ c.shortName ? ' · ' + c.shortName : '' }}</div>
                 </td>
                 <td>
                   <span class="badge" [ngClass]="statusCss(c.status)">{{ statusLabel(c.status) }}</span>
@@ -122,7 +122,7 @@ interface Customer {
               </tr>
             }
             @empty {
-              <tr><td colspan="5" style="text-align:center;color:#9CA3AF;padding:2rem">Müşteri bulunamadı.</td></tr>
+              <tr><td colspan="5" style="text-align:center;color:var(--text-subtle);padding:2rem">Müşteri bulunamadı.</td></tr>
             }
           </tbody>
         </table>
@@ -137,8 +137,8 @@ interface Customer {
             <button type="button" class="modal-close" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
-            <p style="margin:0;color:#374151"><strong>{{ deleteTarget!.name }}</strong> müşterisini silmek istediğinize emin misiniz?</p>
-            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:#6B7280">Bu işlem geri alınamaz.</p>
+            <p style="margin:0;color:var(--text)"><strong>{{ deleteTarget!.name }}</strong> müşterisini silmek istediğinize emin misiniz?</p>
+            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:var(--text-muted)">Bu işlem geri alınamaz.</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" (click)="cancelDelete()">İptal</button>
@@ -261,41 +261,41 @@ interface Customer {
       margin-bottom: 1rem;
     }
     .search-input, .select-input {
-      border: 1px solid #D1D5DB;
+      border: 1px solid var(--border-strong);
       border-radius: 0.5rem;
       padding: 0.5rem 0.75rem;
       font-size: 0.875rem;
       outline: none;
-      &:focus { border-color: #3B82F6; }
+      &:focus { border-color: var(--primary); }
     }
     .search-input { width: 280px; }
-    .checkbox-label { font-size: 0.875rem; color: #374151; display: flex; align-items: center; gap: 0.375rem; cursor: pointer; }
+    .checkbox-label { font-size: 0.875rem; color: var(--text); display: flex; align-items: center; gap: 0.375rem; cursor: pointer; }
     .table-card {
-      background: white;
-      border: 1px solid #E5E7EB;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 0.75rem;
       overflow: hidden;
       table { width: 100%; border-collapse: collapse; }
       th {
-        background: #F9FAFB;
+        background: var(--surface-2);
         padding: 0.75rem 1rem;
         text-align: left;
         font-size: 0.75rem;
         font-weight: 600;
-        color: #6B7280;
+        color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        border-bottom: 1px solid #E5E7EB;
+        border-bottom: 1px solid var(--border);
       }
-      td { padding: 0.875rem 1rem; border-bottom: 1px solid #F3F4F6; font-size: 0.875rem; }
+      td { padding: 0.875rem 1rem; border-bottom: 1px solid var(--surface-3); font-size: 0.875rem; }
     }
-    .table-row { cursor: pointer; &:hover td { background: #F9FAFB; } }
+    .table-row { cursor: pointer; &:hover td { background: var(--surface-2); } }
     .btn-primary-sm {
-      background: #3B82F6; color: white; border: none;
+      background: var(--primary); color: white; border: none;
       border-radius: 0.5rem; padding: 0.5rem 1rem;
       font-size: 0.875rem; font-weight: 500; cursor: pointer;
       display: flex; align-items: center; gap: 0.375rem;
-      &:hover { background: #2563EB; }
+      &:hover { background: var(--primary-hover); }
     }
     .flex-between { display: flex; justify-content: space-between; align-items: center; }
 
@@ -306,55 +306,55 @@ interface Customer {
       z-index: 1000; padding: 1rem;
     }
     .modal {
-      background: white; border-radius: 0.75rem; width: 100%; max-width: 560px;
+      background: var(--surface); border-radius: 0.75rem; width: 100%; max-width: 560px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column;
       max-height: 90vh; overflow: hidden;
     }
     .modal-header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 1.25rem 1.5rem; border-bottom: 1px solid #E5E7EB;
-      h2 { font-size: 1.125rem; font-weight: 700; color: #111827; }
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+      h2 { font-size: 1.125rem; font-weight: 700; color: var(--text-strong); }
     }
-    .modal-close { background: none; border: none; cursor: pointer; color: #6B7280; font-size: 1.25rem; padding: 0.25rem; border-radius: 0.375rem; &:hover { background: #F3F4F6; } }
+    .modal-close { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.25rem; padding: 0.25rem; border-radius: 0.375rem; &:hover { background: var(--surface-3); } }
     .modal-body { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; flex: 1; min-height: 0; }
-    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0; }
 
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .form-group {
       display: flex; flex-direction: column; gap: 0.375rem;
-      label { font-size: 0.8125rem; font-weight: 600; color: #374151; }
+      label { font-size: 0.8125rem; font-weight: 600; color: var(--text); }
       input, textarea, select {
-        padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.375rem;
-        font-size: 0.875rem; color: #111827;
-        &:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        padding: 0.5rem 0.75rem; border: 1px solid var(--border-strong); border-radius: 0.375rem;
+        font-size: 0.875rem; color: var(--text-strong);
+        &:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
       }
       textarea { resize: vertical; font-family: inherit; }
     }
-    .input-error { border-color: #EF4444 !important; }
-    .error-msg { font-size: 0.75rem; color: #EF4444; }
-    .required { color: #EF4444; }
-    .section-title { font-size: 0.8125rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; border-top: 1px solid #F3F4F6; padding-top: 0.75rem; }
-    .alert-error { padding: 0.75rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.375rem; color: #991B1B; font-size: 0.8125rem; }
+    .input-error { border-color: var(--danger) !important; }
+    .error-msg { font-size: 0.75rem; color: var(--danger); }
+    .required { color: var(--danger); }
+    .section-title { font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-top: 1px solid var(--surface-3); padding-top: 0.75rem; }
+    .alert-error { padding: 0.75rem; background: var(--danger-faint-bg); border: 1px solid var(--danger-border); border-radius: 0.375rem; color: var(--danger-soft-text); font-size: 0.8125rem; }
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; line-height: 1.5; &:disabled { opacity: 0.6; cursor: not-allowed; } }
-    .btn-primary { background: #3B82F6 !important; color: #ffffff !important; &:not(:disabled):hover { background: #2563EB !important; } }
-    .btn-secondary { background: white; color: #374151; border: 1px solid #D1D5DB; &:hover { background: #F3F4F6; } }
+    .btn-primary { background: var(--primary) !important; color: var(--surface) !important; &:not(:disabled):hover { background: var(--primary-hover) !important; } }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); &:hover { background: var(--surface-3); } }
     .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-    .badge--prospect { background: #F3F4F6; color: #6B7280; }
-    .badge--onboarding { background: #DBEAFE; color: #1E40AF; }
-    .badge--active { background: #D1FAE5; color: #065F46; }
-    .badge--inactive { background: #FEF3C7; color: #92400E; }
-    .badge--churned { background: #FEE2E2; color: #991B1B; }
+    .badge--prospect { background: var(--surface-3); color: var(--text-muted); }
+    .badge--onboarding { background: var(--primary-soft-bg-2); color: var(--primary-soft-text); }
+    .badge--active { background: var(--success-soft-bg); color: var(--success-soft-text); }
+    .badge--inactive { background: var(--warning-soft-bg); color: var(--warning-soft-text); }
+    .badge--churned { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
 
-    .muted-text { color: #D1D5DB; font-size: 0.875rem; }
+    .muted-text { color: var(--border-strong); font-size: 0.875rem; }
     .product-badges { display: flex; flex-wrap: wrap; gap: 0.25rem; }
-    .product-badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; font-family: monospace; cursor: pointer; white-space: nowrap; &:hover { background: #DBEAFE; border-color: #93C5FD; color: #1E40AF; } }
+    .product-badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; background: var(--primary-soft-bg); color: var(--primary-strong); border: 1px solid var(--primary-soft-bg-2); border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; font-family: monospace; cursor: pointer; white-space: nowrap; &:hover { background: var(--primary-soft-bg-2); border-color: var(--primary-strong); color: var(--primary-soft-text); } }
     .actions-cell { width: 2.5rem; text-align: center; }
     .kebab-wrap { position: relative; display: inline-block; }
-    .kebab-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 1rem; line-height: 1; &:hover { background: #F3F4F6; color: #374151; } }
-    .kebab-menu { position: absolute; right: 0; top: 100%; background: white; border: 1px solid #E5E7EB; border-radius: 0.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 120px; z-index: 50; padding: 0.25rem; }
-    .km-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 0.75rem; border: none; background: none; cursor: pointer; font-size: 0.875rem; border-radius: 0.375rem; &:hover { background: #F3F4F6; } }
-    .km-danger { color: #DC2626; &:hover { background: #FEF2F2 !important; } }
-    .btn-danger { background: #DC2626 !important; color: white !important; &:not(:disabled):hover { background: #B91C1C !important; } }
+    .kebab-btn { background: none; border: none; cursor: pointer; color: var(--text-subtle); padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 1rem; line-height: 1; &:hover { background: var(--surface-3); color: var(--text); } }
+    .kebab-menu { position: absolute; right: 0; top: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 0.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 120px; z-index: 50; padding: 0.25rem; }
+    .km-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 0.75rem; border: none; background: none; cursor: pointer; font-size: 0.875rem; border-radius: 0.375rem; &:hover { background: var(--surface-3); } }
+    .km-danger { color: var(--danger-strong); &:hover { background: var(--danger-faint-bg) !important; } }
+    .btn-danger { background: var(--danger-strong) !important; color: white !important; &:not(:disabled):hover { background: var(--danger-strong) !important; } }
     .modal--sm { max-width: 400px; }
   `]
 })

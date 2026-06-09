@@ -361,6 +361,15 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 22 — Tema Sistemi (Faz 2: Tam Kapsam) ✅ (2026-06-10)
+
+- [x] Kalan ~21 bileşendeki hardcode hex renkler `var(--token)`'a çevrildi (tırnaklı TS renk değerleri korundu)
+- [x] Kategori/durum rozet renkleri semantik token'lara eşlendi
+- [x] Tüm uygulama 4 temada (Açık Klasik · Koyu Slate/Midnight/OLED) tutarlı
+- [x] Setup ekranı kasıtlı koyu marka tasarımı olarak hariç tutuldu
+
+---
+
 ## Sprint 21 — Tema Sistemi (Faz 1) ✅ (2026-06-10)
 
 Açık + 3 koyu tema; aşamalı refactor.
@@ -369,7 +378,7 @@ Açık + 3 koyu tema; aşamalı refactor.
 - [x] **`ThemeService`**: localStorage kalıcılık + `prefers-color-scheme` varsayılanı + `<html data-theme>`
 - [x] **Topbar tema seçici**: gruplu, swatch önizlemeli dropdown
 - [x] **Faz 1 refactor**: global stiller + shell/sidebar/topbar + dashboard + workspace widget `var(--token)`'a çevrildi
-- [ ] **Sonraki dalgalar**: customers, products, teams, people, knowledge-base, admin sayfaları, environment/resource detayları → token refactor
+- [x] **Faz 2 (Sprint 22)**: customers, products, teams, people, knowledge-base, tüm admin sayfaları, environment detayı, arama, login → token refactor tamamlandı (setup ekranı kasıtlı koyu tasarım, hariç)
 
 ---
 

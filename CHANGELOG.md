@@ -16,6 +16,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.19.0] — 2026-06-10 (Sprint 22 — Tema Sistemi Faz 2: Tam Kapsam)
+
+### Değişti
+- **Tüm özellik sayfaları temalı**: Müşteriler, Ürünler, Ekipler, Kişiler, Bilgi Bankası, tüm Admin sayfaları (paylaşımlı kaynaklar, kaynak/ortam tipleri, özel alanlar, platform kullanıcıları, audit log, genel bakış), ortam detayı, arama ve login sayfasındaki hardcode hex renkler `var(--token)`'a çevrildi
+- Artık 4 temanın tamamı (Açık Klasik · Koyu Slate · Koyu Midnight · Koyu OLED) uygulamanın her ekranında geçerli
+- Kategori/durum rozet renkleri semantik token'lara eşlendi (yeşil→success, mor→violet, turuncu→warning, sky→primary, indigo→indigo soft çiftleri)
+
+### Notlar
+- TS içindeki renk değerleri (form default'ları `'#3B82F6'`, `[ngStyle]`/`[style]` binding'leri, durum/ortam-tipi renk haritaları) bilinçli olarak korundu — bunlar veri/dinamik değerler
+- İlk kurulum (setup) ekranı kasıtlı koyu gradient marka tasarımı olduğundan tema dışında bırakıldı
+
+---
+
 ## [0.18.0] — 2026-06-10 (Sprint 21 — Tema Sistemi Faz 1)
 
 ### Eklendi

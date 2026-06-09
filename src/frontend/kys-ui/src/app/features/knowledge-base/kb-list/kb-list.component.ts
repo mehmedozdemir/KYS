@@ -133,51 +133,51 @@ interface ArticleListResult {
   `,
   styles: [`
     .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; }
-    .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
-    .page-subtitle { font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem; }
+    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-strong); }
+    .page-subtitle { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem; }
 
     .toolbar { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap; align-items: center; }
     .search-box {
       position: relative; flex: 1; min-width: 200px; max-width: 320px;
-      i { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #9CA3AF; font-size: 0.875rem; }
-      input { width: 100%; padding: 0.5rem 0.75rem 0.5rem 2.25rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 0.875rem; box-sizing: border-box; }
+      i { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-subtle); font-size: 0.875rem; }
+      input { width: 100%; padding: 0.5rem 0.75rem 0.5rem 2.25rem; border: 1px solid var(--border-strong); border-radius: 0.5rem; font-size: 0.875rem; box-sizing: border-box; }
     }
-    select { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 0.875rem; color: #374151; background: white; }
+    select { padding: 0.5rem 0.75rem; border: 1px solid var(--border-strong); border-radius: 0.5rem; font-size: 0.875rem; color: var(--text); background: var(--surface); }
 
     .filter-chips { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
-    .chip { display: inline-flex; align-items: center; gap: 0.375rem; background: #EEF2FF; color: #4338CA; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8125rem; button { background: none; border: none; cursor: pointer; color: #6366F1; padding: 0; font-size: 0.75rem; line-height: 1; } i:first-child { font-size: 0.75rem; } }
+    .chip { display: inline-flex; align-items: center; gap: 0.375rem; background: var(--indigo-soft-bg); color: var(--indigo-strong); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8125rem; button { background: none; border: none; cursor: pointer; color: var(--indigo); padding: 0; font-size: 0.75rem; line-height: 1; } i:first-child { font-size: 0.75rem; } }
 
-    .loading-state { text-align: center; padding: 4rem; color: #9CA3AF; }
-    .empty-state { text-align: center; padding: 4rem; color: #9CA3AF; i { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; } p { font-size: 0.875rem; } }
+    .loading-state { text-align: center; padding: 4rem; color: var(--text-subtle); }
+    .empty-state { text-align: center; padding: 4rem; color: var(--text-subtle); i { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; } p { font-size: 0.875rem; } }
 
     .article-list { display: flex; flex-direction: column; gap: 0.75rem; }
     .article-card {
-      background: white; border: 1px solid #E5E7EB; border-radius: 0.75rem;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem;
       padding: 1.25rem; display: flex; align-items: center; gap: 1rem;
       text-decoration: none; transition: box-shadow 0.15s, border-color 0.15s;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      &:hover { border-color: #3B82F6; box-shadow: 0 2px 8px rgba(59,130,246,0.12); }
+      &:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(59,130,246,0.12); }
     }
     .article-main { flex: 1; min-width: 0; }
     .article-header { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-    .article-title { font-size: 1rem; font-weight: 600; color: #111827; flex: 1; min-width: 0; }
+    .article-title { font-size: 1rem; font-weight: 600; color: var(--text-strong); flex: 1; min-width: 0; }
     .article-meta { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-    .meta-item { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: #374151; i { font-size: 0.75rem; color: #9CA3AF; } &.muted { color: #9CA3AF; } }
+    .meta-item { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--text); i { font-size: 0.75rem; color: var(--text-subtle); } &.muted { color: var(--text-subtle); } }
     .tag-list { display: flex; flex-wrap: wrap; gap: 0.375rem; }
-    .tag { background: #F3F4F6; color: #374151; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; cursor: pointer; &:hover { background: #E5E7EB; } }
-    .arrow { color: #D1D5DB; font-size: 0.875rem; flex-shrink: 0; }
+    .tag { background: var(--surface-3); color: var(--text); padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; cursor: pointer; &:hover { background: var(--border); } }
+    .arrow { color: var(--border-strong); font-size: 0.875rem; flex-shrink: 0; }
 
     .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1rem; }
-    .page-btn { background: none; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.375rem 0.625rem; cursor: pointer; color: #374151; &:disabled { opacity: 0.4; cursor: not-allowed; } &:not(:disabled):hover { background: #F3F4F6; } }
-    .page-info { font-size: 0.875rem; color: #6B7280; }
+    .page-btn { background: none; border: 1px solid var(--border-strong); border-radius: 0.375rem; padding: 0.375rem 0.625rem; cursor: pointer; color: var(--text); &:disabled { opacity: 0.4; cursor: not-allowed; } &:not(:disabled):hover { background: var(--surface-3); } }
+    .page-info { font-size: 0.875rem; color: var(--text-muted); }
 
     .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
-    .badge--internal { background: #F3F4F6; color: #6B7280; }
-    .badge--team { background: #DBEAFE; color: #1E40AF; }
-    .badge--public { background: #D1FAE5; color: #065F46; }
+    .badge--internal { background: var(--surface-3); color: var(--text-muted); }
+    .badge--team { background: var(--primary-soft-bg-2); color: var(--primary-soft-text); }
+    .badge--public { background: var(--success-soft-bg); color: var(--success-soft-text); }
 
     .btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; text-decoration: none; }
-    .btn-primary { background: #3B82F6; color: white; &:hover { background: #2563EB; } }
+    .btn-primary { background: var(--primary); color: white; &:hover { background: var(--primary-hover); } }
   `]
 })
 export class KbListComponent implements OnInit {
