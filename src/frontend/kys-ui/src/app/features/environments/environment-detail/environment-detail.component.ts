@@ -54,6 +54,14 @@ interface AvailableTemplate {
   fieldSchema: Record<string, FieldSchemaDef>;
 }
 
+interface SharedResourceOption {
+  id: string;
+  name: string;
+  resourceTypeName: string;
+  connectionFields: Record<string, unknown>;
+  fieldSchema: Record<string, FieldSchemaDef>;
+}
+
 interface EnvironmentSummary {
   id: string;
   name: string;
@@ -390,16 +398,40 @@ interface EnvironmentDetail {
                 <div class="form-group">
                   <label>Paylaşımlı Kaynak <span class="required">*</span></label>
                   <select [(ngModel)]="addResourceForm.sharedResourceId"
+                    (ngModelChange)="onSharedResourceSelect($event)"
                     [class.input-error]="addResourceSubmitted() && addResourceForm.isShared && !addResourceForm.sharedResourceId">
                     <option value="">Seçin</option>
                     @for (sr of sharedResources(); track sr.id) {
-                      <option [value]="sr.id">{{ sr.name }}</option>
+                      <option [value]="sr.id">{{ sr.name }} ({{ sr.resourceTypeName }})</option>
                     }
                   </select>
                   @if (addResourceSubmitted() && addResourceForm.isShared && !addResourceForm.sharedResourceId) {
                     <span class="error-msg">Paylaşımlı kaynak seçimi zorunludur</span>
                   }
                 </div>
+
+                <!-- Ortak bağlantı bilgileri (salt okunur) -->
+                @if (selectedSharedResource(); as sr) {
+                  @if (sharedFieldKeys().length) {
+                    <div class="cred-fields-section cred-fields-section--readonly">
+                      <div class="cred-fields-title">
+                        <i class="pi pi-lock"></i>
+                        Ortak Bağlantı Bilgileri
+                        <span class="cred-fields-hint">{{ sr.name }} üzerinden</span>
+                      </div>
+                      @for (key of sharedFieldKeys(); track key) {
+                        @let def = sr.fieldSchema[key];
+                        <div class="form-group">
+                          <label>
+                            {{ def?.label ?? key }}
+                            <code class="field-key-badge">{{ key }}</code>
+                          </label>
+                          <input type="text" [value]="$any(sr.connectionFields[key]) ?? ''" readonly class="input-readonly" />
+                        </div>
+                      }
+                    </div>
+                  }
+                }
               }
             }
             <div class="form-group">
@@ -409,40 +441,49 @@ interface EnvironmentDetail {
 
             <!-- Dinamik credential alanları -->
             @let tpl = selectedTemplate();
-            @if (tpl && addResourceSchemaKeys(tpl).length) {
-              <div class="cred-fields-section">
-                <div class="cred-fields-title">
-                  <i class="pi pi-key"></i>
-                  Bağlantı Bilgileri
-                  <span class="cred-fields-hint">(kaynak tipi: {{ tpl.resourceTypeName }})</span>
-                </div>
-                @for (key of addResourceSchemaKeys(tpl); track key) {
-                  @let def = tpl.fieldSchema[key];
-                  <div class="form-group">
-                    <label>
-                      {{ def.label }}
-                      @if (def.required) { <span class="required">*</span> }
-                      <code class="field-key-badge">{{ key }}</code>
-                    </label>
-                    @if (def.type === 'password') {
-                      <input type="password" autocomplete="new-password"
-                        [value]="addResourceCreds[key] ?? ''"
-                        (input)="addResourceCreds[key] = $any($event.target).value"
-                        [placeholder]="def.required ? 'Zorunlu alan' : 'İsteğe bağlı'" />
-                    } @else if (def.type === 'number') {
-                      <input type="number"
-                        [value]="addResourceCreds[key] ?? ''"
-                        (input)="addResourceCreds[key] = $any($event.target).value"
-                        [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : ''" />
+            @if (tpl) {
+              @let fieldKeys = addResourceForm.isShared && selectedSharedResource()
+                ? privateFieldKeys(tpl)
+                : addResourceSchemaKeys(tpl);
+              @if (fieldKeys.length) {
+                <div class="cred-fields-section">
+                  <div class="cred-fields-title">
+                    <i class="pi pi-key"></i>
+                    @if (addResourceForm.isShared && selectedSharedResource()) {
+                      Ortama Özgü Bilgiler
                     } @else {
-                      <input type="text"
-                        [value]="addResourceCreds[key] ?? ''"
-                        (input)="addResourceCreds[key] = $any($event.target).value"
-                        [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : (def.required ? 'Zorunlu alan' : 'İsteğe bağlı')" />
+                      Bağlantı Bilgileri
                     }
+                    <span class="cred-fields-hint">(kaynak tipi: {{ tpl.resourceTypeName }})</span>
                   </div>
-                }
-              </div>
+                  @for (key of fieldKeys; track key) {
+                    @let def = tpl.fieldSchema[key];
+                    <div class="form-group">
+                      <label>
+                        {{ def.label }}
+                        @if (def.required) { <span class="required">*</span> }
+                        <code class="field-key-badge">{{ key }}</code>
+                      </label>
+                      @if (def.type === 'password') {
+                        <input type="password" autocomplete="new-password"
+                          [value]="addResourceCreds[key] ?? ''"
+                          (input)="addResourceCreds[key] = $any($event.target).value"
+                          [placeholder]="def.required ? 'Zorunlu alan' : 'İsteğe bağlı'" />
+                      } @else if (def.type === 'number') {
+                        <input type="number"
+                          [value]="addResourceCreds[key] ?? ''"
+                          (input)="addResourceCreds[key] = $any($event.target).value"
+                          [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : ''" />
+                      } @else {
+                        <input type="text"
+                          [value]="addResourceCreds[key] ?? ''"
+                          (input)="addResourceCreds[key] = $any($event.target).value"
+                          [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : (def.required ? 'Zorunlu alan' : 'İsteğe bağlı')" />
+                      }
+                    </div>
+                  }
+                </div>
+              }
             }
           </div>
           <div class="modal-footer">
@@ -697,8 +738,10 @@ interface EnvironmentDetail {
 
     /* Dynamic credential fields in add-resource modal */
     .cred-fields-section { background: #F8FAFF; border: 1px solid #DBEAFE; border-radius: 0.5rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .cred-fields-section--readonly { background: #F9FAFB; border-color: #E5E7EB; .cred-fields-title { color: #6B7280; i { color: #9CA3AF; } } }
     .cred-fields-title { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: #1E40AF; i { color: #3B82F6; } }
     .cred-fields-hint { font-size: 0.75rem; color: #6B7280; font-weight: 400; }
+    .input-readonly { background: #F3F4F6 !important; color: #6B7280; cursor: not-allowed; border-color: #E5E7EB !important; }
     .field-key-badge { background: #EFF6FF; color: #1D4ED8; padding: 0.1rem 0.375rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.7rem; margin-left: 0.25rem; }
 
     /* Endpoint grid */
@@ -794,13 +837,15 @@ export class EnvironmentDetailComponent implements OnInit {
   addResourceForm = { templateId: '', isShared: false, sharedResourceId: '', notes: '' };
   addResourceCreds: Record<string, string> = {};
   selectedTemplate = signal<AvailableTemplate | null>(null);
-  sharedResources = signal<{ id: string; name: string }[]>([]);
+  sharedResources = signal<SharedResourceOption[]>([]);
+  selectedSharedResource = signal<SharedResourceOption | null>(null);
   private sharedResourcesLoaded = false;
 
   openAddResource() {
     this.addResourceForm = { templateId: '', isShared: false, sharedResourceId: '', notes: '' };
     this.addResourceCreds = {};
     this.selectedTemplate.set(null);
+    this.selectedSharedResource.set(null);
     this.addResourceSubmitted.set(false);
     this.addResourceError.set('');
     this.showAddResourceModal.set(true);
@@ -814,6 +859,7 @@ export class EnvironmentDetailComponent implements OnInit {
     this.addResourceForm.isShared = false;
     this.addResourceForm.sharedResourceId = '';
     this.addResourceCreds = {};
+    this.selectedSharedResource.set(null);
   }
 
   addResourceSchemaKeys(tpl: AvailableTemplate): string[] {
@@ -879,11 +925,29 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   onSharedChange() {
+    this.addResourceForm.sharedResourceId = '';
+    this.selectedSharedResource.set(null);
     if (this.addResourceForm.isShared && !this.sharedResourcesLoaded) {
-      this.http.get<{ id: string; name: string }[]>(`${environment.apiUrl}/resources/shared`).subscribe({
+      this.http.get<SharedResourceOption[]>(`${environment.apiUrl}/resources/shared`).subscribe({
         next: r => { this.sharedResources.set(r); this.sharedResourcesLoaded = true; }
       });
     }
+  }
+
+  onSharedResourceSelect(id: string) {
+    const sr = this.sharedResources().find(x => x.id === id) ?? null;
+    this.selectedSharedResource.set(sr);
+    this.addResourceCreds = {};
+  }
+
+  sharedFieldKeys(): string[] {
+    const sr = this.selectedSharedResource();
+    return sr ? Object.keys(sr.connectionFields) : [];
+  }
+
+  privateFieldKeys(tpl: AvailableTemplate): string[] {
+    const sharedKeys = new Set(this.sharedFieldKeys());
+    return Object.keys(tpl.fieldSchema).filter(k => !sharedKeys.has(k));
   }
 
   saveResource() {

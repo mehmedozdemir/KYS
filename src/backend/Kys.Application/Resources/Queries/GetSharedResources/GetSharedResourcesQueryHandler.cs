@@ -15,6 +15,8 @@ public sealed class GetSharedResourcesQueryHandler(IResourceRepository repositor
             r.Description,
             r.ResourceType.Name,
             r.ResourceType.Code,
-            r.EnvironmentScope)).ToList();
+            r.EnvironmentScope,
+            r.ConnectionFields,
+            r.ResourceType.FieldSchema)).ToList();
     }
 }

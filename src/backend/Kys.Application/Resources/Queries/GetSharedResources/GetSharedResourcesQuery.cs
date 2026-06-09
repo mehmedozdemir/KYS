@@ -11,4 +11,6 @@ public sealed record SharedResourceDto(
     string? Description,
     string ResourceTypeName,
     string ResourceTypeCode,
-    string? EnvironmentScope);
+    string? EnvironmentScope,
+    Dictionary<string, object?> ConnectionFields,
+    Dictionary<string, object?> FieldSchema);
