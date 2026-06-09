@@ -8,6 +8,7 @@ using Kys.Application.Products.Commands.DeleteProduct;
 using Kys.Application.Products.Commands.DeleteProductEndpoint;
 using Kys.Application.Products.Commands.DeleteProductResourceTemplate;
 using Kys.Application.Products.Commands.UpdateProduct;
+using Kys.Application.Products.Commands.UpdateProductResourceTemplate;
 using Kys.Application.Products.Commands.UpdateProductEndpoint;
 using Kys.Application.Products.Queries.GetProductDetail;
 using Kys.Application.Products.Queries.GetProducts;
@@ -140,6 +141,17 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
         return Created(string.Empty, new { id });
     }
 
+    [HttpPut("{productId:guid}/resource-templates/{templateId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateResourceTemplate(Guid productId, Guid templateId, [FromBody] UpdateResourceTemplateRequest request, CancellationToken ct)
+    {
+        await mediator.Send(new UpdateProductResourceTemplateCommand(
+            templateId, request.Name, request.Description,
+            request.IsRequired, request.CanBeShared, request.SortOrder), ct);
+        return NoContent();
+    }
+
     [HttpDelete("{productId:guid}/resource-templates/{templateId:guid}")]
     public async Task<IActionResult> DeleteResourceTemplate(Guid productId, Guid templateId, CancellationToken ct)
     {
@@ -165,6 +177,10 @@ public sealed record UpdateEndpointRequest(
 
 public sealed record CreateResourceTemplateRequest(
     Guid ResourceTypeId, string Name, string? Description,
+    bool IsRequired, bool CanBeShared, int SortOrder);
+
+public sealed record UpdateResourceTemplateRequest(
+    string Name, string? Description,
     bool IsRequired, bool CanBeShared, int SortOrder);
 
 // NOTE: endpoint lives under resource-templates, not products, for simplicity

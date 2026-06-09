@@ -6,15 +6,12 @@ import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
 
-// CustomerStatus: 0=Prospect,1=Onboarding,2=Active,3=Inactive,4=Churned
-// UsageMode: 0=SaaS,1=Dedicated
-// CustomerProductStatus: 0=Onboarding,1=Active,2=Inactive,3=Discontinued
-const CUST_STATUS: Record<number, string> = { 0: 'Potansiyel', 1: 'Onboarding', 2: 'Aktif', 3: 'Pasif', 4: 'Ayrıldı' };
-const CUST_STATUS_CSS: Record<number, string> = { 0: 'badge--prospect', 1: 'badge--onboarding', 2: 'badge--active', 3: 'badge--inactive', 4: 'badge--churned' };
-const USAGE_MODE: Record<number, string> = { 0: 'SaaS', 1: 'Dedicated' };
-const USAGE_MODE_CSS: Record<number, string> = { 0: 'badge--saas', 1: 'badge--custom' };
-const CP_STATUS: Record<number, string> = { 0: 'Onboarding', 1: 'Aktif', 2: 'Pasif', 3: 'Kapatıldı' };
-const CP_STATUS_CSS: Record<number, string> = { 0: 'badge--onboarding', 1: 'badge--active', 2: 'badge--inactive', 3: 'badge--archived' };
+const CUST_STATUS: Record<string, string> = { Prospect: 'Potansiyel', Onboarding: 'Onboarding', Active: 'Aktif', Inactive: 'Pasif', Churned: 'Ayrıldı' };
+const CUST_STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
+const USAGE_MODE: Record<string, string> = { SaaS: 'SaaS', Dedicated: 'Dedicated' };
+const USAGE_MODE_CSS: Record<string, string> = { SaaS: 'badge--saas', Dedicated: 'badge--custom' };
+const CP_STATUS: Record<string, string> = { Onboarding: 'Onboarding', Active: 'Aktif', Inactive: 'Pasif', Discontinued: 'Kapatıldı' };
+const CP_STATUS_CSS: Record<string, string> = { Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Discontinued: 'badge--archived' };
 
 interface EnvironmentSummary {
   id: string;
@@ -46,8 +43,8 @@ interface CustomerProduct {
   productId: string;
   productName: string;
   productCode: string;
-  usageMode: number;
-  status: number;
+  usageMode: string;
+  status: string;
   goLiveAt: string | null;
 }
 
@@ -60,7 +57,7 @@ interface CustomerDetail {
   sector: string | null;
   country: string | null;
   city: string | null;
-  status: number;
+  status: string;
   isArchived: boolean;
   archivedAt: string | null;
   onboardingStartedAt: string | null;
@@ -220,13 +217,19 @@ interface CustomerDetail {
             } @else {
               <div class="product-grid">
                 @for (cp of customer()!.products; track cp.id) {
-                  <div class="product-card">
+                  <div class="product-card" [id]="'cp-' + cp.id">
                     <div class="pc-header">
                       <div class="pc-icon"><i class="pi pi-box"></i></div>
-                      <div>
+                      <div style="flex:1">
                         <a [routerLink]="['/products', cp.productId]" class="link">{{ cp.productName }}</a>
                         <code class="code-sm">{{ cp.productCode }}</code>
                       </div>
+                      <button type="button" class="btn-icon-danger-sm" title="Ürünü kaldır"
+                        [disabled]="removingProductId() === cp.id"
+                        (click)="removeProduct(cp.id, cp.productName)">
+                        @if (removingProductId() === cp.id) { <i class="pi pi-spin pi-spinner"></i> }
+                        @else { <i class="pi pi-trash"></i> }
+                      </button>
                     </div>
                     <div class="pc-badges">
                       <span class="badge" [ngClass]="usageModeCss(cp.usageMode)">{{ usageModeLabel(cp.usageMode) }}</span>
@@ -304,9 +307,17 @@ interface CustomerDetail {
                             <span><i class="pi pi-database"></i> {{ e.resourceCount }} kaynak</span>
                             <span><i class="pi pi-link"></i> {{ e.endpointCount }} endpoint</span>
                           </div>
-                          <a [routerLink]="['/environments', e.id]" class="env-detail-link">
-                            Detay <i class="pi pi-arrow-right"></i>
-                          </a>
+                          <div class="env-card-footer">
+                            <a [routerLink]="['/environments', e.id]" class="env-detail-link">
+                              Detay <i class="pi pi-arrow-right"></i>
+                            </a>
+                            <button type="button" class="btn-icon-danger-sm" title="Ortamı kaldır"
+                              [disabled]="removingEnvId() === e.id"
+                              (click)="removeEnvironment(e.id, e.name)">
+                              @if (removingEnvId() === e.id) { <i class="pi pi-spin pi-spinner"></i> }
+                              @else { <i class="pi pi-trash"></i> }
+                            </button>
+                          </div>
                         </div>
                       }
                     </div>
@@ -460,14 +471,14 @@ interface CustomerDetail {
             <div class="form-group">
               <label>Yeni Durum <span class="required">*</span></label>
               <select [(ngModel)]="statusForm.newStatus">
-                <option value="0">Potansiyel</option>
-                <option value="1">Onboarding</option>
-                <option value="2">Aktif</option>
-                <option value="3">Pasif</option>
-                <option value="4">Ayrıldı (Churned)</option>
+                <option value="Prospect">Potansiyel</option>
+                <option value="Onboarding">Onboarding</option>
+                <option value="Active">Aktif</option>
+                <option value="Inactive">Pasif</option>
+                <option value="Churned">Ayrıldı (Churned)</option>
               </select>
             </div>
-            @if (+statusForm.newStatus === 4) {
+            @if (statusForm.newStatus === 'Churned') {
               <div class="form-group">
                 <label>Hizmet Bitiş Tarihi</label>
                 <input type="date" [(ngModel)]="statusForm.serviceEndedAt" />
@@ -497,13 +508,6 @@ interface CustomerDetail {
             <button class="modal-close" (click)="showEnvModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
-            <div class="form-group">
-              <label>Ortam Adı <span class="required">*</span></label>
-              <input type="text" [(ngModel)]="envForm.name" placeholder="ör. Prod, Test, UAT..." [class.input-error]="envFormSubmitted() && !envForm.name.trim()" />
-              @if (envFormSubmitted() && !envForm.name.trim()) {
-                <span class="error-msg">Ad zorunludur</span>
-              }
-            </div>
             <div class="form-group">
               <label>Ortam Tipi <span class="required">*</span></label>
               <select [(ngModel)]="envForm.environmentTypeId" [class.input-error]="envFormSubmitted() && !envForm.environmentTypeId">
@@ -609,7 +613,9 @@ interface CustomerDetail {
     .env-type-badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; }
     .env-name { font-size: 0.9375rem; font-weight: 600; color: #111827; }
     .env-stats { display: flex; gap: 0.75rem; font-size: 0.75rem; color: #6B7280; i { font-size: 0.7rem; margin-right: 0.25rem; } }
-    .env-detail-link { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8125rem; color: #3B82F6; text-decoration: none; margin-top: 0.25rem; font-weight: 500; &:hover { text-decoration: underline; } i { font-size: 0.7rem; } }
+    .env-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem; }
+    .env-detail-link { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8125rem; color: #3B82F6; text-decoration: none; font-weight: 500; &:hover { text-decoration: underline; } i { font-size: 0.7rem; } }
+    .btn-icon-danger-sm { background: none; border: none; cursor: pointer; color: #D1D5DB; padding: 0.2rem 0.3rem; border-radius: 0.25rem; font-size: 0.75rem; display: inline-flex; align-items: center; flex-shrink: 0; &:hover:not(:disabled) { color: #EF4444; background: #FEF2F2; } &:disabled { opacity: 0.5; cursor: not-allowed; } }
 
     /* Modal */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
@@ -648,7 +654,7 @@ export class CustomerDetailComponent implements OnInit {
   showStatusModal = signal(false);
   statusChangeSaving = signal(false);
   statusChangeError = signal('');
-  statusForm = { newStatus: '2', serviceEndedAt: '', churnReason: '' };
+  statusForm = { newStatus: 'Active', serviceEndedAt: '', churnReason: '' };
 
   openStatusChange() {
     const c = this.customer()!;
@@ -661,11 +667,11 @@ export class CustomerDetailComponent implements OnInit {
     this.statusChangeSaving.set(true);
     this.statusChangeError.set('');
     const id = this.customer()!.id;
-    const newStatus = +this.statusForm.newStatus;
+    const newStatus = this.statusForm.newStatus;
     this.http.patch(`${environment.apiUrl}/customers/${id}/status`, {
       newStatus,
-      serviceEndedAt: newStatus === 4 && this.statusForm.serviceEndedAt ? this.statusForm.serviceEndedAt : null,
-      churnReason: newStatus === 4 && this.statusForm.churnReason.trim() ? this.statusForm.churnReason.trim() : null
+      serviceEndedAt: newStatus === 'Churned' && this.statusForm.serviceEndedAt ? this.statusForm.serviceEndedAt : null,
+      churnReason: newStatus === 'Churned' && this.statusForm.churnReason.trim() ? this.statusForm.churnReason.trim() : null
     }).subscribe({
       next: () => {
         this.statusChangeSaving.set(false);
@@ -826,6 +832,39 @@ export class CustomerDetailComponent implements OnInit {
     });
   }
 
+  removingProductId = signal<string | null>(null);
+  removingEnvId = signal<string | null>(null);
+
+  removeProduct(customerProductId: string, productName: string) {
+    if (!confirm(`"${productName}" ürününü bu müşteriden kaldırmak istediğinizden emin misiniz?\n\nBu işlem için önce tüm ortamların kaldırılmış olması gerekir.`)) return;
+    this.removingProductId.set(customerProductId);
+    const customerId = this.route.snapshot.paramMap.get('id');
+    this.http.delete(`${environment.apiUrl}/customers/${customerId}/customer-products/${customerProductId}`).subscribe({
+      next: () => { this.removingProductId.set(null); this.loadCustomer(); },
+      error: (err) => {
+        this.removingProductId.set(null);
+        alert(err.error?.detail ?? 'Ürün kaldırılamadı.');
+      }
+    });
+  }
+
+  removeEnvironment(envId: string, envName: string) {
+    if (!confirm(`"${envName}" ortamını kaldırmak istediğinizden emin misiniz?\n\nBu işlem için önce tüm kaynakların kaldırılmış olması gerekir.`)) return;
+    this.removingEnvId.set(envId);
+    this.http.delete(`${environment.apiUrl}/environments/${envId}`).subscribe({
+      next: () => {
+        this.removingEnvId.set(null);
+        this.envMap.clear();
+        this.loadCustomer();
+        this.onEnvironmentsTab();
+      },
+      error: (err) => {
+        this.removingEnvId.set(null);
+        alert(err.error?.detail ?? 'Ortam kaldırılamadı.');
+      }
+    });
+  }
+
   showEnvModal = signal(false);
   private createEnvCpId = '';
   envForm = { name: '', environmentTypeId: '' };
@@ -837,28 +876,28 @@ export class CustomerDetailComponent implements OnInit {
     return [c.city, c.country].filter(v => v).join(', ') || '—';
   }
 
-  statusLabel(s: number) { return CUST_STATUS[s] ?? s; }
-  statusCss(s: number) { return CUST_STATUS_CSS[s] ?? ''; }
-  usageModeLabel(m: number) { return USAGE_MODE[m] ?? m; }
-  usageModeCss(m: number) { return USAGE_MODE_CSS[m] ?? ''; }
-  cpStatusLabel(s: number) { return CP_STATUS[s] ?? s; }
-  cpStatusCss(s: number) { return CP_STATUS_CSS[s] ?? ''; }
+  statusLabel(s: string) { return CUST_STATUS[s] ?? s; }
+  statusCss(s: string) { return CUST_STATUS_CSS[s] ?? ''; }
+  usageModeLabel(m: string) { return USAGE_MODE[m] ?? m; }
+  usageModeCss(m: string) { return USAGE_MODE_CSS[m] ?? ''; }
+  cpStatusLabel(s: string) { return CP_STATUS[s] ?? s; }
+  cpStatusCss(s: string) { return CP_STATUS_CSS[s] ?? ''; }
 
   lifecycleSteps() {
     const c = this.customer()!;
     const currentStatus = c.status;
     const steps = [
-      { label: 'Onboarding Başladı', date: c.onboardingStartedAt, active: currentStatus === 1 },
+      { label: 'Onboarding Başladı', date: c.onboardingStartedAt, active: currentStatus === 'Onboarding' },
       { label: 'Test Ortamı Hazır', date: c.testEnvReadyAt, active: false },
       { label: 'Prod Ortamı Hazır', date: c.prodEnvReadyAt, active: false },
-      { label: 'Canlıya Geçildi', date: c.productionLiveAt, active: currentStatus === 2 || currentStatus === 3 },
-      { label: 'Hizmet Sonlandırıldı', date: c.serviceEndedAt, active: currentStatus === 4 },
+      { label: 'Canlıya Geçildi', date: c.productionLiveAt, active: currentStatus === 'Active' || currentStatus === 'Inactive' },
+      { label: 'Hizmet Sonlandırıldı', date: c.serviceEndedAt, active: currentStatus === 'Churned' },
     ];
     return steps;
   }
 
   nonSaasProducts() {
-    return this.customer()?.products.filter(p => p.usageMode !== 0) ?? [];
+    return this.customer()?.products.filter(p => p.usageMode !== 'SaaS') ?? [];
   }
 
   envsForProduct(cpId: string): EnvironmentSummary[] {
@@ -920,14 +959,14 @@ export class CustomerDetailComponent implements OnInit {
 
   saveEnv() {
     this.envFormSubmitted.set(true);
-    if (!this.envForm.name.trim() || !this.envForm.environmentTypeId) return;
+    if (!this.envForm.environmentTypeId) return;
     this.envFormSaving.set(true);
     this.envFormError.set('');
 
     this.http.post<{ id: string }>(`${environment.apiUrl}/environments`, {
       customerProductId: this.createEnvCpId,
       environmentTypeId: this.envForm.environmentTypeId,
-      name: this.envForm.name.trim(),
+      name: this.envForm.name?.trim() || null,
       notes: null
     }).subscribe({
       next: () => {
@@ -943,11 +982,23 @@ export class CustomerDetailComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+  private loadCustomer() {
     const id = this.route.snapshot.paramMap.get('id');
     this.http.get<CustomerDetail>(`${environment.apiUrl}/customers/${id}`).subscribe({
-      next: c => { this.customer.set(c); this.loading.set(false); this.loadCustomFieldDefs(); },
+      next: c => { this.customer.set(c); this.loading.set(false); },
       error: () => this.loading.set(false)
     });
+  }
+
+  ngOnInit() {
+    const cpId = this.route.snapshot.queryParamMap.get('cp');
+    this.loadCustomFieldDefs();
+    this.loadCustomer();
+    if (cpId) {
+      this.activeTab.set('products');
+      setTimeout(() => {
+        document.getElementById('cp-' + cpId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
   }
 }

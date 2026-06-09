@@ -29,7 +29,7 @@ interface ProductDetail {
   teams: { teamId: string; teamName: string; role: string | null; since: string | null }[];
   assignments: { personId: string; fullName: string; responsibility: string | null; startedAt: string | null; isActive: boolean }[];
   endpoints: { id: string; name: string; endpointType: number; defaultBaseUrl: string | null; swaggerUrl: string | null; sortOrder: number }[];
-  resourceTemplates: { id: string; name: string; resourceTypeId: string; resourceTypeName: string; isRequired: boolean; canBeShared: boolean; sortOrder: number }[];
+  resourceTemplates: { id: string; name: string; description?: string; resourceTypeId: string; resourceTypeName: string; isRequired: boolean; canBeShared: boolean; sortOrder: number }[];
   customFields: Record<string, unknown>;
 }
 
@@ -329,7 +329,11 @@ interface ProductDetail {
                           <span class="muted">Hayır</span>
                         }
                       </td>
-                      <td style="text-align:right;width:48px">
+                      <td style="text-align:right;width:80px">
+                        <button type="button" class="btn-icon" title="Düzenle"
+                          (click)="openEditTemplate(t)">
+                          <i class="pi pi-pencil"></i>
+                        </button>
                         <button type="button" class="btn-icon-danger" title="Sil"
                           [disabled]="deletingTemplateId() === t.id"
                           (click)="deleteTemplate(t.id, t.name)">
@@ -347,28 +351,30 @@ interface ProductDetail {
       }
     </div>
 
-    <!-- Add Resource Template Modal -->
+    <!-- Add / Edit Resource Template Modal -->
     @if (showTemplateModal()) {
       <div class="modal-backdrop" (click)="showTemplateModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Kaynak Şablonu Ekle</h2>
+            <h2>{{ editingTemplateId() ? 'Kaynak Şablonu Düzenle' : 'Kaynak Şablonu Ekle' }}</h2>
             <button type="button" class="close-btn" (click)="showTemplateModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (templateError()) { <div class="alert-error">{{ templateError() }}</div> }
-            <div class="form-group">
-              <label>Kaynak Tipi <span class="req">*</span></label>
-              <select [(ngModel)]="templateForm.resourceTypeId" [class.input-error]="templateSubmitted() && !templateForm.resourceTypeId">
-                <option value="">Tip seçin</option>
-                @for (rt of resourceTypes(); track rt.id) {
-                  <option [value]="rt.id">{{ rt.name }}</option>
+            @if (!editingTemplateId()) {
+              <div class="form-group">
+                <label>Kaynak Tipi <span class="req">*</span></label>
+                <select [(ngModel)]="templateForm.resourceTypeId" [class.input-error]="templateSubmitted() && !templateForm.resourceTypeId">
+                  <option value="">Tip seçin</option>
+                  @for (rt of resourceTypes(); track rt.id) {
+                    <option [value]="rt.id">{{ rt.name }}</option>
+                  }
+                </select>
+                @if (templateSubmitted() && !templateForm.resourceTypeId) {
+                  <span class="field-error">Kaynak tipi zorunludur</span>
                 }
-              </select>
-              @if (templateSubmitted() && !templateForm.resourceTypeId) {
-                <span class="field-error">Kaynak tipi zorunludur</span>
-              }
-            </div>
+              </div>
+            }
             <div class="form-group">
               <label>Şablon Adı <span class="req">*</span></label>
               <input type="text" [(ngModel)]="templateForm.name" placeholder="ör. Ana Veritabanı"
@@ -376,6 +382,10 @@ interface ProductDetail {
               @if (templateSubmitted() && !templateForm.name.trim()) {
                 <span class="field-error">Ad zorunludur</span>
               }
+            </div>
+            <div class="form-group">
+              <label>Açıklama</label>
+              <input type="text" [(ngModel)]="templateForm.description" placeholder="İsteğe bağlı..." />
             </div>
             <div class="form-row">
               <label class="checkbox-label">
@@ -387,11 +397,16 @@ interface ProductDetail {
                 Paylaşılabilir
               </label>
             </div>
+            <div class="form-group">
+              <label>Sıralama</label>
+              <input type="number" [(ngModel)]="templateForm.sortOrder" min="0" style="width:6rem" />
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" (click)="showTemplateModal.set(false)">İptal</button>
-            <button type="button" class="btn btn-primary" [disabled]="templateSaving()" (click)="saveTemplate()">
-              {{ templateSaving() ? 'Kaydediliyor...' : 'Ekle' }}
+            <button type="button" class="btn btn-primary" [disabled]="templateSaving()"
+              (click)="editingTemplateId() ? updateTemplate() : saveTemplate()">
+              {{ templateSaving() ? 'Kaydediliyor...' : (editingTemplateId() ? 'Güncelle' : 'Ekle') }}
             </button>
           </div>
         </div>
@@ -676,6 +691,7 @@ interface ProductDetail {
     .data-table { width: 100%; border-collapse: collapse; th { background: #F9FAFB; padding: 0.625rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB; } td { padding: 0.75rem; font-size: 0.875rem; color: #374151; border-bottom: 1px solid #F3F4F6; } tr:last-child td { border-bottom: none; } }
     .inactive-row td { opacity: 0.55; }
     .muted { color: #6B7280; }
+    .btn-icon { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem; border-radius: 0.25rem; &:hover { color: #3B82F6; background: #EFF6FF; } }
     .btn-icon-danger { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem; border-radius: 0.25rem; &:hover { color: #EF4444; background: #FEF2F2; } &:disabled { opacity: 0.5; cursor: not-allowed; } }
 
     .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
@@ -1027,12 +1043,14 @@ export class ProductDetailComponent implements OnInit {
   templateSubmitted = signal(false);
   deletingTemplateId = signal<string | null>(null);
   templateError = signal('');
-  templateForm = { resourceTypeId: '', name: '', isRequired: false, canBeShared: false };
+  editingTemplateId = signal<string | null>(null);
+  templateForm = { resourceTypeId: '', name: '', description: '', isRequired: false, canBeShared: false, sortOrder: 0 };
   resourceTypes = signal<{ id: string; name: string; code: string }[]>([]);
   private resourceTypesLoaded = false;
 
   openAddTemplate() {
-    this.templateForm = { resourceTypeId: '', name: '', isRequired: false, canBeShared: false };
+    this.editingTemplateId.set(null);
+    this.templateForm = { resourceTypeId: '', name: '', description: '', isRequired: false, canBeShared: false, sortOrder: this.product()!.resourceTemplates.length };
     this.templateSubmitted.set(false);
     this.templateError.set('');
     this.showTemplateModal.set(true);
@@ -1041,6 +1059,21 @@ export class ProductDetailComponent implements OnInit {
         next: r => { this.resourceTypes.set(r); this.resourceTypesLoaded = true; }
       });
     }
+  }
+
+  openEditTemplate(t: { id: string; name: string; resourceTypeId: string; isRequired: boolean; canBeShared: boolean; sortOrder: number; description?: string }) {
+    this.editingTemplateId.set(t.id);
+    this.templateForm = {
+      resourceTypeId: t.resourceTypeId,
+      name: t.name,
+      description: t.description ?? '',
+      isRequired: t.isRequired,
+      canBeShared: t.canBeShared,
+      sortOrder: t.sortOrder
+    };
+    this.templateSubmitted.set(false);
+    this.templateError.set('');
+    this.showTemplateModal.set(true);
   }
 
   saveTemplate() {
@@ -1052,13 +1085,32 @@ export class ProductDetailComponent implements OnInit {
     this.http.post(`${environment.apiUrl}/products/${id}/resource-templates`, {
       resourceTypeId: this.templateForm.resourceTypeId,
       name: this.templateForm.name.trim(),
-      description: null,
+      description: this.templateForm.description.trim() || null,
       isRequired: this.templateForm.isRequired,
       canBeShared: this.templateForm.canBeShared,
-      sortOrder: this.product()!.resourceTemplates.length
+      sortOrder: this.templateForm.sortOrder
     }).subscribe({
       next: () => { this.templateSaving.set(false); this.showTemplateModal.set(false); this.reload(); },
       error: err => { this.templateSaving.set(false); this.templateError.set(err.error?.detail ?? 'Şablon eklenemedi'); }
+    });
+  }
+
+  updateTemplate() {
+    this.templateSubmitted.set(true);
+    if (!this.templateForm.name.trim()) return;
+    this.templateSaving.set(true);
+    this.templateError.set('');
+    const productId = this.route.snapshot.paramMap.get('id');
+    const templateId = this.editingTemplateId()!;
+    this.http.put(`${environment.apiUrl}/products/${productId}/resource-templates/${templateId}`, {
+      name: this.templateForm.name.trim(),
+      description: this.templateForm.description.trim() || null,
+      isRequired: this.templateForm.isRequired,
+      canBeShared: this.templateForm.canBeShared,
+      sortOrder: this.templateForm.sortOrder
+    }).subscribe({
+      next: () => { this.templateSaving.set(false); this.showTemplateModal.set(false); this.reload(); },
+      error: err => { this.templateSaving.set(false); this.templateError.set(err.error?.detail ?? 'Şablon güncellenemedi'); }
     });
   }
 

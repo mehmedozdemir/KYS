@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
@@ -54,10 +54,22 @@ interface AvailableTemplate {
   fieldSchema: Record<string, FieldSchemaDef>;
 }
 
+interface EnvironmentSummary {
+  id: string;
+  name: string;
+  environmentTypeName: string;
+  environmentTypeCode: string;
+  environmentTypeColor: string | null;
+  isActive: boolean;
+}
+
 interface EnvironmentDetail {
   id: string;
   customerProductId: string;
   productId: string;
+  customerId: string;
+  customerName: string;
+  productName: string;
   name: string;
   environmentTypeName: string;
   environmentTypeCode: string;
@@ -83,6 +95,10 @@ interface EnvironmentDetail {
         <div class="breadcrumb">
           <a routerLink="/customers">Müşteriler</a>
           <span>/</span>
+          <a [routerLink]="['/customers', env()!.customerId]">{{ env()!.customerName }}</a>
+          <span>/</span>
+          <span>{{ env()!.productName }}</span>
+          <span>/</span>
           <span>{{ env()!.name }}</span>
         </div>
 
@@ -104,6 +120,28 @@ interface EnvironmentDetail {
               </div>
               @if (env()!.notes) {
                 <p class="header-notes">{{ env()!.notes }}</p>
+              }
+              @if (siblings().length > 1) {
+                <div class="env-switcher">
+                  @for (s of siblings(); track s.id) {
+                    <button type="button"
+                      class="env-pill"
+                      [class.env-pill--active]="s.id === env()!.id"
+                      [style.background]="s.id === env()!.id ? siblingColor(s, 0.15) : ''"
+                      [style.color]="s.id === env()!.id ? (s.environmentTypeColor ?? '#6B7280') : ''"
+                      [style.border-color]="s.id === env()!.id ? (s.environmentTypeColor ?? '#6B7280') + '66' : ''"
+                      [title]="s.environmentTypeName"
+                      (click)="s.id !== env()!.id && navigateToSibling(s.id)">
+                      <span class="env-pill-dot"
+                        [style.background]="s.environmentTypeColor ?? '#6B7280'">
+                      </span>
+                      {{ s.name }}
+                      @if (!s.isActive) {
+                        <span class="env-pill-inactive">pasif</span>
+                      }
+                    </button>
+                  }
+                </div>
               }
             </div>
           </div>
@@ -615,6 +653,11 @@ interface EnvironmentDetail {
     .header-title-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; h1 { font-size: 1.25rem; font-weight: 700; color: #111827; } }
     .type-badge { display: inline-flex; align-items: center; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
     .header-notes { font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem; }
+    .env-switcher { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.625rem; }
+    .env-pill { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border: 1px solid #E5E7EB; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background: white; color: #6B7280; cursor: pointer; transition: all 0.15s; white-space: nowrap; &:hover:not(.env-pill--active) { background: #F3F4F6; border-color: #D1D5DB; color: #374151; } }
+    .env-pill--active { font-weight: 600; cursor: default; }
+    .env-pill-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex-shrink: 0; }
+    .env-pill-inactive { font-size: 0.65rem; color: #9CA3AF; font-weight: 400; }
     .header-stats { display: flex; gap: 1.5rem; flex-shrink: 0; }
     .stat { text-align: center; }
     .stat-val { display: block; font-size: 1.5rem; font-weight: 700; color: #111827; }
@@ -737,9 +780,11 @@ interface EnvironmentDetail {
 export class EnvironmentDetailComponent implements OnInit {
   private http = inject(HttpClient);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   env = signal<EnvironmentDetail | null>(null);
   loading = signal(true);
+  siblings = signal<EnvironmentSummary[]>([]);
 
   // Add resource modal state
   showAddResourceModal = signal(false);
@@ -1005,10 +1050,31 @@ export class EnvironmentDetailComponent implements OnInit {
         this.env.set(d);
         this.loading.set(false);
         this.autoRevealNonPasswordCreds(d);
+        this.loadSiblings(d.customerProductId);
         onDone?.(d);
       },
       error: () => this.loading.set(false)
     });
+  }
+
+  private loadSiblings(customerProductId: string) {
+    this.http.get<EnvironmentSummary[]>(
+      `${environment.apiUrl}/environments/customer-products/${customerProductId}`
+    ).subscribe({ next: list => this.siblings.set(list) });
+  }
+
+  navigateToSibling(siblingId: string) {
+    this.router.navigate(['/environments', siblingId]).then(() => {
+      this.loading.set(true);
+      this.env.set(null);
+      this.siblings.set([]);
+      this.load();
+    });
+  }
+
+  siblingColor(s: EnvironmentSummary, alpha: number): string {
+    const c = s.environmentTypeColor ?? '#6B7280';
+    return c + Math.round(alpha * 255).toString(16).padStart(2, '0');
   }
 
   totalCredentialCount(): number {

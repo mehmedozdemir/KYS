@@ -15,7 +15,11 @@ public sealed class GetCustomersQueryHandler(ICustomerRepository customerReposit
         var dtos = items.Select(c => new CustomerListDto(
             c.Id, c.Name, c.Code, c.ShortName,
             c.Status, c.IsArchived, c.ProductionLiveAt,
-            c.Products.Count
+            c.Products.Count,
+            c.Products
+                .OrderBy(cp => cp.Product.Code)
+                .Select(cp => new CustomerProductBadgeDto(cp.Id, cp.ProductId, cp.Product.Code, cp.Product.Name))
+                .ToList()
         )).ToList();
 
         return new GetCustomersResult(dtos, total, request.Page, request.PageSize);

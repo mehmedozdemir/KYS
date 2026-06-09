@@ -13,7 +13,7 @@ public sealed class ProductRepository(AppDbContext dbContext) : IProductReposito
     {
         var query = dbContext.Products
             .Include(p => p.PoPerson)
-            .Include(p => p.Teams)
+            .Include(p => p.Teams).ThenInclude(pt => pt.Team)
             .Include(p => p.Assignments)
             .AsNoTracking();
 
@@ -107,6 +107,9 @@ public sealed class ProductRepository(AppDbContext dbContext) : IProductReposito
 
     public async Task AddResourceTemplateAsync(ProductResourceTemplate template, CancellationToken ct = default)
         => await dbContext.ProductResourceTemplates.AddAsync(template, ct);
+
+    public void UpdateResourceTemplate(ProductResourceTemplate template)
+        => dbContext.ProductResourceTemplates.Update(template);
 
     public void DeleteResourceTemplate(ProductResourceTemplate template)
         => dbContext.ProductResourceTemplates.Remove(template);

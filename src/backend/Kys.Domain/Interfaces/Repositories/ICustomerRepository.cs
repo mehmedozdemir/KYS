@@ -21,4 +21,5 @@ public interface ICustomerRepository
     Task<CustomerProduct?> GetCustomerProductByIdAsync(Guid customerProductId, CancellationToken ct = default);
     Task AddCustomerProductAsync(CustomerProduct customerProduct, CancellationToken ct = default);
     void UpdateCustomerProduct(CustomerProduct customerProduct);
+    void RemoveCustomerProduct(CustomerProduct customerProduct);
 }

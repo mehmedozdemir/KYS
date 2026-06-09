@@ -45,6 +45,7 @@ interface EnvType {
                 <th>Kod</th>
                 <th>Açıklama</th>
                 <th>Sıra</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -57,6 +58,14 @@ interface EnvType {
                   <td><code class="mono">{{ t.code }}</code></td>
                   <td class="text-muted">{{ t.description ?? '—' }}</td>
                   <td class="text-muted">{{ t.sortOrder }}</td>
+                  <td class="actions-cell">
+                    <button class="btn-icon" title="Düzenle" (click)="openEdit(t)">
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button class="btn-icon btn-icon--danger" title="Sil" (click)="confirmDelete(t)">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -65,12 +74,12 @@ interface EnvType {
       }
     </div>
 
-    <!-- Create Modal -->
+    <!-- Create / Edit Modal -->
     @if (showModal()) {
       <div class="modal-backdrop" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Yeni Ortam Tipi</h2>
+            <h2>{{ editingId() ? 'Ortam Tipini Düzenle' : 'Yeni Ortam Tipi' }}</h2>
             <button class="close-btn" (click)="closeModal()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -117,8 +126,38 @@ interface EnvType {
           <div class="modal-footer">
             <button class="btn btn-secondary" (click)="closeModal()">İptal</button>
             <button class="btn btn-primary" [disabled]="saving()" (click)="save()">
-              {{ saving() ? 'Kaydediliyor...' : 'Oluştur' }}
+              {{ saving() ? 'Kaydediliyor...' : (editingId() ? 'Güncelle' : 'Oluştur') }}
             </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Delete Confirm Modal -->
+    @if (deletingType()) {
+      <div class="modal-backdrop" (click)="deletingType.set(null)">
+        <div class="modal modal--sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Ortam Tipini Sil</h2>
+            <button class="close-btn" (click)="deletingType.set(null)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            @if (deleteError()) {
+              <div class="alert-error">{{ deleteError() }}</div>
+            } @else {
+              <p class="confirm-text">
+                <strong>{{ deletingType()!.name }}</strong> ortam tipini silmek istediğinize emin misiniz?
+                Bu işlem geri alınamaz.
+              </p>
+            }
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="deletingType.set(null)">İptal</button>
+            @if (!deleteError()) {
+              <button class="btn btn-danger" [disabled]="deleting()" (click)="deleteConfirmed()">
+                {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+              </button>
+            }
           </div>
         </div>
       </div>
@@ -141,13 +180,18 @@ interface EnvType {
     .name-cell { font-weight: 500; color: #111827; }
     .mono { font-family: monospace; font-size: 0.8125rem; background: #F3F4F6; padding: 0.125rem 0.375rem; border-radius: 0.25rem; }
     .text-muted { color: #9CA3AF; font-size: 0.8125rem; }
+    .actions-cell { text-align: right; white-space: nowrap; }
 
     .btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; &:disabled { opacity: 0.6; cursor: not-allowed; } }
     .btn-primary { background: #3B82F6; color: white; &:not(:disabled):hover { background: #2563EB; } }
     .btn-secondary { background: white; color: #374151; border: 1px solid #D1D5DB; &:hover { background: #F3F4F6; } }
+    .btn-danger { background: #EF4444; color: white; &:not(:disabled):hover { background: #DC2626; } }
+    .btn-icon { background: none; border: none; cursor: pointer; padding: 0.375rem; border-radius: 0.375rem; color: #6B7280; font-size: 0.875rem; &:hover { background: #F3F4F6; color: #374151; } }
+    .btn-icon--danger { &:hover { background: #FEF2F2; color: #EF4444; } }
 
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
     .modal { background: white; border-radius: 0.75rem; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal--sm { max-width: 400px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid #E5E7EB; h2 { font-size: 1.125rem; font-weight: 700; color: #111827; } }
     .close-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem; font-size: 1rem; &:hover { color: #374151; } }
     .modal-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
@@ -162,6 +206,7 @@ interface EnvType {
     .req { color: #EF4444; }
     .field-error { font-size: 0.75rem; color: #EF4444; }
     .alert-error { padding: 0.75rem 1rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.5rem; color: #991B1B; font-size: 0.875rem; }
+    .confirm-text { font-size: 0.9375rem; color: #374151; line-height: 1.5; margin: 0; }
   `]
 })
 export class EnvironmentTypesComponent implements OnInit {
@@ -171,10 +216,15 @@ export class EnvironmentTypesComponent implements OnInit {
   loading = signal(true);
 
   showModal = signal(false);
+  editingId = signal<string | null>(null);
   saving = signal(false);
   submitted = signal(false);
   saveError = signal('');
   form = { name: '', code: '', description: '', color: '#3B82F6', sortOrder: 0 };
+
+  deletingType = signal<EnvType | null>(null);
+  deleting = signal(false);
+  deleteError = signal('');
 
   ngOnInit() { this.load(); }
 
@@ -187,7 +237,16 @@ export class EnvironmentTypesComponent implements OnInit {
   }
 
   openCreate() {
+    this.editingId.set(null);
     this.form = { name: '', code: '', description: '', color: '#3B82F6', sortOrder: this.types().length + 1 };
+    this.submitted.set(false);
+    this.saveError.set('');
+    this.showModal.set(true);
+  }
+
+  openEdit(t: EnvType) {
+    this.editingId.set(t.id);
+    this.form = { name: t.name, code: t.code, description: t.description ?? '', color: t.color ?? '#3B82F6', sortOrder: t.sortOrder };
     this.submitted.set(false);
     this.saveError.set('');
     this.showModal.set(true);
@@ -200,15 +259,38 @@ export class EnvironmentTypesComponent implements OnInit {
     if (!this.form.name.trim() || !this.form.code.trim()) return;
     this.saving.set(true);
     this.saveError.set('');
-    this.http.post(`${environment.apiUrl}/admin/environment-types`, {
+
+    const payload = {
       name: this.form.name.trim(),
       code: this.form.code.trim().toUpperCase(),
       description: this.form.description.trim() || null,
       color: this.form.color || null,
       sortOrder: Number(this.form.sortOrder)
-    }).subscribe({
+    };
+
+    const id = this.editingId();
+    const req = id
+      ? this.http.put(`${environment.apiUrl}/admin/environment-types/${id}`, payload)
+      : this.http.post(`${environment.apiUrl}/admin/environment-types`, payload);
+
+    req.subscribe({
       next: () => { this.saving.set(false); this.closeModal(); this.load(); },
       error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? 'Kaydedilemedi'); }
+    });
+  }
+
+  confirmDelete(t: EnvType) {
+    this.deleteError.set('');
+    this.deletingType.set(t);
+  }
+
+  deleteConfirmed() {
+    const t = this.deletingType();
+    if (!t) return;
+    this.deleting.set(true);
+    this.http.delete(`${environment.apiUrl}/admin/environment-types/${t.id}`).subscribe({
+      next: () => { this.deleting.set(false); this.deletingType.set(null); this.load(); },
+      error: err => { this.deleting.set(false); this.deleteError.set(err.error?.detail ?? 'Silinemedi'); }
     });
   }
 }

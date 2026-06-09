@@ -8,11 +8,17 @@ public interface IEnvironmentRepository
     Task<IReadOnlyList<EnvironmentType>> GetEnvironmentTypesAsync(CancellationToken ct = default);
     Task<EnvironmentType?> GetEnvironmentTypeByIdAsync(Guid id, CancellationToken ct = default);
     Task AddEnvironmentTypeAsync(EnvironmentType environmentType, CancellationToken ct = default);
+    void UpdateEnvironmentType(EnvironmentType environmentType);
+    void DeleteEnvironmentType(EnvironmentType environmentType);
+    Task<int> CountEnvironmentsByTypeAsync(Guid environmentTypeId, CancellationToken ct = default);
 
     // CustomerEnvironment
     Task<IReadOnlyList<CustomerEnvironment>> GetByCustomerProductAsync(Guid customerProductId, CancellationToken ct = default);
     Task<CustomerEnvironment?> GetEnvironmentByIdAsync(Guid id, CancellationToken ct = default);
     Task AddCustomerEnvironmentAsync(CustomerEnvironment environment, CancellationToken ct = default);
+    void RemoveCustomerEnvironment(CustomerEnvironment environment);
+    Task<int> CountEnvironmentsByCustomerProductAsync(Guid customerProductId, CancellationToken ct = default);
+    Task<int> CountResourcesByEnvironmentAsync(Guid environmentId, CancellationToken ct = default);
 
     // EnvironmentResource
     Task<EnvironmentResource?> GetResourceByIdAsync(Guid id, CancellationToken ct = default);

@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Kys.Application.Environments.Commands.AddResourceToEnvironment;
 using Kys.Application.Environments.Commands.CreateCustomerEnvironment;
+using Kys.Application.Environments.Commands.DeleteCustomerEnvironment;
 using Kys.Application.Environments.Commands.RemoveEnvironmentResource;
 using Kys.Application.Environments.Commands.RemoveEnvironmentEndpointUrl;
 using Kys.Application.Environments.Commands.SetEnvironmentEndpointUrl;
@@ -43,6 +44,16 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
             request.Name,
             request.Notes), ct);
         return CreatedAtAction(nameof(GetDetail), new { id }, new { id });
+    }
+
+    [HttpDelete("{environmentId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> DeleteEnvironment(Guid environmentId, CancellationToken ct)
+    {
+        await mediator.Send(new DeleteCustomerEnvironmentCommand(environmentId), ct);
+        return NoContent();
     }
 
     [HttpPost("{environmentId:guid}/resources")]
@@ -98,7 +109,7 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
 public sealed record CreateCustomerEnvironmentRequest(
     Guid CustomerProductId,
     Guid EnvironmentTypeId,
-    string Name,
+    string? Name,
     string? Notes);
 
 public sealed record AddResourceToEnvironmentRequest(

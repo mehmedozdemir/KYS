@@ -16,6 +16,15 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
     public async Task AddEnvironmentTypeAsync(EnvironmentType environmentType, CancellationToken ct = default)
         => await db.EnvironmentTypes.AddAsync(environmentType, ct);
 
+    public void UpdateEnvironmentType(EnvironmentType environmentType)
+        => db.EnvironmentTypes.Update(environmentType);
+
+    public void DeleteEnvironmentType(EnvironmentType environmentType)
+        => db.EnvironmentTypes.Remove(environmentType);
+
+    public async Task<int> CountEnvironmentsByTypeAsync(Guid environmentTypeId, CancellationToken ct = default)
+        => await db.CustomerEnvironments.CountAsync(e => e.EnvironmentTypeId == environmentTypeId, ct);
+
     public async Task<IReadOnlyList<CustomerEnvironment>> GetByCustomerProductAsync(Guid customerProductId, CancellationToken ct = default)
         => await db.CustomerEnvironments
             .Include(x => x.EnvironmentType)
@@ -37,6 +46,8 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
             .Include(x => x.Endpoints)
                 .ThenInclude(e => e.Credentials)
             .Include(x => x.CustomerProduct)
+                .ThenInclude(cp => cp.Customer)
+            .Include(x => x.CustomerProduct)
                 .ThenInclude(cp => cp.Product)
                     .ThenInclude(p => p.Endpoints)
             .Include(x => x.CustomerProduct)
@@ -47,6 +58,15 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
 
     public async Task AddCustomerEnvironmentAsync(CustomerEnvironment environment, CancellationToken ct = default)
         => await db.CustomerEnvironments.AddAsync(environment, ct);
+
+    public void RemoveCustomerEnvironment(CustomerEnvironment environment)
+        => db.CustomerEnvironments.Remove(environment);
+
+    public async Task<int> CountEnvironmentsByCustomerProductAsync(Guid customerProductId, CancellationToken ct = default)
+        => await db.CustomerEnvironments.CountAsync(e => e.CustomerProductId == customerProductId, ct);
+
+    public async Task<int> CountResourcesByEnvironmentAsync(Guid environmentId, CancellationToken ct = default)
+        => await db.EnvironmentResources.CountAsync(r => r.CustomerEnvironmentId == environmentId, ct);
 
     public async Task<EnvironmentResource?> GetResourceByIdAsync(Guid id, CancellationToken ct = default)
         => await db.EnvironmentResources

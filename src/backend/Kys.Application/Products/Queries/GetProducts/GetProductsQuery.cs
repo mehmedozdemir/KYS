@@ -21,5 +21,8 @@ public sealed record ProductListDto(
     ProductStatus Status,
     string? PoName,
     int TeamCount,
-    int AssignmentCount
+    int AssignmentCount,
+    IReadOnlyList<ProductTeamBadgeDto> Teams
 );
+
+public sealed record ProductTeamBadgeDto(Guid TeamId, string TeamCode, string TeamName);

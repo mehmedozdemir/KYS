@@ -20,7 +20,10 @@ public sealed class GetProductsQueryHandler(IProductRepository productRepository
             p.Status,
             p.PoPerson?.FullName,
             p.Teams.Count,
-            p.Assignments.Count(a => a.IsActive)
+            p.Assignments.Count(a => a.IsActive),
+            p.Teams.OrderBy(pt => pt.Team.Code)
+                   .Select(pt => new ProductTeamBadgeDto(pt.TeamId, pt.Team.Code ?? pt.Team.Name, pt.Team.Name))
+                   .ToList()
         )).ToList();
 
         return new GetProductsResult(dtos, total, request.Page, request.PageSize);

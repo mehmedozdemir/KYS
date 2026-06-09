@@ -21,5 +21,13 @@ public sealed record CustomerListDto(
     CustomerStatus Status,
     bool IsArchived,
     DateOnly? ProductionLiveAt,
-    int ProductCount
+    int ProductCount,
+    IReadOnlyList<CustomerProductBadgeDto> Products
+);
+
+public sealed record CustomerProductBadgeDto(
+    Guid CustomerProductId,
+    Guid ProductId,
+    string ProductCode,
+    string ProductName
 );

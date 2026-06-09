@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -21,6 +21,12 @@ const TYPE_CSS: Record<number, string> = { 0: 'badge--saas', 1: 'badge--custom',
 const STATUS_LABELS: Record<number, string> = { 0: 'Aktif', 1: 'Kullanımdan Kalkıyor', 2: 'Kapatıldı' };
 const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--deprecated', 2: 'badge--archived' };
 
+interface TeamBadge {
+  teamId: string;
+  teamCode: string;
+  teamName: string;
+}
+
 interface ProductListItem {
   id: string;
   name: string;
@@ -30,6 +36,7 @@ interface ProductListItem {
   poName: string | null;
   teamCount: number;
   assignmentCount: number;
+  teams: TeamBadge[];
 }
 
 interface PagedResult {
@@ -111,7 +118,21 @@ interface CreateProductForm {
                   <td><span class="badge" [class]="typeCss(p.productType)">{{ typeLabel(p.productType) }}</span></td>
                   <td><span class="badge" [class]="statusCss(p.status)">{{ statusLabel(p.status) }}</span></td>
                   <td class="muted">{{ p.poName ?? '—' }}</td>
-                  <td class="muted">{{ p.teamCount }} ekip · {{ p.assignmentCount }} kişi</td>
+                  <td (click)="$event.stopPropagation()">
+                    @if (!p.teams.length) {
+                      <span class="muted">—</span>
+                    } @else {
+                      <div class="team-badges">
+                        @for (t of p.teams; track t.teamId) {
+                          <button type="button" class="team-badge"
+                            [title]="t.teamName"
+                            (click)="goToTeam(t.teamId)">
+                            {{ t.teamCode }}
+                          </button>
+                        }
+                      </div>
+                    }
+                  </td>
                   <td class="actions-cell" (click)="$event.stopPropagation()">
                     <div class="kebab-wrap">
                       <button class="kebab-btn" (click)="toggleMenu(p.id)"><i class="pi pi-ellipsis-v"></i></button>
@@ -286,6 +307,8 @@ interface CreateProductForm {
     .product-icon { width: 2rem; height: 2rem; border-radius: 0.375rem; background: #F0FDF4; color: #16A34A; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; flex-shrink: 0; }
     .product-name { font-weight: 500; color: #111827; }
     .muted { color: #6B7280; }
+    .team-badges { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+    .team-badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; font-family: monospace; cursor: pointer; white-space: nowrap; &:hover { background: #DCFCE7; border-color: #86EFAC; color: #14532D; } }
     .code-badge { background: #F3F4F6; color: #374151; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.8125rem; }
 
     .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
@@ -335,6 +358,7 @@ interface CreateProductForm {
 })
 export class ProductListComponent implements OnInit {
   private http = inject(HttpClient);
+  private router = inject(Router);
 
   products = signal<ProductListItem[]>([]);
   loading = signal(true);
@@ -452,6 +476,8 @@ export class ProductListComponent implements OnInit {
   typeCss(t: number) { return TYPE_CSS[t] ?? ''; }
   statusLabel(s: number) { return STATUS_LABELS[s] ?? s; }
   statusCss(s: number) { return STATUS_CSS[s] ?? ''; }
+
+  goToTeam(teamId: string) { this.router.navigate(['/teams', teamId]); }
 
   ngOnInit() {
     this.searchSubject.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {

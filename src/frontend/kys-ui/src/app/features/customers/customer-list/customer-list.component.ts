@@ -5,8 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { NgClass, DatePipe } from '@angular/common';
 import { environment } from '../../../../environments/environment';
 
-const STATUS_LABEL: Record<number, string> = { 0: 'Potansiyel', 1: 'Onboarding', 2: 'Aktif', 3: 'Pasif', 4: 'Ayrıldı' };
-const STATUS_CSS: Record<number, string> = { 0: 'badge--prospect', 1: 'badge--onboarding', 2: 'badge--active', 3: 'badge--inactive', 4: 'badge--churned' };
+const STATUS_LABEL: Record<string, string> = { Prospect: 'Potansiyel', Onboarding: 'Onboarding', Active: 'Aktif', Inactive: 'Pasif', Churned: 'Ayrıldı' };
+const STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
 
 interface CustomFieldDef {
   id: string;
@@ -19,15 +19,23 @@ interface CustomFieldDef {
   groupName: string | null;
 }
 
+interface CustomerProductBadge {
+  customerProductId: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+}
+
 interface Customer {
   id: string;
   name: string;
   code: string;
   shortName: string | null;
-  status: number;
+  status: string;
   productionLiveAt: string | null;
   productCount: number;
   isArchived: boolean;
+  products: CustomerProductBadge[];
 }
 
 @Component({
@@ -50,11 +58,11 @@ interface Customer {
           class="search-input" />
         <select [(ngModel)]="statusFilter" (ngModelChange)="onSearch()" class="select-input">
           <option value="">Tüm Durumlar</option>
-          <option value="0">Potansiyel</option>
-          <option value="1">Onboarding</option>
-          <option value="2">Aktif</option>
-          <option value="3">Pasif</option>
-          <option value="4">Ayrıldı</option>
+          <option value="Prospect">Potansiyel</option>
+          <option value="Onboarding">Onboarding</option>
+          <option value="Active">Aktif</option>
+          <option value="Inactive">Pasif</option>
+          <option value="Churned">Ayrıldı</option>
         </select>
         <label class="checkbox-label">
           <input type="checkbox" [(ngModel)]="includeArchived" (ngModelChange)="onSearch()" />
@@ -84,7 +92,21 @@ interface Customer {
                   <span class="badge" [ngClass]="statusCss(c.status)">{{ statusLabel(c.status) }}</span>
                 </td>
                 <td>{{ c.productionLiveAt ? (c.productionLiveAt | date:'dd.MM.yyyy') : '—' }}</td>
-                <td>{{ c.productCount }}</td>
+                <td (click)="$event.stopPropagation()">
+                  @if (!c.products.length) {
+                    <span class="muted-text">—</span>
+                  } @else {
+                    <div class="product-badges">
+                      @for (p of c.products; track p.customerProductId) {
+                        <button type="button" class="product-badge"
+                          [title]="p.productName"
+                          (click)="goToProduct(c.id, p.customerProductId)">
+                          {{ p.productCode }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </td>
                 <td class="actions-cell" (click)="$event.stopPropagation()">
                   <div class="kebab-wrap">
                     <button class="kebab-btn" (click)="toggleMenu(c.id)"><i class="pi pi-ellipsis-v"></i></button>
@@ -323,6 +345,9 @@ interface Customer {
     .badge--inactive { background: #FEF3C7; color: #92400E; }
     .badge--churned { background: #FEE2E2; color: #991B1B; }
 
+    .muted-text { color: #D1D5DB; font-size: 0.875rem; }
+    .product-badges { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+    .product-badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; font-family: monospace; cursor: pointer; white-space: nowrap; &:hover { background: #DBEAFE; border-color: #93C5FD; color: #1E40AF; } }
     .actions-cell { width: 2.5rem; text-align: center; }
     .kebab-wrap { position: relative; display: inline-block; }
     .kebab-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 1rem; line-height: 1; &:hover { background: #F3F4F6; color: #374151; } }
@@ -499,6 +524,10 @@ export class CustomerListComponent implements OnInit {
     });
   }
 
-  statusLabel(s: number) { return STATUS_LABEL[s] ?? String(s); }
-  statusCss(s: number) { return STATUS_CSS[s] ?? ''; }
+  statusLabel(s: string) { return STATUS_LABEL[s] ?? s; }
+  statusCss(s: string) { return STATUS_CSS[s] ?? ''; }
+
+  goToProduct(customerId: string, customerProductId: string) {
+    this.router.navigate(['/customers', customerId], { queryParams: { cp: customerProductId } });
+  }
 }

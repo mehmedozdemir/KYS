@@ -8,7 +8,7 @@ public sealed class CreateCustomerEnvironmentCommandValidator : AbstractValidato
     {
         RuleFor(x => x.CustomerProductId).NotEmpty();
         RuleFor(x => x.EnvironmentTypeId).NotEmpty();
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Name).MaximumLength(200);
         RuleFor(x => x.Notes).MaximumLength(1000);
     }
 }

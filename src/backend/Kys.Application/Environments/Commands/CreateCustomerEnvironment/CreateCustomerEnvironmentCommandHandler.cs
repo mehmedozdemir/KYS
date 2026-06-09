@@ -25,7 +25,7 @@ public sealed class CreateCustomerEnvironmentCommandHandler(
         {
             CustomerProductId = customerProduct.Id,
             EnvironmentTypeId = envType.Id,
-            Name = request.Name,
+            Name = string.IsNullOrWhiteSpace(request.Name) ? envType.Name : request.Name,
             Notes = request.Notes
         };
 

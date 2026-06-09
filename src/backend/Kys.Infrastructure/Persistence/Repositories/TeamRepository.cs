@@ -15,7 +15,10 @@ public sealed class TeamRepository(AppDbContext db) : ITeamRepository
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
     public async Task<IReadOnlyList<Team>> GetAllAsync(CancellationToken ct = default)
-        => await db.Teams.OrderBy(t => t.Name).ToListAsync(ct);
+        => await db.Teams
+            .Include(t => t.Memberships)
+            .OrderBy(t => t.Name)
+            .ToListAsync(ct);
 
     public async Task AddAsync(Team team, CancellationToken ct = default)
         => await db.Teams.AddAsync(team, ct);

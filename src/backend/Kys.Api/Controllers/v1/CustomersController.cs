@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Kys.Application.Customers.Commands.AddProductToCustomer;
+using Kys.Application.Customers.Commands.RemoveCustomerProduct;
 using Kys.Application.Customers.Commands.ArchiveCustomer;
 using Kys.Application.Customers.Commands.CreateCustomer;
 using Kys.Application.Customers.Commands.DeleteCustomer;
@@ -108,6 +109,16 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
         var id = await mediator.Send(new AddProductToCustomerCommand(
             customerId, request.ProductId, request.UsageMode, request.Notes), ct);
         return Created(string.Empty, new { id });
+    }
+
+    [HttpDelete("{customerId:guid}/customer-products/{customerProductId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RemoveProduct(Guid customerId, Guid customerProductId, CancellationToken ct)
+    {
+        await mediator.Send(new RemoveCustomerProductCommand(customerProductId), ct);
+        return NoContent();
     }
 
     [HttpPatch("{customerId:guid}/products/{productId:guid}/status")]

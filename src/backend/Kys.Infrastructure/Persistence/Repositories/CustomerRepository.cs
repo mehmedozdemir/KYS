@@ -24,6 +24,7 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
 
         var total = await query.CountAsync(ct);
         var items = await query
+            .Include(c => c.Products).ThenInclude(cp => cp.Product)
             .OrderBy(c => c.Name)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -65,4 +66,7 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
 
     public void UpdateCustomerProduct(CustomerProduct customerProduct)
         => dbContext.CustomerProducts.Update(customerProduct);
+
+    public void RemoveCustomerProduct(CustomerProduct customerProduct)
+        => dbContext.CustomerProducts.Remove(customerProduct);
 }
