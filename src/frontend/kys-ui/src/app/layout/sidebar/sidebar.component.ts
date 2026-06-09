@@ -1,17 +1,24 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { NgClass } from '@angular/common';
+import { PermissionService } from '../../core/services/permission.service';
 
 interface NavItem {
   label: string;
   icon: string;
   route: string;
+  exact?: boolean;
+}
+
+interface NavGroup {
+  header?: string;
+  adminOnly?: boolean;
+  items: NavItem[];
 }
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, NgClass],
+  imports: [RouterLink, RouterLinkActive],
   template: `
     <aside class="sidebar">
       <div class="sidebar__brand">
@@ -20,14 +27,20 @@ interface NavItem {
       </div>
 
       <nav class="sidebar__nav">
-        @for (item of navItems; track item.route) {
-          <a
-            [routerLink]="item.route"
-            routerLinkActive="sidebar__item--active"
-            class="sidebar__item">
-            <i [class]="'pi ' + item.icon"></i>
-            <span>{{ item.label }}</span>
-          </a>
+        @for (group of visibleGroups(); track $index) {
+          @if (group.header) {
+            <div class="sidebar__group-header">{{ group.header }}</div>
+          }
+          @for (item of group.items; track item.route) {
+            <a
+              [routerLink]="item.route"
+              routerLinkActive="sidebar__item--active"
+              [routerLinkActiveOptions]="item.exact ? exactMatch : prefixMatch"
+              class="sidebar__item">
+              <i [class]="'pi ' + item.icon"></i>
+              <span>{{ item.label }}</span>
+            </a>
+          }
         }
       </nav>
     </aside>
@@ -67,6 +80,15 @@ interface NavItem {
       display: flex;
       flex-direction: column;
       gap: 2px;
+      overflow-y: auto;
+    }
+    .sidebar__group-header {
+      padding: 0.875rem 0.75rem 0.375rem;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #6B7280;
     }
     .sidebar__item {
       display: flex;
@@ -96,13 +118,50 @@ interface NavItem {
   `]
 })
 export class SidebarComponent {
-  navItems: NavItem[] = [
-    { label: 'Dashboard', icon: 'pi-home', route: '/dashboard' },
-    { label: 'Müşteriler', icon: 'pi-building', route: '/customers' },
-    { label: 'Ürünler', icon: 'pi-box', route: '/products' },
-    { label: 'Ekipler', icon: 'pi-users', route: '/teams' },
-    { label: 'Kişiler', icon: 'pi-user', route: '/people' },
-    { label: 'Bilgi Bankası', icon: 'pi-book', route: '/knowledge-base' },
-    { label: 'Admin', icon: 'pi-cog', route: '/admin' }
+  private permissions = inject(PermissionService);
+
+  readonly exactMatch = { exact: true };
+  readonly prefixMatch = { exact: false };
+
+  private readonly groups: NavGroup[] = [
+    {
+      items: [
+        { label: 'Dashboard', icon: 'pi-home', route: '/dashboard' }
+      ]
+    },
+    {
+      header: 'Çalışma Alanı',
+      items: [
+        { label: 'Müşteriler', icon: 'pi-building', route: '/customers' },
+        { label: 'Ürünler', icon: 'pi-box', route: '/products' },
+        { label: 'Ekipler', icon: 'pi-users', route: '/teams' },
+        { label: 'Kişiler', icon: 'pi-user', route: '/people' },
+        { label: 'Bilgi Bankası', icon: 'pi-book', route: '/knowledge-base' }
+      ]
+    },
+    {
+      header: 'Tanımlar',
+      adminOnly: true,
+      items: [
+        { label: 'Ortam Tipleri', icon: 'pi-server', route: '/admin/environment-types' },
+        { label: 'Kaynak Tipleri', icon: 'pi-database', route: '/admin/resource-types' },
+        { label: 'Paylaşımlı Kaynaklar', icon: 'pi-share-alt', route: '/admin/shared-resources' }
+      ]
+    },
+    {
+      header: 'Yönetim',
+      adminOnly: true,
+      items: [
+        { label: 'Genel Bakış', icon: 'pi-chart-bar', route: '/admin', exact: true },
+        { label: 'Platform Kullanıcıları', icon: 'pi-shield', route: '/admin/platform-users' },
+        { label: 'Özel Alanlar', icon: 'pi-sliders-h', route: '/admin/custom-fields' },
+        { label: 'Audit Log', icon: 'pi-history', route: '/admin/audit-log' }
+      ]
+    }
   ];
+
+  visibleGroups(): NavGroup[] {
+    const isAdmin = this.permissions.isAdmin();
+    return this.groups.filter(g => !g.adminOnly || isAdmin);
+  }
 }
