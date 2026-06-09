@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Primitives;
 using Kys.Api.Authorization;
 using Kys.Api.Middleware;
 using Kys.Api.Services;
@@ -39,11 +40,30 @@ public static class PresentationExtensions
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            options.AddFixedWindowLimiter("fixed", limiterOptions =>
-            {
-                limiterOptions.PermitLimit = 100;
-                limiterOptions.Window = TimeSpan.FromMinutes(1);
-            });
+
+            // Genel API limiti: IP başına 150 istek/dakika
+            options.AddPolicy("global", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: GetClientIp(httpContext),
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 150,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
+
+            // Auth limiti: IP başına 10 istek/15 dakika (brute-force koruması)
+            options.AddPolicy("auth", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: "auth:" + GetClientIp(httpContext),
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromMinutes(15),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
         });
 
         services.AddCors(options =>
@@ -61,5 +81,16 @@ public static class PresentationExtensions
         });
 
         return services;
+    }
+
+    private static string GetClientIp(HttpContext ctx)
+    {
+        // X-Forwarded-For (Nginx / proxy arkasında)
+        if (ctx.Request.Headers.TryGetValue("X-Forwarded-For", out StringValues forwarded))
+        {
+            var first = forwarded.ToString().Split(',')[0].Trim();
+            if (!string.IsNullOrEmpty(first)) return first;
+        }
+        return ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
 }

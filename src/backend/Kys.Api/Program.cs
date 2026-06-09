@@ -56,7 +56,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.MapControllers();
+    app.MapControllers().RequireRateLimiting("global");
 
     app.MapHealthChecks("/health/live", new HealthCheckOptions
     {

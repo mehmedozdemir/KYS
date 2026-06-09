@@ -3,6 +3,7 @@ using Kys.Application.Auth.Commands.Login;
 using Kys.Application.Auth.Commands.RefreshToken;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Kys.Api.Controllers.v1;
 
@@ -12,6 +13,7 @@ namespace Kys.Api.Controllers.v1;
 public sealed class AuthController(IMediator mediator) : ControllerBase
 {
     [HttpPost("login")]
+    [EnableRateLimiting("auth")]
     [ProducesResponseType(typeof(LoginResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
@@ -19,6 +21,7 @@ public sealed class AuthController(IMediator mediator) : ControllerBase
         => Ok(await mediator.Send(command, ct));
 
     [HttpPost("refresh")]
+    [EnableRateLimiting("auth")]
     [ProducesResponseType(typeof(RefreshTokenResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenCommand command, CancellationToken ct)

@@ -4,21 +4,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
+import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
 
 // CustomerStatus: 0=Prospect,1=Onboarding,2=Active,3=Inactive,4=Churned
 // UsageMode: 0=SaaS,1=Dedicated
 // CustomerProductStatus: 0=Onboarding,1=Active,2=Inactive,3=Discontinued
-
-interface CustomFieldDef {
-  id: string;
-  fieldKey: string;
-  displayName: string;
-  fieldType: number;
-  isRequired: boolean;
-  defaultValue: string | null;
-  selectOptions: string[] | null;
-  groupName: string | null;
-}
 const CUST_STATUS: Record<number, string> = { 0: 'Potansiyel', 1: 'Onboarding', 2: 'Aktif', 3: 'Pasif', 4: 'Ayrıldı' };
 const CUST_STATUS_CSS: Record<number, string> = { 0: 'badge--prospect', 1: 'badge--onboarding', 2: 'badge--active', 3: 'badge--inactive', 4: 'badge--churned' };
 const USAGE_MODE: Record<number, string> = { 0: 'SaaS', 1: 'Dedicated' };
@@ -89,7 +79,7 @@ interface CustomerDetail {
 @Component({
   selector: 'app-customer-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe, FormsModule],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent],
   template: `
     <div class="page-content">
       @if (loading()) {
@@ -189,20 +179,10 @@ interface CustomerDetail {
               }
             </div>
 
-            @if (customFieldDefs().length) {
-              <div class="custom-fields-section">
-                <h3>Özel Alanlar</h3>
-                <div class="info-grid">
-                  @for (def of customFieldDefs(); track def.id) {
-                    @let val = customer()!.customFields?.[def.fieldKey];
-                    <div class="info-item">
-                      <label>{{ def.displayName }}</label>
-                      <span>{{ cfDisplayValue(def, val) }}</span>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
+            <app-custom-field-inputs
+              [defs]="customFieldDefs()"
+              [values]="customer()!.customFields ?? {}"
+              mode="view" />
 
             @if (customer()!.primaryContactName) {
               <div class="contact-card">
@@ -449,32 +429,11 @@ interface CustomerDetail {
               <label>Telefon</label>
               <input type="tel" [(ngModel)]="editForm.primaryContactPhone" />
             </div>
-            @if (customFieldDefs().length) {
-              <div class="section-title" style="margin-top:0.5rem">Özel Alanlar</div>
-              @for (def of customFieldDefs(); track def.id) {
-                <div class="form-group">
-                  <label>{{ def.displayName }} @if (def.isRequired) { <span class="required">*</span> }</label>
-                  @if (def.fieldType === 4) {
-                    <select [(ngModel)]="editCfValues[def.fieldKey]">
-                      <option value="">Seçiniz...</option>
-                      @for (opt of def.selectOptions ?? []; track opt) {
-                        <option [value]="opt">{{ opt }}</option>
-                      }
-                    </select>
-                  } @else if (def.fieldType === 3) {
-                    <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer">
-                      <input type="checkbox" [checked]="editCfValues[def.fieldKey] === 'true'" (change)="editCfValues[def.fieldKey] = $any($event.target).checked ? 'true' : 'false'" />
-                      Evet
-                    </label>
-                  } @else {
-                    <input [type]="cfInputType(def.fieldType)" [(ngModel)]="editCfValues[def.fieldKey]" [placeholder]="def.defaultValue ?? ''" />
-                  }
-                  @if (editSubmitted() && def.isRequired && !editCfValues[def.fieldKey]) {
-                    <span class="error-msg">{{ def.displayName }} zorunludur</span>
-                  }
-                </div>
-              }
-            }
+            <app-custom-field-inputs
+              [defs]="customFieldDefs()"
+              [editValues]="editCfValues"
+              [submitted]="editSubmitted()"
+              mode="edit" />
           </div>
           <div class="modal-footer">
             <button type="button" class="btn-cancel" (click)="showEditModal.set(false)">İptal</button>
@@ -784,22 +743,6 @@ export class CustomerDetailComponent implements OnInit {
         onDone?.();
       }
     });
-  }
-
-  cfInputType(fieldType: number): string {
-    switch (fieldType) {
-      case 1: return 'number';
-      case 2: return 'date';
-      case 5: return 'url';
-      case 6: return 'email';
-      default: return 'text';
-    }
-  }
-
-  cfDisplayValue(def: CustomFieldDef, val: unknown): string {
-    if (val === undefined || val === null || val === '') return '—';
-    if (def.fieldType === 3) return val ? 'Evet' : 'Hayır';
-    return String(val);
   }
 
   private buildCustomFields(defs: CustomFieldDef[], values: Record<string, string>): Record<string, unknown> | null {

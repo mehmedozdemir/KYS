@@ -4,17 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
-
-interface CustomFieldDef {
-  id: string;
-  fieldKey: string;
-  displayName: string;
-  fieldType: number;
-  isRequired: boolean;
-  defaultValue: string | null;
-  selectOptions: string[] | null;
-  groupName: string | null;
-}
+import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
 
 const PRODUCT_TYPE: Record<number, string> = { 0: 'SaaS', 1: 'Müşteriye Özel', 2: 'Hibrit' };
 const PRODUCT_TYPE_CSS: Record<number, string> = { 0: 'badge--saas', 1: 'badge--custom', 2: 'badge--hybrid' };
@@ -46,7 +36,7 @@ interface ProductDetail {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe, FormsModule],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent],
   template: `
     <div class="page-content">
       @if (loading()) {
@@ -172,20 +162,10 @@ interface ProductDetail {
                 </div>
               </div>
             }
-            @if (customFieldDefs().length) {
-              <div class="custom-fields-section">
-                <h3>Özel Alanlar</h3>
-                <div class="info-grid">
-                  @for (def of customFieldDefs(); track def.id) {
-                    @let val = product()!.customFields?.[def.fieldKey];
-                    <div class="info-item">
-                      <label>{{ def.displayName }}</label>
-                      <span>{{ cfDisplayValue(def, val) }}</span>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
+            <app-custom-field-inputs
+              [defs]="customFieldDefs()"
+              [values]="product()!.customFields ?? {}"
+              mode="view" />
           </div>
         }
 
@@ -628,32 +608,11 @@ interface ProductDetail {
               <input type="text" [(ngModel)]="editForm.techStack" placeholder="ör. .NET, Angular, PostgreSQL (virgülle ayırın)" />
               <span class="hint">Virgülle ayırarak girin: .NET, Angular, PostgreSQL</span>
             </div>
-            @if (customFieldDefs().length) {
-              <div class="section-divider">Özel Alanlar</div>
-              @for (def of customFieldDefs(); track def.id) {
-                <div class="form-group">
-                  <label>{{ def.displayName }} @if (def.isRequired) { <span class="req">*</span> }</label>
-                  @if (def.fieldType === 4) {
-                    <select [(ngModel)]="editCfValues[def.fieldKey]">
-                      <option value="">Seçiniz...</option>
-                      @for (opt of def.selectOptions ?? []; track opt) {
-                        <option [value]="opt">{{ opt }}</option>
-                      }
-                    </select>
-                  } @else if (def.fieldType === 3) {
-                    <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer">
-                      <input type="checkbox" [checked]="editCfValues[def.fieldKey] === 'true'" (change)="editCfValues[def.fieldKey] = $any($event.target).checked ? 'true' : 'false'" />
-                      Evet
-                    </label>
-                  } @else {
-                    <input [type]="cfInputType(def.fieldType)" [(ngModel)]="editCfValues[def.fieldKey]" [placeholder]="def.defaultValue ?? ''" />
-                  }
-                  @if (editSubmitted() && def.isRequired && !editCfValues[def.fieldKey]) {
-                    <span class="field-error">{{ def.displayName }} zorunludur</span>
-                  }
-                </div>
-              }
-            }
+            <app-custom-field-inputs
+              [defs]="customFieldDefs()"
+              [editValues]="editCfValues"
+              [submitted]="editSubmitted()"
+              mode="edit" />
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" (click)="showEditModal.set(false)">İptal</button>
@@ -783,22 +742,6 @@ export class ProductDetailComponent implements OnInit {
     this.http.get<CustomFieldDef[]>(`${environment.apiUrl}/custom-field-definitions?entityType=1`).subscribe({
       next: defs => { this.customFieldDefs.set(defs); this.cfDefsLoaded = true; onDone?.(); }
     });
-  }
-
-  cfInputType(fieldType: number): string {
-    switch (fieldType) {
-      case 1: return 'number';
-      case 2: return 'date';
-      case 5: return 'url';
-      case 6: return 'email';
-      default: return 'text';
-    }
-  }
-
-  cfDisplayValue(def: CustomFieldDef, val: unknown): string {
-    if (val === undefined || val === null || val === '') return '—';
-    if (def.fieldType === 3) return val ? 'Evet' : 'Hayır';
-    return String(val);
   }
 
   private buildCustomFields(): Record<string, unknown> | null {
