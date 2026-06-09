@@ -140,6 +140,29 @@ kys-platform/
 
 ---
 
+## Git İş Akışı (Zorunlu)
+
+Her geliştirme görevi için aşağıdaki adımlar **tartışmasız** uygulanır:
+
+1. **Branch aç:** `main`'den `feature/<kısa-açıklama>` veya `fix/<kısa-açıklama>` branch'i oluştur
+   ```
+   git checkout main && git pull
+   git checkout -b feature/environment-type-crud
+   ```
+2. **Geliştirmeyi yap:** Tüm commit'ler bu branch üzerinde olur, doğrudan `main`'e commit atılmaz
+3. **Code review özeti sun:** İşi bitirince kullanıcıya değişikliklerin kısa özetini (hangi dosyalar, ne değişti, neden) sun ve onay iste
+4. **Onay al:** Kullanıcı açıkça onay vermedikçe `main`'e merge yapma
+5. **Merge et:** Onay sonrası `main`'e merge yap, branch'i sil
+   ```
+   git checkout main
+   git merge --no-ff feature/environment-type-crud
+   git branch -d feature/environment-type-crud
+   ```
+
+> **Not:** Sadece dokümantasyon güncellemeleri (CHANGELOG, PROJECT_PLAN, CLAUDE.md) doğrudan `main`'e commit edilebilir.
+
+---
+
 ## Görev Başlarken Yapılacaklar (Her Görev)
 
 1. `CLAUDE.md` oku (bu dosya)
@@ -147,6 +170,7 @@ kys-platform/
 3. `PROJECT_PLAN.md`'de hangi sprint/görevde olduğunu kontrol et
 4. Yeni dosya/entity/endpoint ekliyorsan → önce `docs/DATA_MODEL.md`'e bak
 5. Güvenlik gerektiren değişiklik → `docs/SECURITY.md`'e bak
+6. **Branch aç** (Git İş Akışı kuralına göre)
 
 ---
 
