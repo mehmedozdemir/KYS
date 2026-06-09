@@ -22,6 +22,11 @@ public sealed class CustomerEnvironmentConfiguration : IEntityTypeConfiguration<
             .HasForeignKey(x => x.EnvironmentTypeId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(x => x.HostingPlatform)
+            .WithMany()
+            .HasForeignKey(x => x.HostingPlatformId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }

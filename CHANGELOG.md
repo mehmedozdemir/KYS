@@ -16,6 +16,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.21.0] — 2026-06-10 (Sprint 24 — Barındırma Platformu)
+
+### Eklendi
+- **Barındırma Platformu kataloğu**: Ortamların üzerinde çalıştığı platform (Kubernetes, Docker, Linux Sunucu, Windows Sunucu, AWS, Azure, Google Cloud) artık tanımlanabiliyor — admin tarafından yönetilen `HostingPlatform` referans entity'si (ikon + renk + kategori)
+- **Admin → Barındırma Platformları** sayfası: liste + ekle/düzenle/sil (kullanımda olan platform silinemez, 409), önizlemeli renk/ikon seçimi; "Tanımlar" menü grubuna eklendi
+- **Ortam ↔ platform**: `CustomerEnvironment.HostingPlatformId` (nullable FK); ortam oluştururken platform seçilebiliyor, ortam detayında sonradan değiştirilebiliyor (`PUT /environments/{id}/hosting-platform`)
+- **Platform rozeti**: Ortam detay başlığında, müşteri detayındaki ortam kartlarında ve dashboard Çalışma Alanım env kartında ikon+renkli platform rozeti
+- **Endpoint'ler**: `GET /environments/hosting-platforms`, `POST/PUT/DELETE /admin/hosting-platforms`
+
+### Migration
+- `Sprint24_HostingPlatform`: `hosting_platforms` tablosu (7 varsayılan platform seed) + `customer_environments.hosting_platform_id` (nullable FK, ON DELETE SET NULL)
+
+---
+
 ## [0.20.0] — 2026-06-10 (Sprint 23 — Workspace Varsayılan Kapalı)
 
 ### Değişti

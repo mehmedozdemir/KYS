@@ -23,12 +23,22 @@ interface EnvironmentSummary {
   resourceCount: number;
   endpointCount: number;
   notes: string | null;
+  hostingPlatformName: string | null;
+  hostingPlatformIcon: string | null;
+  hostingPlatformColor: string | null;
 }
 
 interface EnvironmentType {
   id: string;
   name: string;
   code: string;
+  color: string | null;
+}
+
+interface HostingPlatformOption {
+  id: string;
+  name: string;
+  icon: string | null;
   color: string | null;
 }
 
@@ -298,6 +308,13 @@ interface CustomerDetail {
                               [style.color]="e.environmentTypeColor ?? '#6B7280'">
                               {{ e.environmentTypeName }}
                             </span>
+                            @if (e.hostingPlatformName) {
+                              <span class="plat-badge-sm"
+                                [style.background]="hexAlpha(e.hostingPlatformColor ?? '#6B7280', 0.14)"
+                                [style.color]="e.hostingPlatformColor ?? '#6B7280'">
+                                <i class="pi" [ngClass]="e.hostingPlatformIcon ?? 'pi-server'"></i> {{ e.hostingPlatformName }}
+                              </span>
+                            }
                             @if (!e.isActive) {
                               <span class="badge badge--inactive">Pasif</span>
                             }
@@ -520,6 +537,15 @@ interface CustomerDetail {
                 <span class="error-msg">Tip zorunludur</span>
               }
             </div>
+            <div class="form-group">
+              <label>Barındırma Platformu</label>
+              <select [(ngModel)]="envForm.hostingPlatformId">
+                <option value="">— (belirtilmedi)</option>
+                @for (p of hostingPlatforms(); track p.id) {
+                  <option [value]="p.id">{{ p.name }}</option>
+                }
+              </select>
+            </div>
             @if (envFormError()) {
               <div class="alert-error">{{ envFormError() }}</div>
             }
@@ -611,6 +637,7 @@ interface CustomerDetail {
     .env-card { background: var(--surface-2); border: 1px solid var(--border); border-left: 4px solid var(--text-muted); border-radius: 0.5rem; padding: 0.875rem 1rem; min-width: 200px; flex: 1; max-width: 280px; display: flex; flex-direction: column; gap: 0.5rem; }
     .env-card-top { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .env-type-badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; }
+    .plat-badge-sm { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.68rem; font-weight: 600; i { font-size: 0.65rem; } }
     .env-name { font-size: 0.9375rem; font-weight: 600; color: var(--text-strong); }
     .env-stats { display: flex; gap: 0.75rem; font-size: 0.75rem; color: var(--text-muted); i { font-size: 0.7rem; margin-right: 0.25rem; } }
     .env-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem; }
@@ -649,6 +676,8 @@ export class CustomerDetailComponent implements OnInit {
   envLoading = signal(false);
   envTypes = signal<EnvironmentType[]>([]);
   private envTypesLoaded = false;
+  hostingPlatforms = signal<HostingPlatformOption[]>([]);
+  private hostingPlatformsLoaded = false;
 
   // Status change state
   showStatusModal = signal(false);
@@ -867,7 +896,7 @@ export class CustomerDetailComponent implements OnInit {
 
   showEnvModal = signal(false);
   private createEnvCpId = '';
-  envForm = { name: '', environmentTypeId: '' };
+  envForm = { name: '', environmentTypeId: '', hostingPlatformId: '' };
   envFormSubmitted = signal(false);
   envFormSaving = signal(false);
   envFormError = signal('');
@@ -946,13 +975,18 @@ export class CustomerDetailComponent implements OnInit {
 
   openCreateEnv(cpId: string) {
     this.createEnvCpId = cpId;
-    this.envForm = { name: '', environmentTypeId: '' };
+    this.envForm = { name: '', environmentTypeId: '', hostingPlatformId: '' };
     this.envFormSubmitted.set(false);
     this.envFormError.set('');
     this.showEnvModal.set(true);
     if (!this.envTypesLoaded) {
       this.http.get<EnvironmentType[]>(`${environment.apiUrl}/environments/types`).subscribe({
         next: t => { this.envTypes.set(t); this.envTypesLoaded = true; }
+      });
+    }
+    if (!this.hostingPlatformsLoaded) {
+      this.http.get<HostingPlatformOption[]>(`${environment.apiUrl}/environments/hosting-platforms`).subscribe({
+        next: p => { this.hostingPlatforms.set(p); this.hostingPlatformsLoaded = true; }
       });
     }
   }
@@ -967,7 +1001,8 @@ export class CustomerDetailComponent implements OnInit {
       customerProductId: this.createEnvCpId,
       environmentTypeId: this.envForm.environmentTypeId,
       name: this.envForm.name?.trim() || null,
-      notes: null
+      notes: null,
+      hostingPlatformId: this.envForm.hostingPlatformId || null
     }).subscribe({
       next: () => {
         this.envFormSaving.set(false);

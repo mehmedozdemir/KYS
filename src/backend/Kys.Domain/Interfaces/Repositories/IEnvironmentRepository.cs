@@ -12,6 +12,14 @@ public interface IEnvironmentRepository
     void DeleteEnvironmentType(EnvironmentType environmentType);
     Task<int> CountEnvironmentsByTypeAsync(Guid environmentTypeId, CancellationToken ct = default);
 
+    // HostingPlatform
+    Task<IReadOnlyList<HostingPlatform>> GetHostingPlatformsAsync(bool activeOnly = true, CancellationToken ct = default);
+    Task<HostingPlatform?> GetHostingPlatformByIdAsync(Guid id, CancellationToken ct = default);
+    Task AddHostingPlatformAsync(HostingPlatform platform, CancellationToken ct = default);
+    void UpdateHostingPlatform(HostingPlatform platform);
+    void DeleteHostingPlatform(HostingPlatform platform);
+    Task<int> CountEnvironmentsByPlatformAsync(Guid hostingPlatformId, CancellationToken ct = default);
+
     // CustomerEnvironment
     Task<IReadOnlyList<CustomerEnvironment>> GetByCustomerProductAsync(Guid customerProductId, CancellationToken ct = default);
     Task<CustomerEnvironment?> GetEnvironmentByIdAsync(Guid id, CancellationToken ct = default);

@@ -25,6 +25,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<CustomerProduct> CustomerProducts => Set<CustomerProduct>();
     public DbSet<EnvironmentType> EnvironmentTypes => Set<EnvironmentType>();
+    public DbSet<HostingPlatform> HostingPlatforms => Set<HostingPlatform>();
     public DbSet<CustomerEnvironment> CustomerEnvironments => Set<CustomerEnvironment>();
     public DbSet<SharedResource> SharedResources => Set<SharedResource>();
     public DbSet<EnvironmentResource> EnvironmentResources => Set<EnvironmentResource>();

@@ -97,11 +97,22 @@ interface EnvironmentDetail {
   environmentTypeName: string;
   environmentTypeCode: string;
   environmentTypeColor: string | null;
+  hostingPlatformId: string | null;
+  hostingPlatformName: string | null;
+  hostingPlatformIcon: string | null;
+  hostingPlatformColor: string | null;
   isActive: boolean;
   notes: string | null;
   resources: EnvironmentResource[];
   endpoints: EndpointUrl[];
   availableTemplates: AvailableTemplate[];
+}
+
+interface HostingPlatformOption {
+  id: string;
+  name: string;
+  icon: string | null;
+  color: string | null;
 }
 
 @Component({
@@ -137,6 +148,13 @@ interface EnvironmentDetail {
                 <span class="type-badge" [style.background]="envColor(0.15)" [style.color]="env()!.environmentTypeColor ?? '#6B7280'">
                   {{ env()!.environmentTypeName }}
                 </span>
+                @if (env()!.hostingPlatformName) {
+                  <span class="plat-badge"
+                    [style.background]="hexAlpha(env()!.hostingPlatformColor, 0.15)"
+                    [style.color]="env()!.hostingPlatformColor ?? '#6B7280'">
+                    <i class="pi" [ngClass]="env()!.hostingPlatformIcon ?? 'pi-server'"></i> {{ env()!.hostingPlatformName }}
+                  </span>
+                }
                 @if (!env()!.isActive) {
                   <span class="badge badge--inactive">Pasif</span>
                 }
@@ -144,6 +162,17 @@ interface EnvironmentDetail {
               @if (env()!.notes) {
                 <p class="header-notes">{{ env()!.notes }}</p>
               }
+              <div class="plat-edit-row">
+                <i class="pi pi-cloud"></i>
+                <span class="plat-edit-label">Barındırma:</span>
+                <select class="plat-select" [ngModel]="env()!.hostingPlatformId ?? ''" (ngModelChange)="changePlatform($event)">
+                  <option value="">— (belirtilmedi)</option>
+                  @for (p of hostingPlatforms(); track p.id) {
+                    <option [value]="p.id">{{ p.name }}</option>
+                  }
+                </select>
+                @if (platformSaving()) { <i class="pi pi-spin pi-spinner"></i> }
+              </div>
               @if (siblings().length > 1) {
                 <div class="env-switcher">
                   @for (s of siblings(); track s.id) {
@@ -810,7 +839,11 @@ interface EnvironmentDetail {
     .env-icon { width: 3rem; height: 3rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
     .header-title-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; h1 { font-size: 1.25rem; font-weight: 700; color: var(--text-strong); } }
     .type-badge { display: inline-flex; align-items: center; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .plat-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; i { font-size: 0.7rem; } }
     .header-notes { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .plat-edit-row { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.8125rem; color: var(--text-muted); i.pi-cloud { color: var(--text-subtle); } }
+    .plat-edit-label { font-size: 0.8125rem; }
+    .plat-select { padding: 0.25rem 0.5rem; border: 1px solid var(--border-strong); border-radius: 0.375rem; font-size: 0.8125rem; background: var(--surface); color: var(--text); &:focus { outline: none; border-color: var(--primary); } }
     .env-switcher { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.625rem; }
     .env-pill { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border: 1px solid var(--border); border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background: var(--surface); color: var(--text-muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; &:hover:not(.env-pill--active) { background: var(--surface-3); border-color: var(--border-strong); color: var(--text); } }
     .env-pill--active { font-weight: 600; cursor: default; }
@@ -949,6 +982,8 @@ export class EnvironmentDetailComponent implements OnInit {
   env = signal<EnvironmentDetail | null>(null);
   loading = signal(true);
   siblings = signal<EnvironmentSummary[]>([]);
+  hostingPlatforms = signal<HostingPlatformOption[]>([]);
+  platformSaving = signal(false);
 
   // Add resource modal state
   showAddResourceModal = signal(false);
@@ -1289,6 +1324,7 @@ export class EnvironmentDetailComponent implements OnInit {
 
   ngOnInit() {
     this.load();
+    this.loadHostingPlatforms();
   }
 
   private load(onDone?: (d: EnvironmentDetail) => void) {
@@ -1523,8 +1559,31 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   envColor(alpha: number): string {
-    const c = this.env()?.environmentTypeColor ?? '#6B7280';
+    return this.hexAlpha(this.env()?.environmentTypeColor ?? null, alpha);
+  }
+
+  hexAlpha(color: string | null, alpha: number): string {
+    const c = color ?? '#6B7280';
     return c + Math.round(alpha * 255).toString(16).padStart(2, '0');
+  }
+
+  private loadHostingPlatforms(): void {
+    if (this.hostingPlatforms().length) return;
+    this.http.get<HostingPlatformOption[]>(`${environment.apiUrl}/environments/hosting-platforms`).subscribe({
+      next: p => this.hostingPlatforms.set(p)
+    });
+  }
+
+  changePlatform(platformId: string): void {
+    const e = this.env();
+    if (!e) return;
+    this.platformSaving.set(true);
+    this.http.put(`${environment.apiUrl}/environments/${e.id}/hosting-platform`, {
+      hostingPlatformId: platformId || null
+    }).subscribe({
+      next: () => { this.platformSaving.set(false); this.load(); },
+      error: () => this.platformSaving.set(false)
+    });
   }
 
   epTypeIcon(type: string): string {
