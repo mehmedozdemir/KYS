@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment';
 interface WorkspaceCredential {
   id: string;
   fieldKey: string;
+  isSecret: boolean;
 }
 
 interface WorkspaceEndpoint {
@@ -209,7 +210,7 @@ interface WorkspaceCustomer {
                               }
                               @if (ep.credentialCount) {
                                 <button type="button" class="ws-cred" [class.active]="isPanelOpen(epKey)"
-                                  (click)="togglePanel(epKey)" title="Credential'ları göster">
+                                  (click)="togglePanel(epKey, ep.credentials)" title="Credential'ları göster">
                                   <i class="pi pi-key"></i> {{ ep.credentialCount }}
                                   <i class="pi" [ngClass]="isPanelOpen(epKey) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                                 </button>
@@ -220,14 +221,20 @@ interface WorkspaceCustomer {
                                 @for (cr of ep.credentials; track cr.id) {
                                   <div class="ws-cred-item">
                                     <span class="ws-cred-key">{{ cr.fieldKey }}</span>
-                                    <span class="ws-cred-val" [class.revealed]="visibleValues()[cr.id]">
-                                      {{ visibleValues()[cr.id] ? (revealedValues()[cr.id] ?? '••••••') : '••••••' }}
-                                    </span>
-                                    <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
-                                      (click)="toggleReveal(cr.id)" [title]="visibleValues()[cr.id] ? 'Gizle' : 'Göster'">
-                                      @if (revealingIds()[cr.id]) { <i class="pi pi-spin pi-spinner"></i> }
-                                      @else { <i class="pi" [ngClass]="visibleValues()[cr.id] ? 'pi-eye-slash' : 'pi-eye'"></i> }
-                                    </button>
+                                    @if (cr.isSecret) {
+                                      <span class="ws-cred-val" [class.revealed]="visibleValues()[cr.id]">
+                                        {{ visibleValues()[cr.id] ? (revealedValues()[cr.id] ?? '••••••') : '••••••' }}
+                                      </span>
+                                      <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
+                                        (click)="toggleReveal(cr.id)" [title]="visibleValues()[cr.id] ? 'Gizle' : 'Göster'">
+                                        @if (revealingIds()[cr.id]) { <i class="pi pi-spin pi-spinner"></i> }
+                                        @else { <i class="pi" [ngClass]="visibleValues()[cr.id] ? 'pi-eye-slash' : 'pi-eye'"></i> }
+                                      </button>
+                                    } @else {
+                                      <span class="ws-cred-val revealed">
+                                        @if (revealingIds()[cr.id]) { ··· } @else { {{ revealedValues()[cr.id] ?? '—' }} }
+                                      </span>
+                                    }
                                     <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
                                       (click)="copyCredential(cr.id)" [title]="copiedIds()[cr.id] ? 'Kopyalandı' : 'Kopyala'">
                                       <i class="pi" [ngClass]="copiedIds()[cr.id] ? 'pi-check' : 'pi-copy'"></i>
@@ -249,7 +256,7 @@ interface WorkspaceCustomer {
                               }
                               @if (r.credentialCount) {
                                 <button type="button" class="ws-cred" [class.active]="isPanelOpen(rKey)"
-                                  (click)="togglePanel(rKey)" title="Bağlantı bilgilerini göster">
+                                  (click)="togglePanel(rKey, r.credentials)" title="Bağlantı bilgilerini göster">
                                   <i class="pi pi-key"></i> {{ r.credentialCount }}
                                   <i class="pi" [ngClass]="isPanelOpen(rKey) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                                 </button>
@@ -260,14 +267,20 @@ interface WorkspaceCustomer {
                                 @for (cr of r.credentials; track cr.id) {
                                   <div class="ws-cred-item">
                                     <span class="ws-cred-key">{{ cr.fieldKey }}</span>
-                                    <span class="ws-cred-val" [class.revealed]="visibleValues()[cr.id]">
-                                      {{ visibleValues()[cr.id] ? (revealedValues()[cr.id] ?? '••••••') : '••••••' }}
-                                    </span>
-                                    <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
-                                      (click)="toggleReveal(cr.id)" [title]="visibleValues()[cr.id] ? 'Gizle' : 'Göster'">
-                                      @if (revealingIds()[cr.id]) { <i class="pi pi-spin pi-spinner"></i> }
-                                      @else { <i class="pi" [ngClass]="visibleValues()[cr.id] ? 'pi-eye-slash' : 'pi-eye'"></i> }
-                                    </button>
+                                    @if (cr.isSecret) {
+                                      <span class="ws-cred-val" [class.revealed]="visibleValues()[cr.id]">
+                                        {{ visibleValues()[cr.id] ? (revealedValues()[cr.id] ?? '••••••') : '••••••' }}
+                                      </span>
+                                      <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
+                                        (click)="toggleReveal(cr.id)" [title]="visibleValues()[cr.id] ? 'Gizle' : 'Göster'">
+                                        @if (revealingIds()[cr.id]) { <i class="pi pi-spin pi-spinner"></i> }
+                                        @else { <i class="pi" [ngClass]="visibleValues()[cr.id] ? 'pi-eye-slash' : 'pi-eye'"></i> }
+                                      </button>
+                                    } @else {
+                                      <span class="ws-cred-val revealed">
+                                        @if (revealingIds()[cr.id]) { ··· } @else { {{ revealedValues()[cr.id] ?? '—' }} }
+                                      </span>
+                                    }
                                     <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
                                       (click)="copyCredential(cr.id)" [title]="copiedIds()[cr.id] ? 'Kopyalandı' : 'Kopyala'">
                                       <i class="pi" [ngClass]="copiedIds()[cr.id] ? 'pi-check' : 'pi-copy'"></i>
@@ -543,11 +556,34 @@ export class WorkspaceWidgetComponent implements OnInit {
     return this.expandedPanels().has(key);
   }
 
-  togglePanel(key: string): void {
+  togglePanel(key: string, creds: WorkspaceCredential[] = []): void {
+    const willOpen = !this.expandedPanels().has(key);
     this.expandedPanels.update(set => {
       const next = new Set(set);
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
+    });
+    // Panel açılırken şifreli olmayan alanları otomatik göster
+    if (willOpen) {
+      for (const cr of creds) {
+        if (!cr.isSecret) this.ensureRevealed(cr.id);
+      }
+    }
+  }
+
+  private ensureRevealed(credId: string): void {
+    if (this.revealedValues()[credId] !== undefined) {
+      this.visibleValues.update(v => ({ ...v, [credId]: true }));
+      return;
+    }
+    this.revealingIds.update(v => ({ ...v, [credId]: true }));
+    this.http.get<{ value: string }>(`${environment.apiUrl}/credentials/${credId}/reveal`).subscribe({
+      next: res => {
+        this.revealedValues.update(v => ({ ...v, [credId]: res.value }));
+        this.visibleValues.update(v => ({ ...v, [credId]: true }));
+        this.revealingIds.update(v => ({ ...v, [credId]: false }));
+      },
+      error: () => this.revealingIds.update(v => ({ ...v, [credId]: false }))
     });
   }
 
