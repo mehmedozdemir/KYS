@@ -46,8 +46,8 @@ Faz 5 (Sprint 10):  AD Entegrasyonu + Güvenlik Sertleme   [🔄 Devam Ediyor]
 - [x] Correlation ID middleware
 - [x] Serilog yapılandırması
 - [x] Swagger/OpenAPI yapılandırması (versioning ile)
-- [ ] Health check endpoint'leri (`/health/live`, `/health/ready`)
-- [ ] Rate limiting altyapısı
+- [x] Health check endpoint'leri (`/health/live`, `/health/ready`)
+- [x] Rate limiting altyapısı
 - [x] CORS yapılandırması
 - [x] `Program.cs` composition root (layer extension methods)
 
@@ -165,7 +165,7 @@ Faz 5 (Sprint 10):  AD Entegrasyonu + Güvenlik Sertleme   [🔄 Devam Ediyor]
 ### Frontend
 
 - [x] Admin → Özel Alanlar sayfası (müşteri ve ürün alanları, oluşturma, toggle)
-- [ ] `CustomFieldInputComponent` (tipe göre dinamik input render — Customer/Product formlarında)
+- [x] `CustomFieldInputComponent` (tipe göre dinamik input render — Customer/Product formlarında)
 - [ ] Alan sıralama (drag & drop)
 
 ### Testler
@@ -301,8 +301,8 @@ Faz 5 (Sprint 10):  AD Entegrasyonu + Güvenlik Sertleme   [🔄 Devam Ediyor]
 ### Güvenlik Sertleme
 - [ ] Penetration test checklist
 - [ ] OWASP Top 10 kontrol
-- [ ] Rate limiting (tüm endpoint'ler)
-- [ ] Health check endpoint'leri (`/health/live`, `/health/ready`)
+- [x] Rate limiting (tüm endpoint'ler)
+- [x] Health check endpoint'leri (`/health/live`, `/health/ready`)
 - [ ] Dependency vulnerability audit
 
 ### Frontend
@@ -373,10 +373,10 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ## Sonraki Adımlar (Öncelik Sırası)
 
-### Kısa Vadeli (Teknik Borç / Güvenlik)
-1. **Rate limiting** — API endpoint koruması (`Sprint 0`'dan kalan, altyapı mevcut)
-2. **Health check endpoint'leri** — `/health/live` ve `/health/ready` (`Sprint 0`'dan kalan)
-3. **`CustomFieldInputComponent`** — Customer/Product formlarında custom field render (`Sprint 3`'ten kalan)
+### Kısa Vadeli (Teknik Borç / Güvenlik) ✅ Tamamlandı
+1. ~~**Rate limiting**~~ — ✅ IP başına FixedWindow; global 150/dk, auth 10/15dk
+2. ~~**Health check endpoint'leri**~~ — ✅ `/health/live` ve `/health/ready`
+3. ~~**`CustomFieldInputComponent`**~~ — ✅ `shared/components/custom-field-inputs` olarak extract edildi
 
 ### Orta Vadeli (Kalite)
 4. **Integration testler** — Credential reveal, auth, customer workflow (`%80 hedef`)
