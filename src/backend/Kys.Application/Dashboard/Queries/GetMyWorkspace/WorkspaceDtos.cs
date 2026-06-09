@@ -24,7 +24,8 @@ public sealed record WorkspaceEndpointDto(
     string? SwaggerUrl,
     string? HealthCheckUrl,
     string? AuthType,
-    int CredentialCount);
+    int CredentialCount,
+    IReadOnlyList<WorkspaceCredentialDto> Credentials);
 
 public sealed record WorkspaceResourceDto(
     string TemplateName,
@@ -32,4 +33,9 @@ public sealed record WorkspaceResourceDto(
     string ResourceTypeCode,
     bool IsShared,
     string? SharedResourceName,
-    int CredentialCount);
+    int CredentialCount,
+    IReadOnlyList<WorkspaceCredentialDto> Credentials);
+
+public sealed record WorkspaceCredentialDto(
+    Guid Id,
+    string FieldKey);

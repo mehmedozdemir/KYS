@@ -5,6 +5,11 @@ import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
 
+interface WorkspaceCredential {
+  id: string;
+  fieldKey: string;
+}
+
 interface WorkspaceEndpoint {
   name: string;
   endpointType: string;
@@ -13,6 +18,7 @@ interface WorkspaceEndpoint {
   healthCheckUrl: string | null;
   authType: string | null;
   credentialCount: number;
+  credentials: WorkspaceCredential[];
 }
 
 interface WorkspaceResource {
@@ -22,6 +28,7 @@ interface WorkspaceResource {
   isShared: boolean;
   sharedResourceName: string | null;
   credentialCount: number;
+  credentials: WorkspaceCredential[];
 }
 
 interface WorkspaceEnvironment {
@@ -172,6 +179,7 @@ interface WorkspaceCustomer {
                           }
 
                           @for (ep of e.endpoints; track ep.name) {
+                            @let epKey = e.environmentId + '|ep|' + ep.name;
                             <div class="ws-row ws-row--endpoint">
                               <i class="pi ws-row-icon" [ngClass]="epTypeIcon(ep.endpointType)"></i>
                               <span class="ws-row-name">{{ ep.name }}</span>
@@ -195,14 +203,38 @@ interface WorkspaceCustomer {
                                 <span class="ws-auth-badge"><i class="pi pi-lock"></i> {{ authLabel(ep.authType) }}</span>
                               }
                               @if (ep.credentialCount) {
-                                <a class="ws-cred" [routerLink]="['/environments', e.environmentId]" title="Credential'ları görüntüle">
+                                <button type="button" class="ws-cred" [class.active]="isPanelOpen(epKey)"
+                                  (click)="togglePanel(epKey)" title="Credential'ları göster">
                                   <i class="pi pi-key"></i> {{ ep.credentialCount }}
-                                </a>
+                                  <i class="pi" [ngClass]="isPanelOpen(epKey) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                                </button>
                               }
                             </div>
+                            @if (isPanelOpen(epKey)) {
+                              <div class="ws-cred-panel">
+                                @for (cr of ep.credentials; track cr.id) {
+                                  <div class="ws-cred-item">
+                                    <span class="ws-cred-key">{{ cr.fieldKey }}</span>
+                                    <span class="ws-cred-val" [class.revealed]="visibleValues()[cr.id]">
+                                      {{ visibleValues()[cr.id] ? (revealedValues()[cr.id] ?? '••••••') : '••••••' }}
+                                    </span>
+                                    <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
+                                      (click)="toggleReveal(cr.id)" [title]="visibleValues()[cr.id] ? 'Gizle' : 'Göster'">
+                                      @if (revealingIds()[cr.id]) { <i class="pi pi-spin pi-spinner"></i> }
+                                      @else { <i class="pi" [ngClass]="visibleValues()[cr.id] ? 'pi-eye-slash' : 'pi-eye'"></i> }
+                                    </button>
+                                    <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
+                                      (click)="copyCredential(cr.id)" [title]="copiedIds()[cr.id] ? 'Kopyalandı' : 'Kopyala'">
+                                      <i class="pi" [ngClass]="copiedIds()[cr.id] ? 'pi-check' : 'pi-copy'"></i>
+                                    </button>
+                                  </div>
+                                }
+                              </div>
+                            }
                           }
 
                           @for (r of e.resources; track r.templateName) {
+                            @let rKey = e.environmentId + '|res|' + r.templateName;
                             <div class="ws-row ws-row--resource">
                               <i class="pi ws-row-icon pi-database"></i>
                               <span class="ws-row-name">{{ r.templateName }}</span>
@@ -211,11 +243,34 @@ interface WorkspaceCustomer {
                                 <span class="ws-shared"><i class="pi pi-share-alt"></i> {{ r.sharedResourceName ?? 'Paylaşımlı' }}</span>
                               }
                               @if (r.credentialCount) {
-                                <a class="ws-cred" [routerLink]="['/environments', e.environmentId]" title="Bağlantı bilgilerini görüntüle">
+                                <button type="button" class="ws-cred" [class.active]="isPanelOpen(rKey)"
+                                  (click)="togglePanel(rKey)" title="Bağlantı bilgilerini göster">
                                   <i class="pi pi-key"></i> {{ r.credentialCount }}
-                                </a>
+                                  <i class="pi" [ngClass]="isPanelOpen(rKey) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                                </button>
                               }
                             </div>
+                            @if (isPanelOpen(rKey)) {
+                              <div class="ws-cred-panel">
+                                @for (cr of r.credentials; track cr.id) {
+                                  <div class="ws-cred-item">
+                                    <span class="ws-cred-key">{{ cr.fieldKey }}</span>
+                                    <span class="ws-cred-val" [class.revealed]="visibleValues()[cr.id]">
+                                      {{ visibleValues()[cr.id] ? (revealedValues()[cr.id] ?? '••••••') : '••••••' }}
+                                    </span>
+                                    <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
+                                      (click)="toggleReveal(cr.id)" [title]="visibleValues()[cr.id] ? 'Gizle' : 'Göster'">
+                                      @if (revealingIds()[cr.id]) { <i class="pi pi-spin pi-spinner"></i> }
+                                      @else { <i class="pi" [ngClass]="visibleValues()[cr.id] ? 'pi-eye-slash' : 'pi-eye'"></i> }
+                                    </button>
+                                    <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
+                                      (click)="copyCredential(cr.id)" [title]="copiedIds()[cr.id] ? 'Kopyalandı' : 'Kopyala'">
+                                      <i class="pi" [ngClass]="copiedIds()[cr.id] ? 'pi-check' : 'pi-copy'"></i>
+                                    </button>
+                                  </div>
+                                }
+                              </div>
+                            }
                           }
                         </div>
                       }
@@ -279,7 +334,13 @@ interface WorkspaceCustomer {
     .ws-auth-badge { background: #FEF3C7; color: #92400E; padding: 0.1rem 0.4rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; i { font-size: 0.65rem; } }
     .ws-res-type { font-size: 0.75rem; color: #6B7280; }
     .ws-shared { background: #EDE9FE; color: #5B21B6; padding: 0.1rem 0.4rem; border-radius: 9999px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; i { font-size: 0.65rem; } }
-    .ws-cred { margin-left: auto; background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; border-radius: 9999px; padding: 0.1rem 0.5rem; font-size: 0.7rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; &:hover { background: #FEF3C7; } i { font-size: 0.65rem; } }
+    .ws-cred { margin-left: auto; background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; border-radius: 9999px; padding: 0.1rem 0.5rem; font-size: 0.7rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; &:hover { background: #FEF3C7; } &.active { background: #FEF3C7; border-color: #FBBF24; } i { font-size: 0.65rem; } }
+
+    .ws-cred-panel { margin: 0.125rem 0 0.375rem 3rem; padding: 0.5rem 0.625rem; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; }
+    .ws-cred-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
+    .ws-cred-key { font-weight: 600; color: #92400E; min-width: 7rem; flex-shrink: 0; }
+    .ws-cred-val { font-family: monospace; color: #9CA3AF; letter-spacing: 0.08em; flex: 1; min-width: 0; word-break: break-all; &.revealed { color: #065F46; background: #D1FAE5; padding: 0.1rem 0.4rem; border-radius: 0.25rem; letter-spacing: normal; } }
+    .ws-cred-btn { background: white; border: 1px solid #FDE68A; border-radius: 0.25rem; padding: 0.15rem 0.4rem; cursor: pointer; color: #B45309; font-size: 0.7rem; flex-shrink: 0; &:hover:not(:disabled) { background: #FEF3C7; } &:disabled { opacity: 0.5; cursor: default; } i { font-size: 0.7rem; } }
   `]
 })
 export class WorkspaceWidgetComponent implements OnInit {
@@ -460,5 +521,68 @@ export class WorkspaceWidgetComponent implements OnInit {
 
   copy(text: string): void {
     navigator.clipboard.writeText(text);
+  }
+
+  // --- Credential peek state ---
+  private expandedPanels = signal<Set<string>>(new Set());
+  revealedValues = signal<Record<string, string>>({});
+  visibleValues = signal<Record<string, boolean>>({});
+  revealingIds = signal<Record<string, boolean>>({});
+  copiedIds = signal<Record<string, boolean>>({});
+
+  isPanelOpen(key: string): boolean {
+    return this.expandedPanels().has(key);
+  }
+
+  togglePanel(key: string): void {
+    this.expandedPanels.update(set => {
+      const next = new Set(set);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
+  toggleReveal(credId: string): void {
+    if (this.visibleValues()[credId]) {
+      this.visibleValues.update(v => ({ ...v, [credId]: false }));
+      return;
+    }
+    if (this.revealedValues()[credId] !== undefined) {
+      this.visibleValues.update(v => ({ ...v, [credId]: true }));
+      return;
+    }
+    this.revealingIds.update(v => ({ ...v, [credId]: true }));
+    this.http.get<{ value: string }>(`${environment.apiUrl}/credentials/${credId}/reveal`).subscribe({
+      next: res => {
+        this.revealedValues.update(v => ({ ...v, [credId]: res.value }));
+        this.visibleValues.update(v => ({ ...v, [credId]: true }));
+        this.revealingIds.update(v => ({ ...v, [credId]: false }));
+      },
+      error: () => this.revealingIds.update(v => ({ ...v, [credId]: false }))
+    });
+  }
+
+  copyCredential(credId: string): void {
+    const cached = this.revealedValues()[credId];
+    if (cached !== undefined) {
+      navigator.clipboard.writeText(cached);
+      this.flashCopied(credId);
+      return;
+    }
+    this.revealingIds.update(v => ({ ...v, [credId]: true }));
+    this.http.get<{ value: string }>(`${environment.apiUrl}/credentials/${credId}/reveal`).subscribe({
+      next: res => {
+        this.revealedValues.update(v => ({ ...v, [credId]: res.value }));
+        this.revealingIds.update(v => ({ ...v, [credId]: false }));
+        navigator.clipboard.writeText(res.value);
+        this.flashCopied(credId);
+      },
+      error: () => this.revealingIds.update(v => ({ ...v, [credId]: false }))
+    });
+  }
+
+  private flashCopied(credId: string): void {
+    this.copiedIds.update(v => ({ ...v, [credId]: true }));
+    setTimeout(() => this.copiedIds.update(v => ({ ...v, [credId]: false })), 1500);
   }
 }

@@ -16,6 +16,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.14.0] — 2026-06-09 (Sprint 17 — Workspace Credential Peek)
+
+### Eklendi
+- **Çalışma Alanım widget'ında satır içi credential görüntüleme**: Endpoint ve kaynak satırlarındaki "🔑 N" rozeti artık tıklanınca satırın altında açılır panel gösterir; detay sayfasına gitmeden field key'ler listelenir
+- **Talep üzerine reveal + kopyala**: Her credential göz butonuyla açılır (`GET /credentials/{id}/reveal` — yetki kontrolü + audit log korunur) ve tek tıkla kopyalanabilir; dashboard yükünde otomatik reveal yapılmaz (audit/performans)
+- `WorkspaceEndpointDto` ve `WorkspaceResourceDto`'ya credential stub listesi (`id` + `fieldKey`) eklendi — ek sorgu yok, veri zaten yükleniyordu
+
+---
+
 ## [0.13.0] — 2026-06-09 (Sprint 16 — Workspace Tip Filtreleri)
 
 ### Eklendi
