@@ -43,7 +43,10 @@ public sealed class GetMyWorkspaceQueryHandler(
                             ep.SwaggerUrl,
                             ep.HealthCheckUrl,
                             ep.AuthType?.ToString(),
-                            ep.Credentials.Count))
+                            ep.Credentials.Count,
+                            ep.Credentials
+                                .Select(c => new WorkspaceCredentialDto(c.Id, c.FieldKey))
+                                .ToList()))
                         .ToList(),
                     e.Resources
                         .Where(r => r.IsActive)
@@ -54,7 +57,10 @@ public sealed class GetMyWorkspaceQueryHandler(
                             r.ProductResourceTemplate.ResourceType.Code,
                             r.IsShared,
                             r.SharedResource?.Name,
-                            r.Credentials.Count))
+                            r.Credentials.Count,
+                            r.Credentials
+                                .Select(c => new WorkspaceCredentialDto(c.Id, c.FieldKey))
+                                .ToList()))
                         .ToList()))
                     .ToList();
 

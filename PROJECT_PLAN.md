@@ -361,6 +361,14 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 17 — Workspace Credential Peek ✅ (2026-06-09)
+
+- [x] **Satır içi credential paneli**: Çalışma Alanım widget'ında endpoint/kaynak credential rozetleri açılır panele dönüştürüldü; detaya gitmeden field key listesi
+- [x] **Talep üzerine reveal/copy**: Mevcut `GET /credentials/{id}/reveal` (audit log + yetki) tekrar kullanıldı; otomatik reveal yok
+- [x] **DTO**: `WorkspaceEndpointDto` + `WorkspaceResourceDto`'ya credential stub listesi (id + fieldKey)
+
+---
+
 ## Sprint 16 — Workspace Tip Filtreleri ✅ (2026-06-09)
 
 - [x] **Çalışma Alanım widget'ı tip filtreleri**: Kaynak tipi + endpoint türü için çoklu seçimli chip filtreleri (frontend-only, `workspace-widget.component.ts`)
