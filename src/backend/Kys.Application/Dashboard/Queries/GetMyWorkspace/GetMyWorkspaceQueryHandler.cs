@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Kys.Domain.Interfaces.Repositories;
 using Kys.Domain.Interfaces.Services;
 using MediatR;
@@ -45,7 +46,7 @@ public sealed class GetMyWorkspaceQueryHandler(
                             ep.AuthType?.ToString(),
                             ep.Credentials.Count,
                             ep.Credentials
-                                .Select(c => new WorkspaceCredentialDto(c.Id, c.FieldKey))
+                                .Select(c => new WorkspaceCredentialDto(c.Id, c.FieldKey, SecretEndpointFieldKeys.Contains(c.FieldKey)))
                                 .ToList()))
                         .ToList(),
                     e.Resources
@@ -59,7 +60,8 @@ public sealed class GetMyWorkspaceQueryHandler(
                             r.SharedResource?.Name,
                             r.Credentials.Count,
                             r.Credentials
-                                .Select(c => new WorkspaceCredentialDto(c.Id, c.FieldKey))
+                                .Select(c => new WorkspaceCredentialDto(c.Id, c.FieldKey,
+                                    IsSecretSchemaField(r.ProductResourceTemplate.ResourceType.FieldSchema, c.FieldKey)))
                                 .ToList()))
                         .ToList()))
                     .ToList();
@@ -72,5 +74,28 @@ public sealed class GetMyWorkspaceQueryHandler(
                     environmentDtos);
             })
             .ToList();
+    }
+
+    // Endpoint auth alanlarından şifreli olanlar (env-detay ile aynı set)
+    private static readonly HashSet<string> SecretEndpointFieldKeys =
+        new(StringComparer.OrdinalIgnoreCase) { "password", "clientSecret", "token", "apiKey" };
+
+    // Kaynak alanının ResourceType.FieldSchema'da "password" tipinde olup olmadığı
+    private static bool IsSecretSchemaField(IReadOnlyDictionary<string, object?> schema, string fieldKey)
+    {
+        if (schema is null || !schema.TryGetValue(fieldKey, out var def) || def is null)
+            return false;
+
+        if (def is JsonElement el)
+        {
+            return el.ValueKind == JsonValueKind.Object
+                && el.TryGetProperty("type", out var t)
+                && string.Equals(t.GetString(), "password", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (def is IDictionary<string, object?> dict && dict.TryGetValue("type", out var tv))
+            return string.Equals(tv?.ToString(), "password", StringComparison.OrdinalIgnoreCase);
+
+        return false;
     }
 }

@@ -361,6 +361,14 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 19 — Workspace Credential Maskeleme ✅ (2026-06-09)
+
+- [x] **Yalnızca şifre alanları maskeli**: Satır içi panelde şifre alanları göz butonuyla maskeli; diğer alanlar panel açılınca otomatik açık
+- [x] **`IsSecret` backend hesabı**: Kaynaklar `ResourceType.FieldSchema` tipi, endpoint'ler `{password, clientSecret, token, apiKey}` seti
+- [x] `WorkspaceCredentialDto`'ya `IsSecret` eklendi; frontend non-secret alanları otomatik reveal eder
+
+---
+
 ## Sprint 18 — Workspace Düzen İyileştirmesi ✅ (2026-06-09)
 
 - [x] **Endpoint adı = link**: URL metni kaldırıldı, ad yeni sekmede açılan link oldu; URL'siz endpoint'te "URL yok"

@@ -38,4 +38,5 @@ public sealed record WorkspaceResourceDto(
 
 public sealed record WorkspaceCredentialDto(
     Guid Id,
-    string FieldKey);
+    string FieldKey,
+    bool IsSecret);

@@ -16,6 +16,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.16.0] — 2026-06-09 (Sprint 19 — Workspace Credential Maskeleme)
+
+### Değişti
+- **Satır içi credential panelinde yalnızca şifre alanları maskeli**: Çalışma Alanım widget'ında şifre tipindeki alanlar (`••••••` + göz butonu) maskeli kalır; şifre olmayan alanlar (kullanıcı adı, host, port vb.) panel açılınca otomatik açık gösterilir
+- Şifre/şifre-değil ayrımı backend'de hesaplanır: kaynaklar için `ResourceType.FieldSchema` tip bilgisi, endpoint auth alanları için `{password, clientSecret, token, apiKey}` seti (env-detay ile aynı mantık)
+- `WorkspaceCredentialDto`'ya `IsSecret` alanı eklendi
+
+---
+
 ## [0.15.0] — 2026-06-09 (Sprint 18 — Workspace Düzen İyileştirmesi)
 
 ### Değişti
