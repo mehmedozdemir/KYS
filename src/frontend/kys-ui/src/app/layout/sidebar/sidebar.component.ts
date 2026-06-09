@@ -49,7 +49,7 @@ interface NavGroup {
     .sidebar {
       width: 260px;
       height: 100vh;
-      background: #1F2937;
+      background: var(--sidebar-bg);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -59,18 +59,18 @@ interface NavGroup {
       align-items: center;
       gap: 0.75rem;
       padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid var(--sidebar-border);
     }
     .sidebar__logo {
-      background: #3B82F6;
-      color: white;
+      background: var(--primary);
+      color: var(--primary-contrast);
       font-weight: 700;
       font-size: 0.875rem;
       padding: 0.25rem 0.5rem;
       border-radius: 0.375rem;
     }
     .sidebar__name {
-      color: white;
+      color: var(--sidebar-brand);
       font-weight: 600;
       font-size: 1rem;
     }
@@ -88,7 +88,7 @@ interface NavGroup {
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #6B7280;
+      color: var(--sidebar-header);
     }
     .sidebar__item {
       display: flex;
@@ -96,21 +96,21 @@ interface NavGroup {
       gap: 0.75rem;
       padding: 0.625rem 0.75rem;
       border-radius: 0.375rem;
-      color: #9CA3AF;
+      color: var(--sidebar-text);
       font-size: 0.875rem;
       font-weight: 500;
       text-decoration: none;
       transition: all 150ms ease;
 
       &:hover {
-        background: rgba(255,255,255,0.06);
-        color: #F9FAFB;
+        background: var(--sidebar-hover-bg);
+        color: var(--sidebar-text-hover);
         text-decoration: none;
       }
 
       &--active {
-        background: #3B82F6;
-        color: white;
+        background: var(--sidebar-active-bg);
+        color: var(--sidebar-active-text);
       }
 
       i { font-size: 1rem; width: 1.25rem; }

@@ -361,6 +361,18 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 21 — Tema Sistemi (Faz 1) ✅ (2026-06-10)
+
+Açık + 3 koyu tema; aşamalı refactor.
+
+- [x] **Token altyapısı**: `styles/_themes.scss` — 4 tema (Açık Klasik, Koyu Slate/Midnight/OLED) semantik CSS custom property setleri
+- [x] **`ThemeService`**: localStorage kalıcılık + `prefers-color-scheme` varsayılanı + `<html data-theme>`
+- [x] **Topbar tema seçici**: gruplu, swatch önizlemeli dropdown
+- [x] **Faz 1 refactor**: global stiller + shell/sidebar/topbar + dashboard + workspace widget `var(--token)`'a çevrildi
+- [ ] **Sonraki dalgalar**: customers, products, teams, people, knowledge-base, admin sayfaları, environment/resource detayları → token refactor
+
+---
+
 ## Sprint 20 — Menü Yeniden Yapılandırma & Yetki ✅ (2026-06-10)
 
 - [x] **Gruplu sidebar**: `Çalışma Alanı` / `Tanımlar` / `Yönetim` başlıklı bölümler

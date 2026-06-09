@@ -105,7 +105,7 @@ interface RecentActivity {
   styles: [`
     .page-header {
       margin-bottom: 1.5rem;
-      h1 { font-size: 1.5rem; font-weight: 700; color: #111827; }
+      h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-strong); }
     }
     .stats-grid {
       display: grid;
@@ -114,8 +114,8 @@ interface RecentActivity {
       margin-bottom: 1.5rem;
     }
     .stat-card {
-      background: white;
-      border: 1px solid #E5E7EB;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 0.75rem;
       padding: 1.25rem;
       display: flex;
@@ -132,20 +132,20 @@ interface RecentActivity {
       font-size: 1.125rem;
       flex-shrink: 0;
 
-      &--blue   { background: #DBEAFE; color: #2563EB; }
-      &--violet { background: #EDE9FE; color: #7C3AED; }
-      &--green  { background: #D1FAE5; color: #059669; }
-      &--orange { background: #FEF3C7; color: #D97706; }
+      &--blue   { background: var(--primary-soft-bg-2); color: var(--primary-hover); }
+      &--violet { background: var(--violet-soft-bg);    color: var(--violet); }
+      &--green  { background: var(--success-soft-bg);   color: var(--success-strong); }
+      &--orange { background: var(--warning-soft-bg);   color: var(--warning-strong); }
     }
-    .stat-card__value { font-size: 1.5rem; font-weight: 700; color: #111827; }
-    .stat-card__label { font-size: 0.75rem; color: #6B7280; margin-top: 0.125rem; }
+    .stat-card__value { font-size: 1.5rem; font-weight: 700; color: var(--text-strong); }
+    .stat-card__label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.125rem; }
     .activity-card {
-      background: white;
-      border: 1px solid #E5E7EB;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 0.75rem;
       padding: 1.25rem;
 
-      h2 { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 1rem; }
+      h2 { font-size: 1rem; font-weight: 600; color: var(--text-strong); margin-bottom: 1rem; }
     }
     .activity-list { display: flex; flex-direction: column; gap: 0.75rem; }
     .activity-item {
@@ -157,14 +157,14 @@ interface RecentActivity {
     .activity-item__dot {
       width: 8px; height: 8px;
       border-radius: 50%;
-      background: #3B82F6;
+      background: var(--primary);
       flex-shrink: 0;
     }
     .activity-item__info { flex: 1; }
-    .activity-item__action { font-weight: 500; color: #111827; margin-right: 0.375rem; }
-    .activity-item__entity { color: #6B7280; }
-    .activity-item__meta { display: flex; flex-direction: column; align-items: flex-end; color: #9CA3AF; font-size: 0.75rem; }
-    .empty { color: #9CA3AF; font-size: 0.875rem; }
+    .activity-item__action { font-weight: 500; color: var(--text-strong); margin-right: 0.375rem; }
+    .activity-item__entity { color: var(--text-muted); }
+    .activity-item__meta { display: flex; flex-direction: column; align-items: flex-end; color: var(--text-subtle); font-size: 0.75rem; }
+    .empty { color: var(--text-subtle); font-size: 0.875rem; }
   `]
 })
 export class DashboardComponent implements OnInit {
