@@ -24,6 +24,8 @@ public sealed class SetCredentialCommandHandler(
             existing = await envRepository.GetCredentialAsync(request.EnvironmentResourceId.Value, request.FieldKey, ct);
         else if (request.EndpointUrlId.HasValue)
             existing = await envRepository.GetEndpointCredentialAsync(request.EndpointUrlId.Value, request.FieldKey, ct);
+        else if (request.SharedResourceId.HasValue)
+            existing = await envRepository.GetSharedCredentialAsync(request.SharedResourceId.Value, request.FieldKey, ct);
 
         if (existing is not null)
         {

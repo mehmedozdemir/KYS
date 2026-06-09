@@ -41,6 +41,9 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
                     .ThenInclude(t => t.ResourceType)
             .Include(x => x.Resources)
                 .ThenInclude(r => r.Credentials)
+            .Include(x => x.Resources)
+                .ThenInclude(r => r.SharedResource)
+                    .ThenInclude(sr => sr!.ResourceType)
             .Include(x => x.Endpoints)
                 .ThenInclude(e => e.ProductEndpoint)
             .Include(x => x.Endpoints)
@@ -54,6 +57,10 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
                 .ThenInclude(cp => cp.Product)
                     .ThenInclude(p => p.ResourceTemplates)
                         .ThenInclude(rt => rt.ResourceType)
+            .Include(x => x.CustomerProduct)
+                .ThenInclude(cp => cp.Product)
+                    .ThenInclude(p => p.ResourceTemplates)
+                        .ThenInclude(rt => rt.SharedResource)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public async Task AddCustomerEnvironmentAsync(CustomerEnvironment environment, CancellationToken ct = default)
@@ -86,6 +93,15 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
     public async Task<ResourceCredential?> GetEndpointCredentialAsync(Guid endpointUrlId, string fieldKey, CancellationToken ct = default)
         => await db.ResourceCredentials
             .FirstOrDefaultAsync(x => x.EndpointUrlId == endpointUrlId && x.FieldKey == fieldKey, ct);
+
+    public async Task<ResourceCredential?> GetSharedCredentialAsync(Guid sharedResourceId, string fieldKey, CancellationToken ct = default)
+        => await db.ResourceCredentials
+            .FirstOrDefaultAsync(x => x.SharedResourceId == sharedResourceId && x.FieldKey == fieldKey, ct);
+
+    public async Task<IReadOnlyList<ResourceCredential>> GetSharedCredentialsAsync(Guid sharedResourceId, CancellationToken ct = default)
+        => await db.ResourceCredentials
+            .Where(x => x.SharedResourceId == sharedResourceId)
+            .ToListAsync(ct);
 
     public async Task AddCredentialAsync(ResourceCredential credential, CancellationToken ct = default)
         => await db.ResourceCredentials.AddAsync(credential, ct);

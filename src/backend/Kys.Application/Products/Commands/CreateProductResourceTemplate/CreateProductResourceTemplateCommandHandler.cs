@@ -23,7 +23,8 @@ public sealed class CreateProductResourceTemplateCommandHandler(
             Description = request.Description,
             IsRequired = request.IsRequired,
             CanBeShared = request.CanBeShared,
-            SortOrder = request.SortOrder
+            SortOrder = request.SortOrder,
+            SharedResourceId = request.SharedResourceId
         };
 
         await productRepository.AddResourceTemplateAsync(template, cancellationToken);

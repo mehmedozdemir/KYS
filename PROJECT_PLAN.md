@@ -361,6 +361,20 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 15 — Paylaşımlı Kaynak İyileştirmeleri ✅ (2026-06-09)
+
+Paylaşımlı kaynak (Graylog, Redis, RabbitMQ gibi ortak sunucular) akışı baştan sona düzeltildi.
+
+- [x] **Admin paylaşımlı kaynak formu**: Kaynak tipine göre dinamik bağlantı alanları; normal alanlar `SharedResource.ConnectionFields` (düz JSONB), şifre alanları AES-256 shared credential olarak kaydedilir
+- [x] **`GetSharedResourceDetailQuery` + `GET /resources/shared/{id}`**: bağlantı alanları + field schema + credential stub'ları döner
+- [x] **`UpdateSharedResourceCommand` + `ConnectionFields`**: düzenlemede bağlantı bilgileri korunur
+- [x] **`SetCredentialCommandHandler` shared lookup fix**: `GetSharedCredentialAsync` ile mükerrer credential önlendi
+- [x] **Environment kalıtımı**: paylaşımlı kaynak eklerken ortak bilgiler salt okunur otomatik gelir; `GetEnvironmentDetailQuery` `SharedConnectionFields` + `SharedCredentials` döner; opsiyonel override toggle
+- [x] **`GetEnvironmentByIdAsync` SharedResource include fix**: `sharedResourceName` null sorunu giderildi
+- [x] **Şablon → paylaşımlı kaynak bağlama**: `ProductResourceTemplate.SharedResourceId` (migration `Sprint14_TemplateSharedResourceLink`); bağlı şablonlarda environment ekleme ekranında checkbox + dropdown gizlenir, kaynak otomatik kullanılır
+
+---
+
 ## Sprint 14 — Plan Dışı Geliştirmeler ✅ (2026-06-09)
 
 - [x] **Ortam tipi CRUD tamamlandı**: Admin → Ortam Tipleri sayfasına düzenleme (PUT) ve silme (DELETE, bağımlılık kontrolü ile) eklendi

@@ -30,6 +30,8 @@ interface EnvironmentResource {
   notes: string | null;
   credentials: CredentialStub[];
   fieldSchema: Record<string, FieldSchemaDef>;
+  sharedConnectionFields: Record<string, unknown>;
+  sharedCredentials: CredentialStub[];
 }
 
 interface EndpointUrl {
@@ -52,6 +54,27 @@ interface AvailableTemplate {
   isRequired: boolean;
   canBeShared: boolean;
   fieldSchema: Record<string, FieldSchemaDef>;
+  sharedResourceId: string | null;
+  sharedResourceName: string | null;
+}
+
+interface SharedResourceOption {
+  id: string;
+  name: string;
+  resourceTypeId: string;
+  resourceTypeName: string;
+  connectionFields: Record<string, unknown>;
+  fieldSchema: Record<string, FieldSchemaDef>;
+}
+
+interface SharedResourceDetail {
+  id: string;
+  name: string;
+  resourceTypeId: string;
+  resourceTypeName: string;
+  connectionFields: Record<string, unknown>;
+  fieldSchema: Record<string, FieldSchemaDef>;
+  credentials: { id: string; fieldKey: string }[];
 }
 
 interface EnvironmentSummary {
@@ -216,7 +239,43 @@ interface EnvironmentDetail {
                   @if (r.notes) {
                     <p class="resource-notes">{{ r.notes }}</p>
                   }
-                  @let schemaEntries = resourceSchemaEntries(r);
+
+                  <!-- Paylaşılan kaynaktan kalıtılan bilgiler -->
+                  @if (r.isShared) {
+                    @let inheritedConn = sharedConnEntries(r);
+                    @if (inheritedConn.length || r.sharedCredentials.length) {
+                      <div class="inherited-box">
+                        <div class="inherited-title"><i class="pi pi-share-alt"></i> Paylaşılan değerler ({{ r.sharedResourceName }})</div>
+                        <div class="cred-kv-grid">
+                          @for (entry of inheritedConn; track entry.key) {
+                            <div class="cred-kv-item">
+                              <span class="cred-kv-label">{{ entry.label }}</span>
+                              <span class="cred-kv-value">{{ entry.value }}</span>
+                            </div>
+                          }
+                          @for (stub of r.sharedCredentials; track stub.id) {
+                            <div class="cred-kv-item">
+                              <span class="cred-kv-label">{{ sharedCredLabel(r, stub.fieldKey) }}</span>
+                              <span class="cred-kv-value cred-kv-pw">
+                                {{ cardVisiblePasswords()[stub.id] ? (cardRevealedValues()[stub.id] ?? '••••••') : '••••••' }}
+                              </span>
+                              <button type="button" class="cred-kv-eye"
+                                [disabled]="cardRevealingIds()[stub.id]"
+                                (click)="toggleCardPassword(stub.id)">
+                                @if (cardRevealingIds()[stub.id]) {
+                                  <i class="pi pi-spin pi-spinner"></i>
+                                } @else {
+                                  <i class="pi" [ngClass]="cardVisiblePasswords()[stub.id] ? 'pi-eye-slash' : 'pi-eye'"></i>
+                                }
+                              </button>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  }
+
+                  @let schemaEntries = resourceOwnSchemaEntries(r);
                   @if (schemaEntries.length) {
                     <div class="cred-kv-grid">
                       @for (entry of schemaEntries; track entry.key) {
@@ -379,7 +438,53 @@ interface EnvironmentDetail {
                 <span class="error-msg">Şablon seçimi zorunludur</span>
               }
             </div>
-            @if (selectedTemplate()?.canBeShared) {
+            @if (templateBoundShared()) {
+              <!-- Şablon belirli bir paylaşımlı kaynağa bağlı — otomatik kullanılır -->
+              <div class="shared-bound-note">
+                <i class="pi pi-share-alt"></i>
+                Bu şablon <strong>{{ selectedTemplate()?.sharedResourceName }}</strong> paylaşımlı kaynağına bağlı. Bilgiler otomatik kullanılır.
+              </div>
+
+              <!-- Paylaşımlı kaynaktan kalıtılan bilgiler (salt okunur) -->
+              @if (selectedSharedResource(); as sr) {
+                @if (sharedFieldKeys().length || sharedCredKeys().length) {
+                  <div class="cred-fields-section cred-fields-section--readonly">
+                    <div class="cred-fields-title">
+                      <i class="pi pi-lock"></i>
+                      Paylaşılan Bilgiler (otomatik)
+                      <span class="cred-fields-hint">{{ sr.name }} üzerinden</span>
+                    </div>
+                    @for (key of sharedFieldKeys(); track key) {
+                      @let def = sr.fieldSchema[key];
+                      <div class="form-group">
+                        <label>
+                          {{ def?.label ?? key }}
+                          <code class="field-key-badge">{{ key }}</code>
+                        </label>
+                        <input type="text" [value]="$any(sr.connectionFields[key]) ?? ''" readonly class="input-readonly" />
+                      </div>
+                    }
+                    @for (key of sharedCredKeys(); track key) {
+                      @let def = sr.fieldSchema[key];
+                      <div class="form-group">
+                        <label>
+                          {{ def?.label ?? key }}
+                          <code class="field-key-badge">{{ key }}</code>
+                          <span class="secret-tag"><i class="pi pi-lock"></i> şifreli</span>
+                        </label>
+                        <input type="text" value="•••••••• (paylaşılan şifre)" readonly class="input-readonly" />
+                      </div>
+                    }
+                  </div>
+                }
+                <div class="form-group">
+                  <label class="checkbox-label-inline">
+                    <input type="checkbox" [(ngModel)]="addResourceForm.override" />
+                    Bu ortam için bazı bilgileri override et
+                  </label>
+                </div>
+              }
+            } @else if (selectedTemplate()?.canBeShared) {
               <div class="form-group">
                 <label class="checkbox-label-inline">
                   <input type="checkbox" [(ngModel)]="addResourceForm.isShared" (ngModelChange)="onSharedChange()" />
@@ -390,16 +495,59 @@ interface EnvironmentDetail {
                 <div class="form-group">
                   <label>Paylaşımlı Kaynak <span class="required">*</span></label>
                   <select [(ngModel)]="addResourceForm.sharedResourceId"
+                    (ngModelChange)="onSharedResourceSelect($event)"
                     [class.input-error]="addResourceSubmitted() && addResourceForm.isShared && !addResourceForm.sharedResourceId">
                     <option value="">Seçin</option>
                     @for (sr of sharedResources(); track sr.id) {
-                      <option [value]="sr.id">{{ sr.name }}</option>
+                      <option [value]="sr.id">{{ sr.name }} ({{ sr.resourceTypeName }})</option>
                     }
                   </select>
                   @if (addResourceSubmitted() && addResourceForm.isShared && !addResourceForm.sharedResourceId) {
                     <span class="error-msg">Paylaşımlı kaynak seçimi zorunludur</span>
                   }
                 </div>
+
+                <!-- Paylaşımlı kaynaktan kalıtılan bilgiler (salt okunur) -->
+                @if (selectedSharedResource(); as sr) {
+                  @if (sharedFieldKeys().length || sharedCredKeys().length) {
+                    <div class="cred-fields-section cred-fields-section--readonly">
+                      <div class="cred-fields-title">
+                        <i class="pi pi-lock"></i>
+                        Paylaşılan Bilgiler (otomatik)
+                        <span class="cred-fields-hint">{{ sr.name }} üzerinden</span>
+                      </div>
+                      @for (key of sharedFieldKeys(); track key) {
+                        @let def = sr.fieldSchema[key];
+                        <div class="form-group">
+                          <label>
+                            {{ def?.label ?? key }}
+                            <code class="field-key-badge">{{ key }}</code>
+                          </label>
+                          <input type="text" [value]="$any(sr.connectionFields[key]) ?? ''" readonly class="input-readonly" />
+                        </div>
+                      }
+                      @for (key of sharedCredKeys(); track key) {
+                        @let def = sr.fieldSchema[key];
+                        <div class="form-group">
+                          <label>
+                            {{ def?.label ?? key }}
+                            <code class="field-key-badge">{{ key }}</code>
+                            <span class="secret-tag"><i class="pi pi-lock"></i> şifreli</span>
+                          </label>
+                          <input type="text" value="•••••••• (paylaşılan şifre)" readonly class="input-readonly" />
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <!-- Override toggle -->
+                  <div class="form-group">
+                    <label class="checkbox-label-inline">
+                      <input type="checkbox" [(ngModel)]="addResourceForm.override" />
+                      Bu ortam için bazı bilgileri override et
+                    </label>
+                  </div>
+                }
               }
             }
             <div class="form-group">
@@ -409,40 +557,50 @@ interface EnvironmentDetail {
 
             <!-- Dinamik credential alanları -->
             @let tpl = selectedTemplate();
-            @if (tpl && addResourceSchemaKeys(tpl).length) {
-              <div class="cred-fields-section">
-                <div class="cred-fields-title">
-                  <i class="pi pi-key"></i>
-                  Bağlantı Bilgileri
-                  <span class="cred-fields-hint">(kaynak tipi: {{ tpl.resourceTypeName }})</span>
-                </div>
-                @for (key of addResourceSchemaKeys(tpl); track key) {
-                  @let def = tpl.fieldSchema[key];
-                  <div class="form-group">
-                    <label>
-                      {{ def.label }}
-                      @if (def.required) { <span class="required">*</span> }
-                      <code class="field-key-badge">{{ key }}</code>
-                    </label>
-                    @if (def.type === 'password') {
-                      <input type="password" autocomplete="new-password"
-                        [value]="addResourceCreds[key] ?? ''"
-                        (input)="addResourceCreds[key] = $any($event.target).value"
-                        [placeholder]="def.required ? 'Zorunlu alan' : 'İsteğe bağlı'" />
-                    } @else if (def.type === 'number') {
-                      <input type="number"
-                        [value]="addResourceCreds[key] ?? ''"
-                        (input)="addResourceCreds[key] = $any($event.target).value"
-                        [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : ''" />
+            @if (tpl) {
+              @let useShared = addResourceForm.isShared && selectedSharedResource();
+              @let fieldKeys = useShared
+                ? (addResourceForm.override ? addResourceSchemaKeys(tpl) : privateFieldKeys(tpl))
+                : addResourceSchemaKeys(tpl);
+              @if (fieldKeys.length) {
+                <div class="cred-fields-section">
+                  <div class="cred-fields-title">
+                    <i class="pi pi-key"></i>
+                    @if (useShared) {
+                      Ortama Özgü Bilgiler
                     } @else {
-                      <input type="text"
-                        [value]="addResourceCreds[key] ?? ''"
-                        (input)="addResourceCreds[key] = $any($event.target).value"
-                        [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : (def.required ? 'Zorunlu alan' : 'İsteğe bağlı')" />
+                      Bağlantı Bilgileri
                     }
+                    <span class="cred-fields-hint">(kaynak tipi: {{ tpl.resourceTypeName }})</span>
                   </div>
-                }
-              </div>
+                  @for (key of fieldKeys; track key) {
+                    @let def = tpl.fieldSchema[key];
+                    <div class="form-group">
+                      <label>
+                        {{ def.label }}
+                        @if (def.required) { <span class="required">*</span> }
+                        <code class="field-key-badge">{{ key }}</code>
+                      </label>
+                      @if (def.type === 'password') {
+                        <input type="password" autocomplete="new-password"
+                          [value]="addResourceCreds[key] ?? ''"
+                          (input)="addResourceCreds[key] = $any($event.target).value"
+                          [placeholder]="def.required ? 'Zorunlu alan' : 'İsteğe bağlı'" />
+                      } @else if (def.type === 'number') {
+                        <input type="number"
+                          [value]="addResourceCreds[key] ?? ''"
+                          (input)="addResourceCreds[key] = $any($event.target).value"
+                          [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : ''" />
+                      } @else {
+                        <input type="text"
+                          [value]="addResourceCreds[key] ?? ''"
+                          (input)="addResourceCreds[key] = $any($event.target).value"
+                          [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : (def.required ? 'Zorunlu alan' : 'İsteğe bağlı')" />
+                      }
+                    </div>
+                  }
+                </div>
+              }
             }
           </div>
           <div class="modal-footer">
@@ -697,8 +855,14 @@ interface EnvironmentDetail {
 
     /* Dynamic credential fields in add-resource modal */
     .cred-fields-section { background: #F8FAFF; border: 1px solid #DBEAFE; border-radius: 0.5rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .cred-fields-section--readonly { background: #F9FAFB; border-color: #E5E7EB; .cred-fields-title { color: #6B7280; i { color: #9CA3AF; } } }
     .cred-fields-title { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: #1E40AF; i { color: #3B82F6; } }
     .cred-fields-hint { font-size: 0.75rem; color: #6B7280; font-weight: 400; }
+    .input-readonly { background: #F3F4F6 !important; color: #6B7280; cursor: not-allowed; border-color: #E5E7EB !important; }
+    .secret-tag { font-size: 0.6875rem; color: #B45309; background: #FEF3C7; padding: 0.0625rem 0.375rem; border-radius: 0.25rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.1875rem; margin-left: 0.25rem; }
+    .shared-bound-note { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 0.875rem; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 0.5rem; font-size: 0.8125rem; color: #1D4ED8; i { color: #3B82F6; } strong { font-weight: 600; } }
+    .inherited-box { background: #F9FAFB; border: 1px dashed #D1D5DB; border-radius: 0.5rem; padding: 0.75rem; margin-top: 0.5rem; }
+    .inherited-title { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; font-weight: 600; color: #6B7280; margin-bottom: 0.5rem; i { color: #9CA3AF; } }
     .field-key-badge { background: #EFF6FF; color: #1D4ED8; padding: 0.1rem 0.375rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.7rem; margin-left: 0.25rem; }
 
     /* Endpoint grid */
@@ -791,16 +955,20 @@ export class EnvironmentDetailComponent implements OnInit {
   addResourceSaving = signal(false);
   addResourceSubmitted = signal(false);
   addResourceError = signal('');
-  addResourceForm = { templateId: '', isShared: false, sharedResourceId: '', notes: '' };
+  addResourceForm = { templateId: '', isShared: false, sharedResourceId: '', notes: '', override: false };
   addResourceCreds: Record<string, string> = {};
   selectedTemplate = signal<AvailableTemplate | null>(null);
-  sharedResources = signal<{ id: string; name: string }[]>([]);
+  sharedResources = signal<SharedResourceOption[]>([]);
+  selectedSharedResource = signal<SharedResourceOption | null>(null);
+  sharedCredKeys = signal<string[]>([]);
   private sharedResourcesLoaded = false;
 
   openAddResource() {
-    this.addResourceForm = { templateId: '', isShared: false, sharedResourceId: '', notes: '' };
+    this.addResourceForm = { templateId: '', isShared: false, sharedResourceId: '', notes: '', override: false };
     this.addResourceCreds = {};
     this.selectedTemplate.set(null);
+    this.selectedSharedResource.set(null);
+    this.sharedCredKeys.set([]);
     this.addResourceSubmitted.set(false);
     this.addResourceError.set('');
     this.showAddResourceModal.set(true);
@@ -813,7 +981,38 @@ export class EnvironmentDetailComponent implements OnInit {
     this.selectedTemplate.set(t);
     this.addResourceForm.isShared = false;
     this.addResourceForm.sharedResourceId = '';
+    this.addResourceForm.override = false;
     this.addResourceCreds = {};
+    this.selectedSharedResource.set(null);
+    this.sharedCredKeys.set([]);
+
+    // Şablon belirli bir paylaşımlı kaynağa bağlıysa otomatik kullan
+    if (t?.sharedResourceId) {
+      this.addResourceForm.isShared = true;
+      this.addResourceForm.sharedResourceId = t.sharedResourceId;
+      this.loadSharedResourceDetail(t.sharedResourceId);
+    }
+  }
+
+  // Şablonun belirli bir paylaşımlı kaynağa bağlı olup olmadığı
+  templateBoundShared(): boolean {
+    return !!this.selectedTemplate()?.sharedResourceId;
+  }
+
+  private loadSharedResourceDetail(id: string) {
+    this.http.get<SharedResourceDetail>(`${environment.apiUrl}/resources/shared/${id}`).subscribe({
+      next: d => {
+        this.selectedSharedResource.set({
+          id: d.id,
+          name: d.name,
+          resourceTypeId: d.resourceTypeId,
+          resourceTypeName: d.resourceTypeName,
+          connectionFields: d.connectionFields ?? {},
+          fieldSchema: d.fieldSchema ?? {}
+        });
+        this.sharedCredKeys.set((d.credentials ?? []).map(c => c.fieldKey));
+      }
+    });
   }
 
   addResourceSchemaKeys(tpl: AvailableTemplate): string[] {
@@ -827,6 +1026,27 @@ export class EnvironmentDetailComponent implements OnInit {
       label: (def as FieldSchemaDef).label ?? key,
       type: (def as FieldSchemaDef).type ?? 'string'
     }));
+  }
+
+  // Kaynağın kendi (ortama özgü) alanları — paylaşımlıdan kalıtılanları hariç tut
+  resourceOwnSchemaEntries(r: EnvironmentResource): { key: string; label: string; type: string }[] {
+    const inherited = new Set([
+      ...Object.keys(r.sharedConnectionFields ?? {}),
+      ...(r.sharedCredentials ?? []).map(c => c.fieldKey)
+    ]);
+    return this.resourceSchemaEntries(r).filter(e => !inherited.has(e.key));
+  }
+
+  sharedConnEntries(r: EnvironmentResource): { key: string; label: string; value: string }[] {
+    return Object.entries(r.sharedConnectionFields ?? {}).map(([key, value]) => ({
+      key,
+      label: (r.fieldSchema?.[key] as FieldSchemaDef | undefined)?.label ?? key,
+      value: value == null ? '—' : String(value)
+    }));
+  }
+
+  sharedCredLabel(r: EnvironmentResource, key: string): string {
+    return (r.fieldSchema?.[key] as FieldSchemaDef | undefined)?.label ?? key;
   }
 
   credForKey(r: EnvironmentResource, key: string): boolean {
@@ -879,11 +1099,39 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   onSharedChange() {
+    this.addResourceForm.sharedResourceId = '';
+    this.addResourceForm.override = false;
+    this.selectedSharedResource.set(null);
+    this.sharedCredKeys.set([]);
     if (this.addResourceForm.isShared && !this.sharedResourcesLoaded) {
-      this.http.get<{ id: string; name: string }[]>(`${environment.apiUrl}/resources/shared`).subscribe({
+      this.http.get<SharedResourceOption[]>(`${environment.apiUrl}/resources/shared`).subscribe({
         next: r => { this.sharedResources.set(r); this.sharedResourcesLoaded = true; }
       });
     }
+  }
+
+  onSharedResourceSelect(id: string) {
+    this.addResourceCreds = {};
+    this.selectedSharedResource.set(null);
+    this.sharedCredKeys.set([]);
+    if (id) {
+      this.loadSharedResourceDetail(id);
+    }
+  }
+
+  sharedFieldKeys(): string[] {
+    const sr = this.selectedSharedResource();
+    return sr ? Object.keys(sr.connectionFields) : [];
+  }
+
+  // Paylaşılan kaynaktan kalıtılan tüm anahtarlar (connection + şifreli)
+  private inheritedKeys(): Set<string> {
+    return new Set([...this.sharedFieldKeys(), ...this.sharedCredKeys()]);
+  }
+
+  privateFieldKeys(tpl: AvailableTemplate): string[] {
+    const inherited = this.inheritedKeys();
+    return Object.keys(tpl.fieldSchema).filter(k => !inherited.has(k));
   }
 
   saveResource() {

@@ -17,5 +17,10 @@ public sealed class ProductResourceTemplateConfiguration : IEntityTypeConfigurat
             .WithMany()
             .HasForeignKey(x => x.ResourceTypeId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.SharedResource)
+            .WithMany()
+            .HasForeignKey(x => x.SharedResourceId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

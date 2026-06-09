@@ -9,5 +9,6 @@ public sealed record CreateProductResourceTemplateCommand(
     string? Description,
     bool IsRequired,
     bool CanBeShared,
-    int SortOrder
+    int SortOrder,
+    Guid? SharedResourceId = null
 ) : IRequest<Guid>;

@@ -11,6 +11,16 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
         var env = await repository.GetEnvironmentByIdAsync(request.EnvironmentId, ct);
         if (env is null) return null;
 
+        // Paylaşımlı kaynakların ortak credential'larını (şifreli alanlar) yükle
+        var sharedCredentialMap = new Dictionary<Guid, IReadOnlyList<CredentialStubDto>>();
+        foreach (var sharedId in env.Resources.Where(r => r.IsShared && r.SharedResourceId.HasValue)
+                     .Select(r => r.SharedResourceId!.Value).Distinct())
+        {
+            var creds = await repository.GetSharedCredentialsAsync(sharedId, ct);
+            sharedCredentialMap[sharedId] = creds
+                .Select(c => new CredentialStubDto(c.Id, c.FieldKey, c.LastRotatedAt)).ToList();
+        }
+
         var resources = env.Resources.Select(r => new EnvironmentResourceDto(
             r.Id,
             r.ProductResourceTemplate.ResourceType.Name,
@@ -22,7 +32,10 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
             r.IsActive,
             r.Notes,
             r.Credentials.Select(c => new CredentialStubDto(c.Id, c.FieldKey, c.LastRotatedAt)).ToList(),
-            r.ProductResourceTemplate.ResourceType.FieldSchema)).ToList();
+            r.ProductResourceTemplate.ResourceType.FieldSchema,
+            r.SharedResource?.ConnectionFields ?? [],
+            r.SharedResourceId.HasValue && sharedCredentialMap.TryGetValue(r.SharedResourceId.Value, out var sc)
+                ? sc : [])).ToList();
 
         var endpointUrlMap = env.Endpoints.ToDictionary(e => e.ProductEndpointId);
         var endpoints = env.CustomerProduct.Product.Endpoints
@@ -47,7 +60,8 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
         var availableTemplates = env.CustomerProduct.Product.ResourceTemplates
             .OrderBy(t => t.SortOrder)
             .Select(t => new AvailableResourceTemplateDto(
-                t.Id, t.Name, t.ResourceType.Name, t.IsRequired, t.CanBeShared, t.ResourceType.FieldSchema))
+                t.Id, t.Name, t.ResourceType.Name, t.IsRequired, t.CanBeShared, t.ResourceType.FieldSchema,
+                t.SharedResourceId, t.SharedResource?.Name))
             .ToList();
 
         return new EnvironmentDetailDto(

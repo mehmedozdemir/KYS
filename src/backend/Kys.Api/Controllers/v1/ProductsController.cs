@@ -137,7 +137,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     {
         var id = await mediator.Send(new CreateProductResourceTemplateCommand(
             productId, request.ResourceTypeId, request.Name, request.Description,
-            request.IsRequired, request.CanBeShared, request.SortOrder), ct);
+            request.IsRequired, request.CanBeShared, request.SortOrder, request.SharedResourceId), ct);
         return Created(string.Empty, new { id });
     }
 
@@ -177,7 +177,7 @@ public sealed record UpdateEndpointRequest(
 
 public sealed record CreateResourceTemplateRequest(
     Guid ResourceTypeId, string Name, string? Description,
-    bool IsRequired, bool CanBeShared, int SortOrder);
+    bool IsRequired, bool CanBeShared, int SortOrder, Guid? SharedResourceId = null);
 
 public sealed record UpdateResourceTemplateRequest(
     string Name, string? Description,

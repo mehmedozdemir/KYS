@@ -7,6 +7,7 @@ using Kys.Application.Resources.Commands.UpdateResourceType;
 using Kys.Application.Resources.Commands.UpdateSharedResource;
 using Kys.Application.Resources.Queries.GetResourceTypes;
 using Kys.Application.Resources.Queries.GetSharedResources;
+using Kys.Application.Resources.Queries.GetSharedResourceDetail;
 using Kys.Api.Authorization;
 using Kys.Domain.Entities;
 using MediatR;
@@ -66,7 +67,7 @@ public sealed class ResourcesController(IMediator mediator) : ControllerBase
     [RequirePermission(SystemRole.Codes.PlatformAdmin)]
     public async Task<IActionResult> UpdateSharedResource(Guid id, UpdateSharedResourceRequest request, CancellationToken ct)
     {
-        await mediator.Send(new UpdateSharedResourceCommand(id, request.Name, request.Description, request.EnvironmentScope), ct);
+        await mediator.Send(new UpdateSharedResourceCommand(id, request.Name, request.Description, request.EnvironmentScope, request.ConnectionFields ?? []), ct);
         return NoContent();
     }
 
@@ -81,6 +82,13 @@ public sealed class ResourcesController(IMediator mediator) : ControllerBase
     [HttpGet("shared")]
     public async Task<IActionResult> GetSharedResources([FromQuery] string? scope = null, CancellationToken ct = default)
         => Ok(await mediator.Send(new GetSharedResourcesQuery(scope), ct));
+
+    [HttpGet("shared/{id:guid}")]
+    public async Task<IActionResult> GetSharedResourceDetail(Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetSharedResourceDetailQuery(id), ct);
+        return result is null ? NotFound() : Ok(result);
+    }
 
     [HttpPost("shared")]
     [RequirePermission(SystemRole.Codes.PlatformAdmin)]
@@ -107,7 +115,8 @@ public sealed record CreateResourceTypeRequest(
 public sealed record UpdateSharedResourceRequest(
     string Name,
     string? Description,
-    string? EnvironmentScope);
+    string? EnvironmentScope,
+    Dictionary<string, object?>? ConnectionFields);
 
 public sealed record UpdateResourceTypeRequest(
     string Name,
