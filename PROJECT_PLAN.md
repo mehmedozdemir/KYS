@@ -361,6 +361,14 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 18 — Workspace Düzen İyileştirmesi ✅ (2026-06-09)
+
+- [x] **Endpoint adı = link**: URL metni kaldırıldı, ad yeni sekmede açılan link oldu; URL'siz endpoint'te "URL yok"
+- [x] **Ortamlar yan yana**: Ürün grubunda responsive kart ızgarası (`ws-env-grid`); dar ekranda sarar
+- [x] **Ortam sıralaması**: `DashboardRepository`'de `EnvironmentType.SortOrder`'a göre sıralama
+
+---
+
 ## Sprint 17 — Workspace Credential Peek ✅ (2026-06-09)
 
 - [x] **Satır içi credential paneli**: Çalışma Alanım widget'ında endpoint/kaynak credential rozetleri açılır panele dönüştürüldü; detaya gitmeden field key listesi
