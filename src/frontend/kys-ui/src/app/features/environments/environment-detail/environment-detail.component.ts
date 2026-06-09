@@ -148,13 +148,49 @@ interface HostingPlatformOption {
                 <span class="type-badge" [style.background]="envColor(0.15)" [style.color]="env()!.environmentTypeColor ?? '#6B7280'">
                   {{ env()!.environmentTypeName }}
                 </span>
-                @if (env()!.hostingPlatformName) {
-                  <span class="plat-badge"
-                    [style.background]="hexAlpha(env()!.hostingPlatformColor, 0.15)"
-                    [style.color]="env()!.hostingPlatformColor ?? '#6B7280'">
-                    <i class="pi" [ngClass]="env()!.hostingPlatformIcon ?? 'pi-server'"></i> {{ env()!.hostingPlatformName }}
-                  </span>
-                }
+                <div class="plat-picker">
+                  @if (env()!.hostingPlatformName) {
+                    <button type="button" class="plat-badge plat-badge--btn"
+                      [style.background]="hexAlpha(env()!.hostingPlatformColor, 0.15)"
+                      [style.color]="env()!.hostingPlatformColor ?? '#6B7280'"
+                      (click)="togglePlatformMenu($event)" title="Barındırma platformunu değiştir">
+                      <i class="pi" [ngClass]="env()!.hostingPlatformIcon ?? 'pi-server'"></i>
+                      {{ env()!.hostingPlatformName }}
+                      @if (platformSaving()) { <i class="pi pi-spin pi-spinner"></i> }
+                      @else { <i class="pi pi-chevron-down plat-caret"></i> }
+                    </button>
+                  } @else {
+                    <button type="button" class="plat-add-btn" (click)="togglePlatformMenu($event)">
+                      <i class="pi pi-cloud"></i> Barındırma platformu seç
+                      @if (platformSaving()) { <i class="pi pi-spin pi-spinner"></i> }
+                    </button>
+                  }
+
+                  @if (showPlatformMenu()) {
+                    <div class="plat-menu-backdrop" (click)="showPlatformMenu.set(false)"></div>
+                    <div class="plat-menu">
+                      @for (p of hostingPlatforms(); track p.id) {
+                        <button type="button" class="plat-menu-item"
+                          [class.active]="p.id === env()!.hostingPlatformId"
+                          (click)="selectPlatform(p.id)">
+                          <span class="plat-menu-icon"
+                            [style.background]="hexAlpha(p.color, 0.15)"
+                            [style.color]="p.color ?? '#6B7280'">
+                            <i class="pi" [ngClass]="p.icon ?? 'pi-server'"></i>
+                          </span>
+                          <span class="plat-menu-name">{{ p.name }}</span>
+                          @if (p.id === env()!.hostingPlatformId) { <i class="pi pi-check"></i> }
+                        </button>
+                      }
+                      @if (env()!.hostingPlatformId) {
+                        <button type="button" class="plat-menu-item plat-menu-clear" (click)="selectPlatform('')">
+                          <span class="plat-menu-icon plat-menu-icon--clear"><i class="pi pi-times"></i></span>
+                          <span class="plat-menu-name">Kaldır</span>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
                 @if (!env()!.isActive) {
                   <span class="badge badge--inactive">Pasif</span>
                 }
@@ -162,17 +198,6 @@ interface HostingPlatformOption {
               @if (env()!.notes) {
                 <p class="header-notes">{{ env()!.notes }}</p>
               }
-              <div class="plat-edit-row">
-                <i class="pi pi-cloud"></i>
-                <span class="plat-edit-label">Barındırma:</span>
-                <select class="plat-select" [ngModel]="env()!.hostingPlatformId ?? ''" (ngModelChange)="changePlatform($event)">
-                  <option value="">— (belirtilmedi)</option>
-                  @for (p of hostingPlatforms(); track p.id) {
-                    <option [value]="p.id">{{ p.name }}</option>
-                  }
-                </select>
-                @if (platformSaving()) { <i class="pi pi-spin pi-spinner"></i> }
-              </div>
               @if (siblings().length > 1) {
                 <div class="env-switcher">
                   @for (s of siblings(); track s.id) {
@@ -841,9 +866,18 @@ interface HostingPlatformOption {
     .type-badge { display: inline-flex; align-items: center; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
     .plat-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; i { font-size: 0.7rem; } }
     .header-notes { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem; }
-    .plat-edit-row { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.8125rem; color: var(--text-muted); i.pi-cloud { color: var(--text-subtle); } }
-    .plat-edit-label { font-size: 0.8125rem; }
-    .plat-select { padding: 0.25rem 0.5rem; border: 1px solid var(--border-strong); border-radius: 0.375rem; font-size: 0.8125rem; background: var(--surface); color: var(--text); &:focus { outline: none; border-color: var(--primary); } }
+
+    .plat-picker { position: relative; display: inline-flex; }
+    .plat-badge--btn { border: none; cursor: pointer; transition: filter 0.12s; &:hover { filter: brightness(0.95); } }
+    .plat-caret { opacity: 0.7; font-size: 0.6rem !important; }
+    .plat-add-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; cursor: pointer; color: var(--text-muted); background: transparent; border: 1px dashed var(--border-strong); &:hover { border-color: var(--primary); color: var(--primary); } i { font-size: 0.7rem; } }
+    .plat-menu-backdrop { position: fixed; inset: 0; z-index: 90; }
+    .plat-menu { position: absolute; top: calc(100% + 0.375rem); left: 0; z-index: 100; min-width: 220px; background: var(--surface); border: 1px solid var(--border); border-radius: 0.625rem; box-shadow: var(--shadow-lg); padding: 0.375rem; display: flex; flex-direction: column; gap: 1px; }
+    .plat-menu-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.4rem 0.5rem; background: none; border: none; cursor: pointer; border-radius: 0.375rem; font-size: 0.8125rem; color: var(--text); text-align: left; &:hover { background: var(--hover); } &.active { background: var(--primary-soft-bg); } i.pi-check { margin-left: auto; color: var(--primary); font-size: 0.75rem; } }
+    .plat-menu-icon { width: 1.5rem; height: 1.5rem; border-radius: 0.375rem; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; }
+    .plat-menu-icon--clear { background: var(--surface-3); color: var(--text-muted); }
+    .plat-menu-name { flex: 1; }
+    .plat-menu-clear { color: var(--text-muted); border-top: 1px solid var(--border-light); margin-top: 1px; padding-top: 0.45rem; }
     .env-switcher { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.625rem; }
     .env-pill { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border: 1px solid var(--border); border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background: var(--surface); color: var(--text-muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; &:hover:not(.env-pill--active) { background: var(--surface-3); border-color: var(--border-strong); color: var(--text); } }
     .env-pill--active { font-weight: 600; cursor: default; }
@@ -984,6 +1018,7 @@ export class EnvironmentDetailComponent implements OnInit {
   siblings = signal<EnvironmentSummary[]>([]);
   hostingPlatforms = signal<HostingPlatformOption[]>([]);
   platformSaving = signal(false);
+  showPlatformMenu = signal(false);
 
   // Add resource modal state
   showAddResourceModal = signal(false);
@@ -1574,7 +1609,14 @@ export class EnvironmentDetailComponent implements OnInit {
     });
   }
 
-  changePlatform(platformId: string): void {
+  togglePlatformMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.showPlatformMenu.update(v => !v);
+  }
+
+  selectPlatform(platformId: string): void {
+    this.showPlatformMenu.set(false);
+    if ((this.env()?.hostingPlatformId ?? '') === platformId) return;
     const e = this.env();
     if (!e) return;
     this.platformSaving.set(true);
