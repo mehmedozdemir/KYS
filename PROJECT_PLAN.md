@@ -361,6 +361,16 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 20 — Menü Yeniden Yapılandırma & Yetki ✅ (2026-06-10)
+
+- [x] **Gruplu sidebar**: `Çalışma Alanı` / `Tanımlar` / `Yönetim` başlıklı bölümler
+- [x] **Tanımlar ana menüde**: Ortam Tipleri, Kaynak Tipleri, Paylaşımlı Kaynaklar admin panelinden ana menüye taşındı
+- [x] **Menü yetki gizleme**: `Tanımlar` ve `Yönetim` yalnızca PlatformAdmin'de görünür (`PermissionService.isAdmin`)
+- [x] **`adminGuard`**: `/admin/*` route koruması; yetkisiz → `/dashboard`
+- [x] **`PermissionService`**: localStorage izinlerini senkron okur (`has`, `isAdmin`)
+
+---
+
 ## Sprint 19 — Workspace Credential Maskeleme ✅ (2026-06-09)
 
 - [x] **Yalnızca şifre alanları maskeli**: Satır içi panelde şifre alanları göz butonuyla maskeli; diğer alanlar panel açılınca otomatik açık

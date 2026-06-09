@@ -16,6 +16,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.17.0] — 2026-06-10 (Sprint 20 — Menü Yeniden Yapılandırma & Yetki)
+
+### Değişti
+- **Gruplu ana menü**: Sidebar başlıklı bölümlere ayrıldı — `Çalışma Alanı` (Müşteriler/Ürünler/Ekipler/Kişiler/Bilgi Bankası), `Tanımlar`, `Yönetim`
+- **Tanımlar ana menüye taşındı**: Ortam Tipleri, Kaynak Tipleri, Paylaşımlı Kaynaklar artık doğrudan ana menüden erişilebilir (önceden yalnızca Admin paneli içinden)
+- **Yönetim grubu**: Genel Bakış, Platform Kullanıcıları, Özel Alanlar, Audit Log
+
+### Eklendi
+- **Menü yetki kontrolü**: `Tanımlar` ve `Yönetim` grupları yalnızca PlatformAdmin (`*` izni) kullanıcılara gösterilir; diğer roller bu öğeleri görmez
+- **`adminGuard`**: `/admin/*` route'ları frontend'de korumaya alındı — yetkisiz kullanıcı `/dashboard`'a yönlendirilir (önceden sayfa açılıp veriler 403 dönüyordu)
+- **`PermissionService`**: localStorage'daki kullanıcı izinlerini senkron okuyan servis (`has`, `isAdmin`)
+
+---
+
 ## [0.16.0] — 2026-06-09 (Sprint 19 — Workspace Credential Maskeleme)
 
 ### Değişti
