@@ -16,6 +16,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.15.0] — 2026-06-09 (Sprint 18 — Workspace Düzen İyileştirmesi)
+
+### Değişti
+- **Endpoint adı artık link**: Çalışma Alanım widget'ında endpoint satırı sadeleştirildi; uzun URL metni kaldırıldı, endpoint **adı** URL'ye link oldu (yeni sekmede açılır, URL tooltip'te). Kopyala/Swagger/Health/Auth/Credential butonları korundu. URL'si olmayan endpoint'lerde ad link olmaz, "URL yok" ibaresi gösterilir
+- **Ortamlar yan yana**: Ortamlar alt alta yerine ürün grubunda responsive kart ızgarasında yan yana dizilir (Test | UAT | Prod); dar ekranda alta sarar
+- **Ortam sıralaması**: Ortamlar artık `EnvironmentType.SortOrder`'a göre sıralanır (Dev → Test → UAT → Prod); önceden ada göreydi
+
+---
+
 ## [0.14.0] — 2026-06-09 (Sprint 17 — Workspace Credential Peek)
 
 ### Eklendi

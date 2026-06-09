@@ -160,6 +160,7 @@ interface WorkspaceCustomer {
                         {{ pg.productName }}
                       </div>
 
+                      <div class="ws-env-grid">
                       @for (e of pg.environments; track e.environmentId) {
                         <div class="ws-env">
                           <div class="ws-env-head">
@@ -182,13 +183,17 @@ interface WorkspaceCustomer {
                             @let epKey = e.environmentId + '|ep|' + ep.name;
                             <div class="ws-row ws-row--endpoint">
                               <i class="pi ws-row-icon" [ngClass]="epTypeIcon(ep.endpointType)"></i>
-                              <span class="ws-row-name">{{ ep.name }}</span>
-                              <a [href]="ep.baseUrl" target="_blank" class="ws-url" [title]="ep.baseUrl">
-                                {{ ep.baseUrl }}<i class="pi pi-external-link"></i>
-                              </a>
-                              <button type="button" class="ws-copy" (click)="copy(ep.baseUrl)" title="URL kopyala">
-                                <i class="pi pi-copy"></i>
-                              </button>
+                              @if (ep.baseUrl) {
+                                <a [href]="ep.baseUrl" target="_blank" class="ws-row-name ws-row-name--link" [title]="ep.baseUrl">
+                                  {{ ep.name }}<i class="pi pi-external-link"></i>
+                                </a>
+                                <button type="button" class="ws-copy" (click)="copy(ep.baseUrl)" title="URL kopyala">
+                                  <i class="pi pi-copy"></i>
+                                </button>
+                              } @else {
+                                <span class="ws-row-name">{{ ep.name }}</span>
+                                <span class="ws-no-url">URL yok</span>
+                              }
                               @if (ep.swaggerUrl) {
                                 <a [href]="ep.swaggerUrl" target="_blank" class="ws-mini-link" title="Swagger">
                                   <i class="pi pi-book"></i>
@@ -274,6 +279,7 @@ interface WorkspaceCustomer {
                           }
                         </div>
                       }
+                      </div>
                     </div>
                   }
                 </div>
@@ -317,14 +323,17 @@ interface WorkspaceCustomer {
     .ws-product-list { display: flex; flex-direction: column; }
     .ws-product-group { border-top: 1px solid #E5E7EB; }
     .ws-product-title { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 0.875rem; font-size: 0.9375rem; font-weight: 700; color: #111827; background: #FAFAFA; i { color: #6366F1; font-size: 0.875rem; } }
-    .ws-env { border-top: 1px solid #F3F4F6; padding: 0.5rem 0.875rem 0.5rem 2rem; }
-    .ws-env-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.375rem; }
+    .ws-env-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; padding: 0.75rem 0.875rem; align-items: flex-start; }
+    .ws-env { flex: 1 1 320px; min-width: 280px; max-width: 520px; border: 1px solid #E5E7EB; border-radius: 0.5rem; padding: 0.625rem 0.75rem; background: #FCFCFD; }
+    .ws-env-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #F3F4F6; }
     .ws-env-badge { padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
     .ws-env-name { font-weight: 500; color: #374151; font-size: 0.8125rem; }
     .ws-env-link { margin-left: auto; font-size: 0.75rem; color: #3B82F6; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; &:hover { text-decoration: underline; } i { font-size: 0.65rem; } }
-    .ws-empty-env { font-size: 0.75rem; color: #9CA3AF; padding: 0.25rem 0 0.25rem 1.5rem; }
+    .ws-empty-env { font-size: 0.75rem; color: #9CA3AF; padding: 0.25rem 0; }
 
-    .ws-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0 0.3rem 1.5rem; font-size: 0.8125rem; min-width: 0; }
+    .ws-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.3rem 0; font-size: 0.8125rem; min-width: 0; }
+    .ws-row-name--link { color: #3B82F6; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; &:hover { text-decoration: underline; } i { font-size: 0.6rem; } }
+    .ws-no-url { font-size: 0.7rem; color: #9CA3AF; font-style: italic; }
     .ws-row-icon { color: #6B7280; font-size: 0.8125rem; flex-shrink: 0; width: 1rem; text-align: center; }
     .ws-row--resource .ws-row-icon { color: #0891B2; }
     .ws-row-name { font-weight: 500; color: #374151; flex-shrink: 0; }
@@ -336,7 +345,7 @@ interface WorkspaceCustomer {
     .ws-shared { background: #EDE9FE; color: #5B21B6; padding: 0.1rem 0.4rem; border-radius: 9999px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; i { font-size: 0.65rem; } }
     .ws-cred { margin-left: auto; background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; border-radius: 9999px; padding: 0.1rem 0.5rem; font-size: 0.7rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; &:hover { background: #FEF3C7; } &.active { background: #FEF3C7; border-color: #FBBF24; } i { font-size: 0.65rem; } }
 
-    .ws-cred-panel { margin: 0.125rem 0 0.375rem 3rem; padding: 0.5rem 0.625rem; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; }
+    .ws-cred-panel { margin: 0.125rem 0 0.375rem 1.25rem; padding: 0.5rem 0.625rem; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; }
     .ws-cred-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
     .ws-cred-key { font-weight: 600; color: #92400E; min-width: 7rem; flex-shrink: 0; }
     .ws-cred-val { font-family: monospace; color: #9CA3AF; letter-spacing: 0.08em; flex: 1; min-width: 0; word-break: break-all; &.revealed { color: #065F46; background: #D1FAE5; padding: 0.1rem 0.4rem; border-radius: 0.25rem; letter-spacing: normal; } }

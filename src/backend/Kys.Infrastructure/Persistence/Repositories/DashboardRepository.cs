@@ -83,6 +83,7 @@ public sealed class DashboardRepository(NpgsqlDataSource dataSource, AppDbContex
             .Include(e => e.Endpoints).ThenInclude(ep => ep.Credentials)
             .OrderBy(e => e.CustomerProduct.Customer.Name)
             .ThenBy(e => e.CustomerProduct.Product.Name)
+            .ThenBy(e => e.EnvironmentType.SortOrder)
             .ThenBy(e => e.Name)
             .AsSplitQuery()
             .ToListAsync(ct);
