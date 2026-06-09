@@ -16,6 +16,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.18.0] — 2026-06-10 (Sprint 21 — Tema Sistemi Faz 1)
+
+### Eklendi
+- **Tema sistemi (açık + 3 koyu)**: CSS custom property tabanlı tema altyapısı; `styles/_themes.scss`'te 4 tema — Açık Klasik, Koyu Slate, Koyu Midnight, Koyu OLED
+- **`ThemeService`**: tema seçimini `localStorage`'da saklar, ilk açılışta sistem tercihine (`prefers-color-scheme`) göre varsayılan belirler, `<html data-theme>` üzerinden uygular
+- **Topbar tema seçici**: palet ikonuyla açılan, açık/koyu gruplu, renk önizlemeli (swatch) dropdown
+- Semantik token sözlüğü (`--bg`, `--surface`, `--text`, `--border`, `--primary`, accent soft çiftleri, sidebar token'ları, gölgeler)
+
+### Değişti
+- Global stiller + layout (shell, sidebar, topbar) + dashboard + workspace widget hardcode hex renklerden `var(--token)`'a çevrildi — bu alanlar artık tam temalı
+
+### Notlar
+- Faz 1 kapsamı uygulama çatısı + dashboard; kalan özellik sayfaları (müşteriler, ürünler, ekipler, kişiler, KB, admin, ortam/kaynak detayları) sonraki dalgalarda token'a çevrilecek
+
+---
+
 ## [0.17.0] — 2026-06-10 (Sprint 20 — Menü Yeniden Yapılandırma & Yetki)
 
 ### Değişti

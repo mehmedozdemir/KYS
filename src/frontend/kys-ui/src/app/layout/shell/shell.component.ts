@@ -57,7 +57,7 @@ import { SessionTimeoutService } from '../../core/services/session-timeout.servi
     .shell__content {
       flex: 1;
       overflow-y: auto;
-      background: #F9FAFB;
+      background: var(--bg);
     }
 
     .timeout-backdrop {

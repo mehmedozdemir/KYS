@@ -1,4 +1,5 @@
 @use 'styles/variables' as *;
+@use 'styles/themes';
 
 // PrimeNG Aura theme
 @import 'primeng/resources/themes/aura-light-blue/theme.css';
@@ -24,14 +25,15 @@ html {
 body {
   font-family: $font-family;
   font-size: $font-size-base;
-  color: $gray-800;
-  background-color: $surface-ground;
+  color: var(--text);
+  background-color: var(--bg);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 a {
-  color: $primary;
+  color: var(--primary);
   text-decoration: none;
   &:hover { text-decoration: underline; }
 }
@@ -41,19 +43,19 @@ a {
 }
 
 .p-datatable .p-datatable-header {
-  background: $surface-card;
+  background: var(--surface);
   border: none;
-  border-bottom: 1px solid $surface-border;
+  border-bottom: 1px solid var(--border);
   padding: $space-4;
 }
 
 .p-card {
-  border: 1px solid $surface-border;
-  box-shadow: $shadow-sm;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
 }
 
 .p-dialog .p-dialog-header {
-  border-bottom: 1px solid $surface-border;
+  border-bottom: 1px solid var(--border);
 }
 
 // Status badges
@@ -67,12 +69,12 @@ a {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 
-  &--active     { background: #D1FAE5; color: #065F46; }
-  &--onboarding { background: #DBEAFE; color: #1E40AF; }
-  &--pilot      { background: #EDE9FE; color: #5B21B6; }
-  &--suspended  { background: #FEF3C7; color: #92400E; }
-  &--churned    { background: #FEE2E2; color: #991B1B; }
-  &--archived   { background: #F3F4F6; color: #4B5563; }
+  &--active     { background: var(--success-soft-bg); color: var(--success-soft-text); }
+  &--onboarding { background: var(--primary-soft-bg);  color: var(--primary-soft-text); }
+  &--pilot      { background: var(--violet-soft-bg);   color: var(--violet-soft-text); }
+  &--suspended  { background: var(--warning-soft-bg);  color: var(--warning-soft-text); }
+  &--churned    { background: var(--danger-soft-bg);   color: var(--danger-soft-text); }
+  &--archived   { background: var(--surface-3);        color: var(--text-muted); }
 }
 
 .page-content {
@@ -89,5 +91,5 @@ a {
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
