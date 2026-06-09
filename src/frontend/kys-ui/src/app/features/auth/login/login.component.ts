@@ -69,14 +69,14 @@ import { selectAuthLoading, selectAuthError } from '../../../core/store/auth/aut
   styles: [`
     .login-page {
       min-height: 100vh;
-      background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+      background: linear-gradient(135deg, var(--text-strong) 0%, var(--text) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 2rem;
     }
     .login-card {
-      background: white;
+      background: var(--surface);
       border-radius: 1rem;
       padding: 2.5rem;
       width: 100%;
@@ -89,7 +89,7 @@ import { selectAuthLoading, selectAuthError } from '../../../core/store/auth/aut
     }
     .login-card__logo {
       display: inline-flex;
-      background: #3B82F6;
+      background: var(--primary);
       color: white;
       font-weight: 700;
       font-size: 1.25rem;
@@ -100,16 +100,16 @@ import { selectAuthLoading, selectAuthError } from '../../../core/store/auth/aut
     h1 {
       font-size: 1.25rem;
       font-weight: 700;
-      color: #111827;
+      color: var(--text-strong);
       margin-bottom: 0.25rem;
     }
     p {
       font-size: 0.875rem;
-      color: #6B7280;
+      color: var(--text-muted);
     }
     .login-card__error {
-      background: #FEE2E2;
-      color: #991B1B;
+      background: var(--danger-soft-bg);
+      color: var(--danger-soft-text);
       border-radius: 0.5rem;
       padding: 0.75rem 1rem;
       font-size: 0.875rem;
@@ -131,27 +131,27 @@ import { selectAuthLoading, selectAuthError } from '../../../core/store/auth/aut
       label {
         font-size: 0.875rem;
         font-weight: 500;
-        color: #374151;
+        color: var(--text);
       }
 
       input {
-        border: 1px solid #D1D5DB;
+        border: 1px solid var(--border-strong);
         border-radius: 0.5rem;
         padding: 0.625rem 0.875rem;
         font-size: 0.875rem;
         outline: none;
         transition: border-color 150ms;
 
-        &:focus { border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        &.is-invalid { border-color: #EF4444; }
+        &:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        &.is-invalid { border-color: var(--danger); }
       }
     }
     .form-error {
       font-size: 0.75rem;
-      color: #EF4444;
+      color: var(--danger);
     }
     .btn-primary {
-      background: #3B82F6;
+      background: var(--primary);
       color: white;
       border: none;
       border-radius: 0.5rem;
@@ -165,7 +165,7 @@ import { selectAuthLoading, selectAuthError } from '../../../core/store/auth/aut
       justify-content: center;
       gap: 0.5rem;
 
-      &:hover:not(:disabled) { background: #2563EB; }
+      &:hover:not(:disabled) { background: var(--primary-hover); }
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
   `]

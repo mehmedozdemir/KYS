@@ -146,7 +146,7 @@ import { SetupService } from '../../core/services/setup.service';
     label {
       font-size: 0.8125rem;
       font-weight: 500;
-      color: #cbd5e1;
+      color: var(--border-strong);
     }
 
     input {
@@ -167,17 +167,17 @@ import { SetupService } from '../../core/services/setup.service';
     }
 
     input:focus {
-      border-color: #6366f1;
+      border-color: var(--indigo);
       box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
     }
 
     .form-group.error input {
-      border-color: #ef4444;
+      border-color: var(--danger);
     }
 
     .error-msg {
       font-size: 0.75rem;
-      color: #f87171;
+      color: var(--danger);
     }
 
     .alert-error {
@@ -185,12 +185,12 @@ import { SetupService } from '../../core/services/setup.service';
       border: 1px solid rgba(239,68,68,0.3);
       border-radius: 8px;
       padding: 0.75rem 1rem;
-      color: #fca5a5;
+      color: var(--danger-soft-text);
       font-size: 0.875rem;
     }
 
     .btn-submit {
-      background: #6366f1;
+      background: var(--indigo);
       color: white;
       border: none;
       border-radius: 8px;
@@ -203,7 +203,7 @@ import { SetupService } from '../../core/services/setup.service';
     }
 
     .btn-submit:hover:not(:disabled) {
-      background: #4f46e5;
+      background: var(--indigo-strong);
     }
 
     .btn-submit:disabled {

@@ -137,8 +137,8 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
             <button class="modal-close" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
-            <p style="margin:0;color:#374151"><strong>{{ deleteTarget()!.firstName }} {{ deleteTarget()!.lastName }}</strong> kişisini silmek istediğinize emin misiniz?</p>
-            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:#6B7280">Bu işlem geri alınamaz.</p>
+            <p style="margin:0;color:var(--text)"><strong>{{ deleteTarget()!.firstName }} {{ deleteTarget()!.lastName }}</strong> kişisini silmek istediğinize emin misiniz?</p>
+            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:var(--text-muted)">Bu işlem geri alınamaz.</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn-secondary" (click)="cancelDelete()">İptal</button>
@@ -239,8 +239,8 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
     }
   `,
   styles: [`
-    .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
-    .page-subtitle { font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem; }
+    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-strong); }
+    .page-subtitle { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem; }
 
     .filters-bar {
       display: flex;
@@ -258,31 +258,31 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       left: 0.75rem;
       top: 50%;
       transform: translateY(-50%);
-      color: #9CA3AF;
+      color: var(--text-subtle);
       font-size: 0.875rem;
     }
     .search-input {
       width: 100%;
       padding: 0.5rem 0.75rem 0.5rem 2.25rem;
-      border: 1px solid #D1D5DB;
+      border: 1px solid var(--border-strong);
       border-radius: 0.5rem;
       font-size: 0.875rem;
       outline: none;
-      &:focus { border-color: #3B82F6; }
+      &:focus { border-color: var(--primary); }
     }
     .filter-select {
       padding: 0.5rem 0.75rem;
-      border: 1px solid #D1D5DB;
+      border: 1px solid var(--border-strong);
       border-radius: 0.5rem;
       font-size: 0.875rem;
-      background: white;
+      background: var(--surface);
       outline: none;
       cursor: pointer;
     }
 
     .table-card {
-      background: white;
-      border: 1px solid #E5E7EB;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 0.75rem;
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.06);
@@ -291,73 +291,73 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       width: 100%;
       border-collapse: collapse;
       th {
-        background: #F9FAFB;
+        background: var(--surface-2);
         padding: 0.75rem 1rem;
         text-align: left;
         font-size: 0.75rem;
         font-weight: 600;
-        color: #6B7280;
+        color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        border-bottom: 1px solid #E5E7EB;
+        border-bottom: 1px solid var(--border);
       }
       td {
         padding: 0.875rem 1rem;
         font-size: 0.875rem;
-        color: #374151;
-        border-bottom: 1px solid #F3F4F6;
+        color: var(--text);
+        border-bottom: 1px solid var(--surface-3);
       }
     }
     .table-row:last-child td { border-bottom: none; }
-    .table-row:hover td { background: #F9FAFB; }
-    .table-empty { text-align: center; color: #9CA3AF; padding: 3rem 1rem !important; }
+    .table-row:hover td { background: var(--surface-2); }
+    .table-empty { text-align: center; color: var(--text-subtle); padding: 3rem 1rem !important; }
 
     .person-cell { display: flex; align-items: center; gap: 0.75rem; }
     .avatar {
       width: 2rem; height: 2rem;
-      background: #EEF2FF; color: #4F46E5;
+      background: var(--indigo-soft-bg); color: var(--indigo-strong);
       border-radius: 50%; display: flex; align-items: center; justify-content: center;
       font-size: 0.75rem; font-weight: 700;
       flex-shrink: 0;
     }
-    .person-name { font-weight: 500; color: #111827; }
-    .person-email { font-size: 0.75rem; color: #9CA3AF; margin-top: 1px; }
-    .text-muted { color: #9CA3AF; }
+    .person-name { font-weight: 500; color: var(--text-strong); }
+    .person-email { font-size: 0.75rem; color: var(--text-subtle); margin-top: 1px; }
+    .text-muted { color: var(--text-subtle); }
     .action-cell { text-align: right; }
     .btn-link {
-      color: #3B82F6; font-size: 0.8125rem; font-weight: 500;
+      color: var(--primary); font-size: 0.8125rem; font-weight: 500;
       text-decoration: none;
       &:hover { text-decoration: underline; }
     }
 
     .btn-primary {
       display: inline-flex; align-items: center; gap: 0.375rem;
-      background: #3B82F6; color: white; border: none;
+      background: var(--primary); color: white; border: none;
       border-radius: 0.5rem; padding: 0.5rem 1rem;
       font-size: 0.875rem; font-weight: 600; cursor: pointer;
-      &:hover:not(:disabled) { background: #2563EB; }
+      &:hover:not(:disabled) { background: var(--primary-hover); }
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
     .btn-secondary {
-      background: white; color: #374151;
-      border: 1px solid #D1D5DB; border-radius: 0.5rem;
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--border-strong); border-radius: 0.5rem;
       padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;
-      &:hover { background: #F9FAFB; }
+      &:hover { background: var(--surface-2); }
     }
 
     .pagination {
       display: flex; align-items: center; justify-content: center; gap: 1rem;
       padding: 0.75rem;
-      border-top: 1px solid #F3F4F6;
+      border-top: 1px solid var(--surface-3);
     }
     .page-btn {
       width: 2rem; height: 2rem;
-      border: 1px solid #D1D5DB; border-radius: 0.375rem;
-      background: white; cursor: pointer; font-size: 1rem;
-      &:hover:not(:disabled) { background: #F3F4F6; }
+      border: 1px solid var(--border-strong); border-radius: 0.375rem;
+      background: var(--surface); cursor: pointer; font-size: 1rem;
+      &:hover:not(:disabled) { background: var(--surface-3); }
       &:disabled { opacity: 0.4; cursor: not-allowed; }
     }
-    .page-info { font-size: 0.875rem; color: #6B7280; }
+    .page-info { font-size: 0.875rem; color: var(--text-muted); }
 
     /* Modal */
     .modal-overlay {
@@ -367,7 +367,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       z-index: 1000; padding: 1rem;
     }
     .modal {
-      background: white; border-radius: 0.75rem;
+      background: var(--surface); border-radius: 0.75rem;
       width: 100%; max-width: 540px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.2);
       max-height: 90vh; overflow-y: auto;
@@ -375,52 +375,52 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid #E5E7EB;
-      h2 { font-size: 1.125rem; font-weight: 700; color: #111827; }
+      border-bottom: 1px solid var(--border);
+      h2 { font-size: 1.125rem; font-weight: 700; color: var(--text-strong); }
     }
     .modal-close {
       background: none; border: none; cursor: pointer;
-      color: #9CA3AF; font-size: 1rem;
-      &:hover { color: #374151; }
+      color: var(--text-subtle); font-size: 1rem;
+      &:hover { color: var(--text); }
     }
     .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     .modal-footer {
       display: flex; justify-content: flex-end; gap: 0.75rem;
       padding-top: 1rem;
-      border-top: 1px solid #F3F4F6;
+      border-top: 1px solid var(--surface-3);
       margin-top: 0.5rem;
     }
 
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .form-group { display: flex; flex-direction: column; gap: 0.375rem; }
-    .form-group label { font-size: 0.8125rem; font-weight: 500; color: #374151; }
+    .form-group label { font-size: 0.8125rem; font-weight: 500; color: var(--text); }
     .form-group input, .form-group select {
-      border: 1px solid #D1D5DB; border-radius: 0.5rem;
+      border: 1px solid var(--border-strong); border-radius: 0.5rem;
       padding: 0.5rem 0.75rem; font-size: 0.875rem; outline: none;
-      &:focus { border-color: #3B82F6; }
+      &:focus { border-color: var(--primary); }
     }
-    .form-group.has-error input, .form-group.has-error select { border-color: #EF4444; }
-    .form-error { font-size: 0.75rem; color: #EF4444; }
+    .form-group.has-error input, .form-group.has-error select { border-color: var(--danger); }
+    .form-error { font-size: 0.75rem; color: var(--danger); }
 
     .toggle-row {
       display: flex; align-items: center; gap: 0.5rem;
-      font-size: 0.875rem; color: #374151; cursor: pointer;
+      font-size: 0.875rem; color: var(--text); cursor: pointer;
       input[type="checkbox"] { width: 1rem; height: 1rem; cursor: pointer; }
     }
 
     .alert-error {
-      background: #FEE2E2; border: 1px solid #FECACA;
+      background: var(--danger-soft-bg); border: 1px solid var(--danger-border);
       border-radius: 0.5rem; padding: 0.75rem;
-      font-size: 0.875rem; color: #991B1B;
+      font-size: 0.875rem; color: var(--danger-soft-text);
     }
 
     .action-cell { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; }
     .kebab-wrap { position: relative; display: inline-block; }
-    .kebab-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 1rem; line-height: 1; &:hover { background: #F3F4F6; color: #374151; } }
-    .kebab-menu { position: absolute; right: 0; top: 100%; background: white; border: 1px solid #E5E7EB; border-radius: 0.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 120px; z-index: 50; padding: 0.25rem; }
-    .km-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 0.75rem; border: none; background: none; cursor: pointer; font-size: 0.875rem; border-radius: 0.375rem; white-space: nowrap; &:hover { background: #F3F4F6; } }
-    .km-danger { color: #DC2626; &:hover { background: #FEF2F2 !important; } }
-    .btn-danger { display: inline-flex; align-items: center; gap: 0.375rem; background: #DC2626; color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; &:hover:not(:disabled) { background: #B91C1C; } &:disabled { opacity: 0.6; cursor: not-allowed; } }
+    .kebab-btn { background: none; border: none; cursor: pointer; color: var(--text-subtle); padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 1rem; line-height: 1; &:hover { background: var(--surface-3); color: var(--text); } }
+    .kebab-menu { position: absolute; right: 0; top: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 0.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 120px; z-index: 50; padding: 0.25rem; }
+    .km-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 0.75rem; border: none; background: none; cursor: pointer; font-size: 0.875rem; border-radius: 0.375rem; white-space: nowrap; &:hover { background: var(--surface-3); } }
+    .km-danger { color: var(--danger-strong); &:hover { background: var(--danger-faint-bg) !important; } }
+    .btn-danger { display: inline-flex; align-items: center; gap: 0.375rem; background: var(--danger-strong); color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; &:hover:not(:disabled) { background: var(--danger-strong); } &:disabled { opacity: 0.6; cursor: not-allowed; } }
     .modal--sm { max-width: 400px; }
   `]
 })

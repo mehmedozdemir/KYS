@@ -140,39 +140,39 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
   `,
   styles: [`
     .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; }
-    .breadcrumb { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #6B7280; margin-bottom: 0.375rem; a { color: #3B82F6; text-decoration: none; } span { &:last-child { color: #374151; } } }
-    .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
-    .page-subtitle { font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem; }
+    .breadcrumb { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.375rem; a { color: var(--primary); text-decoration: none; } span { &:last-child { color: var(--text); } } }
+    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-strong); }
+    .page-subtitle { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem; }
 
     .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
-    select, .date-input { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 0.875rem; color: #374151; background: white; }
+    select, .date-input { padding: 0.5rem 0.75rem; border: 1px solid var(--border-strong); border-radius: 0.5rem; font-size: 0.875rem; color: var(--text); background: var(--surface); }
     .date-input { font-size: 0.8125rem; }
-    .btn-clear { background: none; border: 1px solid #D1D5DB; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.8125rem; color: #6B7280; cursor: pointer; display: flex; align-items: center; gap: 0.375rem; &:hover { background: #F9FAFB; color: #374151; } }
+    .btn-clear { background: none; border: 1px solid var(--border-strong); border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.8125rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 0.375rem; &:hover { background: var(--surface-2); color: var(--text); } }
 
-    .table-wrapper { background: white; border: 1px solid #E5E7EB; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .empty-state { padding: 3rem; text-align: center; color: #9CA3AF; font-size: 0.875rem; }
+    .table-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .empty-state { padding: 3rem; text-align: center; color: var(--text-subtle); font-size: 0.875rem; }
     .data-table { width: 100%; border-collapse: collapse;
-      th { background: #F9FAFB; padding: 0.625rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB; }
-      td { padding: 0.625rem 0.75rem; font-size: 0.8125rem; color: #374151; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+      th { background: var(--surface-2); padding: 0.625rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+      td { padding: 0.625rem 0.75rem; font-size: 0.8125rem; color: var(--text); border-bottom: 1px solid var(--surface-3); vertical-align: middle; }
       tr:last-child td { border-bottom: none; }
     }
-    .credential-row td { background: #FFF7ED; }
-    .time-cell { font-family: monospace; font-size: 0.75rem; color: #6B7280; white-space: nowrap; }
-    .entity-type { color: #6B7280; }
-    .entity-name { display: block; font-weight: 500; color: #111827; }
-    .entity-id { display: block; font-size: 0.7rem; color: #9CA3AF; font-family: monospace; }
-    .ip-cell { font-family: monospace; font-size: 0.75rem; color: #9CA3AF; }
+    .credential-row td { background: var(--warning-faint-bg); }
+    .time-cell { font-family: monospace; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+    .entity-type { color: var(--text-muted); }
+    .entity-name { display: block; font-weight: 500; color: var(--text-strong); }
+    .entity-id { display: block; font-size: 0.7rem; color: var(--text-subtle); font-family: monospace; }
+    .ip-cell { font-family: monospace; font-size: 0.75rem; color: var(--text-subtle); }
 
     .action-badge { display: inline-flex; align-items: center; padding: 0.2rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .action--created { background: #D1FAE5; color: #065F46; }
-    .action--updated { background: #DBEAFE; color: #1E40AF; }
-    .action--deleted { background: #FEE2E2; color: #991B1B; }
-    .action--restored { background: #FEF3C7; color: #92400E; }
-    .action--credential { background: #FED7AA; color: #9A3412; }
+    .action--created { background: var(--success-soft-bg); color: var(--success-soft-text); }
+    .action--updated { background: var(--primary-soft-bg-2); color: var(--primary-soft-text); }
+    .action--deleted { background: var(--danger-soft-bg); color: var(--danger-soft-text); }
+    .action--restored { background: var(--warning-soft-bg); color: var(--warning-soft-text); }
+    .action--credential { background: var(--warning-border); color: var(--warning-soft-text); }
 
-    .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 0.875rem; border-top: 1px solid #F3F4F6; }
-    .page-btn { background: none; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.375rem 0.625rem; cursor: pointer; color: #374151; &:disabled { opacity: 0.4; cursor: not-allowed; } &:not(:disabled):hover { background: #F3F4F6; } }
-    .page-info { font-size: 0.8125rem; color: #6B7280; }
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 0.875rem; border-top: 1px solid var(--surface-3); }
+    .page-btn { background: none; border: 1px solid var(--border-strong); border-radius: 0.375rem; padding: 0.375rem 0.625rem; cursor: pointer; color: var(--text); &:disabled { opacity: 0.4; cursor: not-allowed; } &:not(:disabled):hover { background: var(--surface-3); } }
+    .page-info { font-size: 0.8125rem; color: var(--text-muted); }
   `]
 })
 export class AuditLogComponent implements OnInit {
