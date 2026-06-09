@@ -16,6 +16,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.11.0] — 2026-06-09 (Sprint 14)
+
+### Eklendi
+- **Ortam tipi düzenleme ve silme**: Admin → Ortam Tipleri sayfasında düzenleme (kalem butonu + modal) ve silme (onay dialog'u + bağımlılık kontrolü) özellikleri eklendi
+- **Ortam breadcrumb tam yolu**: Ortam detay sayfası başlığı artık `Müşteriler / [Müşteri] / [Ürün] / [Ortam]` şeklinde tam yolu gösteriyor
+- **Ortam kardeş geçiş pill'leri**: Ortam detay sayfasında aynı ürüne ait diğer ortamlar pill butonları olarak gösterilir; tıklanınca o ortama geçilir
+- **Kaynak şablonu düzenleme**: Ürün detay sayfasında kaynak şablonlarına düzenleme (kalem butonu + modal) özelliği eklendi
+- **Müşteri listesinde ürün badge'leri**: Müşteri listesinde her müşteriye ait ürünler kısa kod badge'leri olarak gösterilir; tıklanınca müşteri detayında ilgili ürüne scroll edilir
+- **Ürün listesinde ekip badge'leri**: Ürün listesinde bağlı ekipler yeşil kod badge'leri olarak gösterilir; tıklanınca ekip detayına gidilir
+- **Müşteriden ürün kaldırma**: Müşteri detay sayfasında ürün kartına çöp kutusu butonu eklendi; bağlı ortam varsa 409 Conflict ile engellenir
+- **Ortam kaldırma**: Müşteri detay sayfasında ortam kartına çöp kutusu butonu eklendi; bağlı kaynak varsa 409 Conflict ile engellenir
+- **Ortam adı opsiyonel**: Ortam oluştururken "Ortam Adı" alanı artık zorunlu değil; boş bırakılırsa ortam tipi adı otomatik kullanılır
+
+### Düzeltildi
+- Müşteri ve ortam listelerinde durum badge'leri görünmüyordu — `JsonStringEnumConverter` nedeniyle API string değer döndürüyor (`"Active"`) ancak frontend sayı bekliyordu; tüm status/usageMode map'leri string key'e çevrildi
+- Ekipler listesinde üye sayısı 0 görünüyordu — `TeamRepository.GetAllAsync`'te `Include(t => t.Memberships)` eksikti
+- Müşteri listesinde ürün sayısı 0 görünüyordu — `CustomerRepository.GetAllAsync`'te Products include zinciri eksikti
+
+---
+
 ## [0.10.0] — 2026-06-09 (Sprint 13)
 
 ### Eklendi

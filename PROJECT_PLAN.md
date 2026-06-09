@@ -361,6 +361,21 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 14 — Plan Dışı Geliştirmeler ✅ (2026-06-09)
+
+- [x] **Ortam tipi CRUD tamamlandı**: Admin → Ortam Tipleri sayfasına düzenleme (PUT) ve silme (DELETE, bağımlılık kontrolü ile) eklendi
+- [x] **Ortam breadcrumb tam yolu**: Ortam detay sayfasında `Müşteriler / [Müşteri] / [Ürün] / [Ortam]` tam navigasyon yolu; `GetEnvironmentDetailQuery`'ye `CustomerId`, `CustomerName`, `ProductName` eklendi
+- [x] **Ortam kardeş geçiş**: Ortam başlığının altında aynı ürünün diğer ortamlarına geçiş pill'leri
+- [x] **Kaynak şablonu düzenleme**: `UpdateProductResourceTemplate` command + `PUT /products/{id}/resource-templates/{templateId}` endpoint
+- [x] **Müşteri listesinde ürün badge'leri**: `GetCustomersQueryHandler`'a Products include + `CustomerProductBadgeDto`; tıklanınca müşteri detayında ürün tab'ına deep-link
+- [x] **Ürün listesinde ekip badge'leri**: `GetProductsQueryHandler`'a Team include + `ProductTeamBadgeDto`; tıklanınca ekip detayına navigate
+- [x] **Müşteriden ürün kaldırma**: `RemoveCustomerProduct` command (ortam varsa 409) + `DELETE /customers/{id}/customer-products/{cpId}` endpoint
+- [x] **Ortam kaldırma**: `DeleteCustomerEnvironment` command (kaynak varsa 409) + `DELETE /environments/{id}` endpoint
+- [x] **Ortam adı opsiyonel**: `CreateCustomerEnvironmentCommand.Name` → `string?`; boşsa `EnvironmentType.Name` kullanılır
+- [x] **Enum string serializasyonu düzeltmesi**: Frontend status/usageMode map'leri numeric'ten string key'e çevrildi (CustomerStatus, CustomerProductStatus, UsageMode)
+
+---
+
 ## Sprint 13 — Plan Dışı Geliştirmeler ✅ (2026-06-09)
 
 - [x] **Soft delete**: Ürün, Müşteri, Ekip, Kişi listelerinde kebab menü (⋮) + onay dialog + soft delete
