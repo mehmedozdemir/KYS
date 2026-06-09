@@ -6,10 +6,10 @@
 
 ---
 
-## Güncel Durum (2026-06-08)
+## Güncel Durum (2026-06-09)
 
-Sprint 0–8 tamamlandı. Sprint 9 (AD entegrasyonu) ve Sprint 10 (production hazırlığı) devam ediyor.
-Plan dışında Sprint 11–12 kapsamında ek özellikler geliştirildi (bkz. aşağıda).
+Sprint 0–8 tamamlandı. Sprint 11–13 kapsamında plan dışı özellikler geliştirildi (bkz. aşağıda).
+Sprint 9 (AD entegrasyonu) ve Sprint 10 (production hazırlığı) henüz başlanmadı.
 
 ---
 
@@ -361,15 +361,32 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 13 — Plan Dışı Geliştirmeler ✅ (2026-06-09)
+
+- [x] **Soft delete**: Ürün, Müşteri, Ekip, Kişi listelerinde kebab menü (⋮) + onay dialog + soft delete
+- [x] **Dashboard "Çalışma Alanım" widget'ı**: Müşteri → Ürün → Ortam hiyerarşisi, anlık filtre, URL kopyala, `GET /dashboard/my-workspace` (kişiye atanmış ürünler bazlı kapsam + "Tüm Müşteriler" toggle)
+- [x] **Ortam endpoint kapsam düzeltmesi**: Endpoint Ekle butonu ortam detayından kaldırıldı (product-level tanım); silme artık yalnızca `CustomerEnvironmentEndpoint` URL kaydını siler (`DELETE /environments/{envId}/endpoints/{productEndpointId}`)
+- [x] **`JsonStringEnumConverter` global kayıt** — enum string değerleri 400 hata veriyordu
+- [x] **`SetCredentialValidator` `EndpointUrlId` branch eksikliği** — endpoint credential 422 hata veriyordu
+
+---
+
 ## Sonraki Adımlar (Öncelik Sırası)
 
-1. **Rate limiting** — API endpoint koruması (Sprint 0'dan kalan)
-2. **Health check endpoint'leri** — `/health/live` ve `/health/ready`
-3. **Integration testler** — Credential reveal, auth, customer workflow
-4. **AD/OIDC entegrasyonu** — Sprint 9 ana görevi
-5. **Production Docker Compose** — Nginx SSL, volume'lar, restart policy
-6. **`CustomFieldInputComponent`** — Customer/Product formlarında custom field render
-7. **CI/CD pipeline** — GitHub Actions PR check
+### Kısa Vadeli (Teknik Borç / Güvenlik)
+1. **Rate limiting** — API endpoint koruması (`Sprint 0`'dan kalan, altyapı mevcut)
+2. **Health check endpoint'leri** — `/health/live` ve `/health/ready` (`Sprint 0`'dan kalan)
+3. **`CustomFieldInputComponent`** — Customer/Product formlarında custom field render (`Sprint 3`'ten kalan)
+
+### Orta Vadeli (Kalite)
+4. **Integration testler** — Credential reveal, auth, customer workflow (`%80 hedef`)
+5. **CI/CD pipeline** — GitHub Actions PR check (build + test + format)
+
+### Uzun Vadeli (Altyapı)
+6. **AD/OIDC entegrasyonu** — `Sprint 9` ana görevi (hibrit auth)
+7. **Production Docker Compose** — Nginx SSL, volume'lar, restart policy
+8. **Database index optimizasyonu** — Yük testinden sonra
+9. **Kullanıcı / Admin kılavuzu** — Dokümantasyon
 
 ---
 
