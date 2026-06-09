@@ -374,7 +374,7 @@ export class WorkspaceWidgetComponent implements OnInit {
   filter = signal('');
   selectedResourceTypes = signal<Set<string>>(new Set());
   selectedEndpointTypes = signal<Set<string>>(new Set());
-  private collapsed = signal<Set<string>>(new Set());
+  private expanded = signal<Set<string>>(new Set());
 
   // Yüklü veriden türetilen mevcut tipler (boş filtre gösterilmez)
   availableResourceTypes = computed(() => {
@@ -472,7 +472,7 @@ export class WorkspaceWidgetComponent implements OnInit {
 
   isExpanded(customerId: string): boolean {
     if (this.filter().trim() || this.hasActiveTypeFilter()) return true;
-    return !this.collapsed().has(customerId);
+    return this.expanded().has(customerId);
   }
 
   toggleResourceType(type: string): void {
@@ -504,7 +504,7 @@ export class WorkspaceWidgetComponent implements OnInit {
   }
 
   toggle(customerId: string): void {
-    this.collapsed.update(set => {
+    this.expanded.update(set => {
       const next = new Set(set);
       next.has(customerId) ? next.delete(customerId) : next.add(customerId);
       return next;

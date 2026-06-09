@@ -16,6 +16,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.20.0] — 2026-06-10 (Sprint 23 — Workspace Varsayılan Kapalı)
+
+### Değişti
+- Çalışma Alanım widget'ında müşteri satırları artık varsayılan **kapalı** geliyor (tıklayınca açılır); önceden hepsi açık geliyordu. Arama veya tip filtresi aktifken ilgili satırlar otomatik açılır
+
+---
+
 ## [0.19.0] — 2026-06-10 (Sprint 22 — Tema Sistemi Faz 2: Tam Kapsam)
 
 ### Değişti
