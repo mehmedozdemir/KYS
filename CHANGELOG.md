@@ -28,6 +28,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 - **`adminGuard`**: `/admin/*` route'ları frontend'de korumaya alındı — yetkisiz kullanıcı `/dashboard`'a yönlendirilir (önceden sayfa açılıp veriler 403 dönüyordu)
 - **`PermissionService`**: localStorage'daki kullanıcı izinlerini senkron okuyan servis (`has`, `isAdmin`)
 
+### Düzeltildi
+- Sidebar tamamen boş görünüyordu: `@for ... track group.header ?? ''` ifadesindeki `??` Angular derleyicisinde `tmp_16_0 is not defined` runtime hatasına yol açıyordu → `track $index` ile düzeltildi
+- `PermissionService.permissions()` bozuk localStorage kaydına karşı try/catch ile sağlamlaştırıldı
+
 ---
 
 ## [0.16.0] — 2026-06-09 (Sprint 19 — Workspace Credential Maskeleme)

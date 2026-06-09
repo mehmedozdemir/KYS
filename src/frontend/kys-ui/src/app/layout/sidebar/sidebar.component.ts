@@ -27,7 +27,7 @@ interface NavGroup {
       </div>
 
       <nav class="sidebar__nav">
-        @for (group of visibleGroups(); track group.header ?? '') {
+        @for (group of visibleGroups(); track $index) {
           @if (group.header) {
             <div class="sidebar__group-header">{{ group.header }}</div>
           }

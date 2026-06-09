@@ -6,7 +6,11 @@ export class PermissionService {
   private token = inject(TokenService);
 
   permissions(): string[] {
-    return this.token.getUser<{ permissions?: string[] }>()?.permissions ?? [];
+    try {
+      return this.token.getUser<{ permissions?: string[] }>()?.permissions ?? [];
+    } catch {
+      return [];
+    }
   }
 
   /** Belirli bir izne sahip mi (wildcard '*' her şeyi kapsar). */
