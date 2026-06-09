@@ -361,6 +361,12 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 23 — Workspace Varsayılan Kapalı ✅ (2026-06-10)
+
+- [x] Çalışma Alanım widget'ında müşteri satırları varsayılan kapalı (`collapsed` → `expanded` mantığı); arama/tip filtresi aktifken otomatik açılır
+
+---
+
 ## Sprint 22 — Tema Sistemi (Faz 2: Tam Kapsam) ✅ (2026-06-10)
 
 - [x] Kalan ~21 bileşendeki hardcode hex renkler `var(--token)`'a çevrildi (tırnaklı TS renk değerleri korundu)
