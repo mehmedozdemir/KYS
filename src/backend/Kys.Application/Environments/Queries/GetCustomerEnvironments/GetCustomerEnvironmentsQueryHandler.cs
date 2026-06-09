@@ -18,6 +18,9 @@ public sealed class GetCustomerEnvironmentsQueryHandler(IEnvironmentRepository r
             e.IsActive,
             e.Resources.Count,
             e.Endpoints.Count,
-            e.Notes)).ToList();
+            e.Notes,
+            e.HostingPlatform?.Name,
+            e.HostingPlatform?.Icon,
+            e.HostingPlatform?.Color)).ToList();
     }
 }

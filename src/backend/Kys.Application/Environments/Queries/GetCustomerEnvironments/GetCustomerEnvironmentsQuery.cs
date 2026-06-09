@@ -14,4 +14,7 @@ public sealed record CustomerEnvironmentSummaryDto(
     bool IsActive,
     int ResourceCount,
     int EndpointCount,
-    string? Notes);
+    string? Notes,
+    string? HostingPlatformName,
+    string? HostingPlatformIcon,
+    string? HostingPlatformColor);

@@ -361,6 +361,19 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 24 — Barındırma Platformu ✅ (2026-06-10)
+
+Ortamların hangi platformda çalıştığını (K8s/Linux/Windows/AWS/Azure/GCP) tanımlama ve gösterme.
+
+- [x] `HostingPlatform` entity (admin-yönetimli katalog: ad, kod, kategori, ikon, renk) + migration (7 seed) + `CustomerEnvironment.HostingPlatformId` FK
+- [x] CRUD: GetHostingPlatforms + Create/Update/Delete + `Admin/HostingPlatformsController` + public GET
+- [x] Ortam oluşturmada platform seçimi + `SetEnvironmentHostingPlatform` (`PUT /environments/{id}/hosting-platform`)
+- [x] DTO'lara platform bilgisi: env detay, ortam listesi, workspace
+- [x] Admin **Barındırma Platformları** sayfası (token temalı) + route + sidebar "Tanımlar"
+- [x] Gösterim: env detay başlığı (+ değiştirme), müşteri detay ortam kartı, workspace env kartı — ikon+renkli rozet
+
+---
+
 ## Sprint 23 — Workspace Varsayılan Kapalı ✅ (2026-06-10)
 
 - [x] Çalışma Alanım widget'ında müşteri satırları varsayılan kapalı (`collapsed` → `expanded` mantığı); arama/tip filtresi aktifken otomatik açılır

@@ -39,6 +39,9 @@ interface WorkspaceEnvironment {
   environmentTypeName: string;
   environmentTypeCode: string;
   environmentTypeColor: string | null;
+  hostingPlatformName: string | null;
+  hostingPlatformIcon: string | null;
+  hostingPlatformColor: string | null;
   endpoints: WorkspaceEndpoint[];
   resources: WorkspaceResource[];
 }
@@ -171,6 +174,14 @@ interface WorkspaceCustomer {
                               {{ e.environmentTypeName }}
                             </span>
                             <span class="ws-env-name">{{ e.name }}</span>
+                            @if (e.hostingPlatformName) {
+                              <span class="ws-plat-badge"
+                                [style.background]="hexAlpha(e.hostingPlatformColor, 0.15)"
+                                [style.color]="e.hostingPlatformColor ?? '#6B7280'"
+                                [title]="'Barındırma: ' + e.hostingPlatformName">
+                                <i class="pi" [ngClass]="e.hostingPlatformIcon ?? 'pi-server'"></i> {{ e.hostingPlatformName }}
+                              </span>
+                            }
                             <a class="ws-env-link" [routerLink]="['/environments', e.environmentId]" title="Ortam detayı">
                               Detay <i class="pi pi-arrow-right"></i>
                             </a>
@@ -341,6 +352,7 @@ interface WorkspaceCustomer {
     .ws-env-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-light); }
     .ws-env-badge { padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
     .ws-env-name { font-weight: 500; color: var(--text); font-size: 0.8125rem; }
+    .ws-plat-badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.66rem; font-weight: 600; flex-shrink: 0; i { font-size: 0.62rem; } }
     .ws-env-link { margin-left: auto; font-size: 0.75rem; color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; &:hover { text-decoration: underline; } i { font-size: 0.65rem; } }
     .ws-empty-env { font-size: 0.75rem; color: var(--text-subtle); padding: 0.25rem 0; }
 
@@ -512,7 +524,11 @@ export class WorkspaceWidgetComponent implements OnInit {
   }
 
   envColor(e: WorkspaceEnvironment, alpha: number): string {
-    const c = e.environmentTypeColor ?? '#6B7280';
+    return this.hexAlpha(e.environmentTypeColor, alpha);
+  }
+
+  hexAlpha(color: string | null, alpha: number): string {
+    const c = color ?? '#6B7280';
     return c + Math.round(alpha * 255).toString(16).padStart(2, '0');
   }
 

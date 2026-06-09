@@ -144,6 +144,7 @@ export class SidebarComponent {
       adminOnly: true,
       items: [
         { label: 'Ortam Tipleri', icon: 'pi-server', route: '/admin/environment-types' },
+        { label: 'Barındırma Platformları', icon: 'pi-cloud', route: '/admin/hosting-platforms' },
         { label: 'Kaynak Tipleri', icon: 'pi-database', route: '/admin/resource-types' },
         { label: 'Paylaşımlı Kaynaklar', icon: 'pi-share-alt', route: '/admin/shared-resources' }
       ]

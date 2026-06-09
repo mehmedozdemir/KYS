@@ -74,6 +74,7 @@ public sealed class DashboardRepository(NpgsqlDataSource dataSource, AppDbContex
 
         return await query
             .Include(e => e.EnvironmentType)
+            .Include(e => e.HostingPlatform)
             .Include(e => e.CustomerProduct).ThenInclude(cp => cp.Customer)
             .Include(e => e.CustomerProduct).ThenInclude(cp => cp.Product)
             .Include(e => e.Resources).ThenInclude(r => r.ProductResourceTemplate).ThenInclude(t => t.ResourceType)

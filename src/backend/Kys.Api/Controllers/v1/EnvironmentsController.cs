@@ -5,9 +5,11 @@ using Kys.Application.Environments.Commands.DeleteCustomerEnvironment;
 using Kys.Application.Environments.Commands.RemoveEnvironmentResource;
 using Kys.Application.Environments.Commands.RemoveEnvironmentEndpointUrl;
 using Kys.Application.Environments.Commands.SetEnvironmentEndpointUrl;
+using Kys.Application.Environments.Commands.SetEnvironmentHostingPlatform;
 using Kys.Application.Environments.Queries.GetCustomerEnvironments;
 using Kys.Application.Environments.Queries.GetEnvironmentDetail;
 using Kys.Application.Environments.Queries.GetEnvironmentTypes;
+using Kys.Application.Environments.Queries.GetHostingPlatforms;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +25,10 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
     [HttpGet("types")]
     public async Task<IActionResult> GetTypes(CancellationToken ct)
         => Ok(await mediator.Send(new GetEnvironmentTypesQuery(), ct));
+
+    [HttpGet("hosting-platforms")]
+    public async Task<IActionResult> GetHostingPlatforms([FromQuery] bool activeOnly = true, CancellationToken ct = default)
+        => Ok(await mediator.Send(new GetHostingPlatformsQuery(activeOnly), ct));
 
     [HttpGet("customer-products/{customerProductId:guid}")]
     public async Task<IActionResult> GetByCustomerProduct(Guid customerProductId, CancellationToken ct)
@@ -42,8 +48,18 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
             request.CustomerProductId,
             request.EnvironmentTypeId,
             request.Name,
-            request.Notes), ct);
+            request.Notes,
+            request.HostingPlatformId), ct);
         return CreatedAtAction(nameof(GetDetail), new { id }, new { id });
+    }
+
+    [HttpPut("{environmentId:guid}/hosting-platform")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetHostingPlatform(Guid environmentId, SetHostingPlatformRequest request, CancellationToken ct)
+    {
+        await mediator.Send(new SetEnvironmentHostingPlatformCommand(environmentId, request.HostingPlatformId), ct);
+        return NoContent();
     }
 
     [HttpDelete("{environmentId:guid}")]
@@ -110,7 +126,10 @@ public sealed record CreateCustomerEnvironmentRequest(
     Guid CustomerProductId,
     Guid EnvironmentTypeId,
     string? Name,
-    string? Notes);
+    string? Notes,
+    Guid? HostingPlatformId);
+
+public sealed record SetHostingPlatformRequest(Guid? HostingPlatformId);
 
 public sealed record AddResourceToEnvironmentRequest(
     Guid ProductResourceTemplateId,

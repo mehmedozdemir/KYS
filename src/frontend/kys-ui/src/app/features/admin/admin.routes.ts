@@ -14,6 +14,10 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () => import('./environment-types/environment-types.component').then(m => m.EnvironmentTypesComponent)
   },
   {
+    path: 'hosting-platforms',
+    loadComponent: () => import('./hosting-platforms/hosting-platforms.component').then(m => m.HostingPlatformsComponent)
+  },
+  {
     path: 'platform-users',
     loadComponent: () => import('./platform-users/platform-users.component').then(m => m.PlatformUsersComponent)
   },

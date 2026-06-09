@@ -35,6 +35,9 @@ public sealed class GetMyWorkspaceQueryHandler(
                     e.EnvironmentType.Name,
                     e.EnvironmentType.Code,
                     e.EnvironmentType.Color,
+                    e.HostingPlatform?.Name,
+                    e.HostingPlatform?.Icon,
+                    e.HostingPlatform?.Color,
                     e.Endpoints
                         .OrderBy(ep => ep.ProductEndpoint.SortOrder)
                         .Select(ep => new WorkspaceEndpointDto(

@@ -14,6 +14,9 @@ public sealed record WorkspaceEnvironmentDto(
     string EnvironmentTypeName,
     string EnvironmentTypeCode,
     string? EnvironmentTypeColor,
+    string? HostingPlatformName,
+    string? HostingPlatformIcon,
+    string? HostingPlatformColor,
     IReadOnlyList<WorkspaceEndpointDto> Endpoints,
     IReadOnlyList<WorkspaceResourceDto> Resources);
 

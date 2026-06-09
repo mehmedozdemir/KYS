@@ -25,9 +25,32 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
     public async Task<int> CountEnvironmentsByTypeAsync(Guid environmentTypeId, CancellationToken ct = default)
         => await db.CustomerEnvironments.CountAsync(e => e.EnvironmentTypeId == environmentTypeId, ct);
 
+    public async Task<IReadOnlyList<HostingPlatform>> GetHostingPlatformsAsync(bool activeOnly = true, CancellationToken ct = default)
+    {
+        var query = db.HostingPlatforms.AsQueryable();
+        if (activeOnly) query = query.Where(x => x.IsActive);
+        return await query.OrderBy(x => x.SortOrder).ThenBy(x => x.Name).ToListAsync(ct);
+    }
+
+    public async Task<HostingPlatform?> GetHostingPlatformByIdAsync(Guid id, CancellationToken ct = default)
+        => await db.HostingPlatforms.FindAsync([id], ct);
+
+    public async Task AddHostingPlatformAsync(HostingPlatform platform, CancellationToken ct = default)
+        => await db.HostingPlatforms.AddAsync(platform, ct);
+
+    public void UpdateHostingPlatform(HostingPlatform platform)
+        => db.HostingPlatforms.Update(platform);
+
+    public void DeleteHostingPlatform(HostingPlatform platform)
+        => db.HostingPlatforms.Remove(platform);
+
+    public async Task<int> CountEnvironmentsByPlatformAsync(Guid hostingPlatformId, CancellationToken ct = default)
+        => await db.CustomerEnvironments.CountAsync(e => e.HostingPlatformId == hostingPlatformId, ct);
+
     public async Task<IReadOnlyList<CustomerEnvironment>> GetByCustomerProductAsync(Guid customerProductId, CancellationToken ct = default)
         => await db.CustomerEnvironments
             .Include(x => x.EnvironmentType)
+            .Include(x => x.HostingPlatform)
             .Include(x => x.Resources)
             .Where(x => x.CustomerProductId == customerProductId)
             .OrderBy(x => x.EnvironmentType.SortOrder)
@@ -36,6 +59,7 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
     public async Task<CustomerEnvironment?> GetEnvironmentByIdAsync(Guid id, CancellationToken ct = default)
         => await db.CustomerEnvironments
             .Include(x => x.EnvironmentType)
+            .Include(x => x.HostingPlatform)
             .Include(x => x.Resources)
                 .ThenInclude(r => r.ProductResourceTemplate)
                     .ThenInclude(t => t.ResourceType)
