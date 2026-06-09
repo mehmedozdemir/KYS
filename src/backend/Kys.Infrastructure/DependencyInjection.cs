@@ -27,17 +27,19 @@ public static class DependencyInjection
         services.AddScoped<TimestampInterceptor>();
         services.AddScoped<AuditLogInterceptor>();
 
-        var dataSource = new NpgsqlDataSourceBuilder(
-                configuration.GetConnectionString("DefaultConnection"))
-            .EnableDynamicJson()
-            .Build();
-
-        services.AddSingleton(dataSource);
+        // Lazy factory so tests can replace the data source before first resolution
+        services.AddSingleton<NpgsqlDataSource>(sp =>
+        {
+            var cfg = sp.GetRequiredService<IConfiguration>();
+            return new NpgsqlDataSourceBuilder(cfg.GetConnectionString("DefaultConnection"))
+                .EnableDynamicJson()
+                .Build();
+        });
 
         services.AddDbContext<AppDbContext>((sp, options) =>
         {
             options.UseNpgsql(
-                dataSource,
+                sp.GetRequiredService<NpgsqlDataSource>(),
                 npgsql => npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName))
                 .UseSnakeCaseNamingConvention()
                 .AddInterceptors(
