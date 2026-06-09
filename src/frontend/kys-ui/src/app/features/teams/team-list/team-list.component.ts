@@ -72,6 +72,7 @@ interface CreateTeamRequest {
                 <th>Açıklama</th>
                 <th>Üye Sayısı</th>
                 <th>Durum</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -95,6 +96,18 @@ interface CreateTeamRequest {
                       {{ team.isActive ? 'Aktif' : 'Pasif' }}
                     </span>
                   </td>
+                  <td class="actions-cell" (click)="$event.stopPropagation()">
+                    <div class="kebab-wrap">
+                      <button class="kebab-btn" (click)="toggleMenu(team.id)"><i class="pi pi-ellipsis-v"></i></button>
+                      @if (openMenuId() === team.id) {
+                        <div class="kebab-menu">
+                          <button class="km-item km-danger" (click)="confirmDelete(team)">
+                            <i class="pi pi-trash"></i> Sil
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -113,6 +126,27 @@ interface CreateTeamRequest {
         }
       </div>
     </div>
+
+    @if (deleteTarget()) {
+      <div class="modal-backdrop" (click)="cancelDelete()">
+        <div class="modal modal--sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Ekibi Sil</h2>
+            <button class="close-btn" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <p style="margin:0;color:#374151"><strong>{{ deleteTarget()!.name }}</strong> ekibini silmek istediğinize emin misiniz?</p>
+            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:#6B7280">Bu işlem geri alınamaz.</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="cancelDelete()">İptal</button>
+            <button class="btn btn-danger" [disabled]="deleting()" (click)="deleteTeam()">
+              {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
 
     @if (showModal()) {
       <div class="modal-backdrop" (click)="closeModal()">
@@ -212,6 +246,15 @@ interface CreateTeamRequest {
     .required { color: #EF4444; }
     .field-error { font-size: 0.75rem; color: #EF4444; }
     .alert-error { padding: 0.75rem 1rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 0.5rem; color: #991B1B; font-size: 0.875rem; }
+
+    .actions-cell { width: 2.5rem; text-align: center; }
+    .kebab-wrap { position: relative; display: inline-block; }
+    .kebab-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 1rem; line-height: 1; &:hover { background: #F3F4F6; color: #374151; } }
+    .kebab-menu { position: absolute; right: 0; top: 100%; background: white; border: 1px solid #E5E7EB; border-radius: 0.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 120px; z-index: 50; padding: 0.25rem; }
+    .km-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 0.75rem; border: none; background: none; cursor: pointer; font-size: 0.875rem; border-radius: 0.375rem; &:hover { background: #F3F4F6; } }
+    .km-danger { color: #DC2626; &:hover { background: #FEF2F2 !important; } }
+    .btn-danger { background: #DC2626; color: white; &:not(:disabled):hover { background: #B91C1C; } }
+    .modal--sm { max-width: 400px; }
   `]
 })
 export class TeamListComponent implements OnInit {
@@ -226,6 +269,36 @@ export class TeamListComponent implements OnInit {
 
   searchInput = '';
   private searchSubject = new Subject<string>();
+
+  openMenuId = signal<string | null>(null);
+  deleteTarget = signal<TeamSummary | null>(null);
+  deleting = signal(false);
+
+  toggleMenu(id: string): void {
+    this.openMenuId.set(this.openMenuId() === id ? null : id);
+  }
+
+  confirmDelete(team: TeamSummary): void {
+    this.openMenuId.set(null);
+    this.deleteTarget.set(team);
+  }
+
+  cancelDelete(): void { this.deleteTarget.set(null); }
+
+  deleteTeam(): void {
+    const target = this.deleteTarget();
+    if (!target) return;
+    this.deleting.set(true);
+    this.http.delete(`${environment.apiUrl}/teams/${target.id}`).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.deleteTarget.set(null);
+        this.page.set(1);
+        this.load();
+      },
+      error: () => this.deleting.set(false)
+    });
+  }
 
   showModal = signal(false);
   saving = signal(false);

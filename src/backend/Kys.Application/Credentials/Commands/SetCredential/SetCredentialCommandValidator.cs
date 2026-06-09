@@ -9,8 +9,8 @@ public sealed class SetCredentialCommandValidator : AbstractValidator<SetCredent
         RuleFor(x => x.FieldKey).NotEmpty().MaximumLength(100);
         RuleFor(x => x.PlainValue).NotEmpty();
         RuleFor(x => x)
-            .Must(x => x.EnvironmentResourceId.HasValue || x.SharedResourceId.HasValue)
+            .Must(x => x.EnvironmentResourceId.HasValue || x.SharedResourceId.HasValue || x.EndpointUrlId.HasValue)
             .WithName("ResourceId")
-            .WithMessage("Either EnvironmentResourceId or SharedResourceId must be provided.");
+            .WithMessage("Either EnvironmentResourceId, SharedResourceId or EndpointUrlId must be provided.");
     }
 }

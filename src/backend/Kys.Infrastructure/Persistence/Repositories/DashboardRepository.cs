@@ -1,10 +1,12 @@
 using Dapper;
+using Kys.Domain.Entities;
 using Kys.Domain.Interfaces.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace Kys.Infrastructure.Persistence.Repositories;
 
-public sealed class DashboardRepository(NpgsqlDataSource dataSource) : IDashboardRepository
+public sealed class DashboardRepository(NpgsqlDataSource dataSource, AppDbContext db) : IDashboardRepository
 {
     public async Task<DashboardStatsResult> GetStatsAsync(CancellationToken ct = default)
     {
@@ -48,5 +50,41 @@ public sealed class DashboardRepository(NpgsqlDataSource dataSource) : IDashboar
             """, new { Count = count });
 
         return results.ToList();
+    }
+
+    public async Task<IReadOnlyList<CustomerEnvironment>> GetWorkspaceEnvironmentsAsync(
+        Guid personId, bool allCustomers, CancellationToken ct = default)
+    {
+        var query = db.CustomerEnvironments
+            .AsNoTracking()
+            .Where(e => e.IsActive && !e.CustomerProduct.Customer.IsArchived);
+
+        if (!allCustomers)
+        {
+            var myProductIds = db.ProductAssignments
+                .Where(pa => pa.PersonId == personId && pa.IsActive)
+                .Select(pa => pa.ProductId)
+                .Union(db.ProductTeams
+                    .Where(pt => db.TeamMemberships.Any(tm =>
+                        tm.TeamId == pt.TeamId && tm.PersonId == personId && tm.EndDate == null))
+                    .Select(pt => pt.ProductId));
+
+            query = query.Where(e => myProductIds.Contains(e.CustomerProduct.ProductId));
+        }
+
+        return await query
+            .Include(e => e.EnvironmentType)
+            .Include(e => e.CustomerProduct).ThenInclude(cp => cp.Customer)
+            .Include(e => e.CustomerProduct).ThenInclude(cp => cp.Product)
+            .Include(e => e.Resources).ThenInclude(r => r.ProductResourceTemplate).ThenInclude(t => t.ResourceType)
+            .Include(e => e.Resources).ThenInclude(r => r.SharedResource)
+            .Include(e => e.Resources).ThenInclude(r => r.Credentials)
+            .Include(e => e.Endpoints).ThenInclude(ep => ep.ProductEndpoint)
+            .Include(e => e.Endpoints).ThenInclude(ep => ep.Credentials)
+            .OrderBy(e => e.CustomerProduct.Customer.Name)
+            .ThenBy(e => e.CustomerProduct.Product.Name)
+            .ThenBy(e => e.Name)
+            .AsSplitQuery()
+            .ToListAsync(ct);
     }
 }

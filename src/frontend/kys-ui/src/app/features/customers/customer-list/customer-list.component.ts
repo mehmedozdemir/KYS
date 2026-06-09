@@ -70,6 +70,7 @@ interface Customer {
               <th>Durum</th>
               <th>Go-Live</th>
               <th>Ürünler</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -84,15 +85,48 @@ interface Customer {
                 </td>
                 <td>{{ c.productionLiveAt ? (c.productionLiveAt | date:'dd.MM.yyyy') : '—' }}</td>
                 <td>{{ c.productCount }}</td>
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <div class="kebab-wrap">
+                    <button class="kebab-btn" (click)="toggleMenu(c.id)"><i class="pi pi-ellipsis-v"></i></button>
+                    @if (openMenuId === c.id) {
+                      <div class="kebab-menu">
+                        <button class="km-item km-danger" (click)="confirmDelete(c)">
+                          <i class="pi pi-trash"></i> Sil
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </td>
               </tr>
             }
             @empty {
-              <tr><td colspan="4" style="text-align:center;color:#9CA3AF;padding:2rem">Müşteri bulunamadı.</td></tr>
+              <tr><td colspan="5" style="text-align:center;color:#9CA3AF;padding:2rem">Müşteri bulunamadı.</td></tr>
             }
           </tbody>
         </table>
       </div>
     </div>
+
+    @if (deleteTarget) {
+      <div class="modal-backdrop" (click)="cancelDelete()">
+        <div class="modal modal--sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Müşteriyi Sil</h2>
+            <button type="button" class="modal-close" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <p style="margin:0;color:#374151"><strong>{{ deleteTarget!.name }}</strong> müşterisini silmek istediğinize emin misiniz?</p>
+            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:#6B7280">Bu işlem geri alınamaz.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="cancelDelete()">İptal</button>
+            <button type="button" class="btn btn-danger" [disabled]="deleting()" (click)="deleteCustomer()">
+              {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- Yeni Müşteri Modal -->
     @if (showModal()) {
@@ -288,6 +322,15 @@ interface Customer {
     .badge--active { background: #D1FAE5; color: #065F46; }
     .badge--inactive { background: #FEF3C7; color: #92400E; }
     .badge--churned { background: #FEE2E2; color: #991B1B; }
+
+    .actions-cell { width: 2.5rem; text-align: center; }
+    .kebab-wrap { position: relative; display: inline-block; }
+    .kebab-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 1rem; line-height: 1; &:hover { background: #F3F4F6; color: #374151; } }
+    .kebab-menu { position: absolute; right: 0; top: 100%; background: white; border: 1px solid #E5E7EB; border-radius: 0.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 120px; z-index: 50; padding: 0.25rem; }
+    .km-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 0.75rem; border: none; background: none; cursor: pointer; font-size: 0.875rem; border-radius: 0.375rem; &:hover { background: #F3F4F6; } }
+    .km-danger { color: #DC2626; &:hover { background: #FEF2F2 !important; } }
+    .btn-danger { background: #DC2626 !important; color: white !important; &:not(:disabled):hover { background: #B91C1C !important; } }
+    .modal--sm { max-width: 400px; }
   `]
 })
 export class CustomerListComponent implements OnInit {
@@ -299,6 +342,34 @@ export class CustomerListComponent implements OnInit {
   statusFilter = '';
   includeArchived = false;
   totalCount = 0;
+
+  openMenuId: string | null = null;
+  deleteTarget: Customer | null = null;
+  deleting = signal(false);
+
+  toggleMenu(id: string): void {
+    this.openMenuId = this.openMenuId === id ? null : id;
+  }
+
+  confirmDelete(c: Customer): void {
+    this.openMenuId = null;
+    this.deleteTarget = c;
+  }
+
+  cancelDelete(): void { this.deleteTarget = null; }
+
+  deleteCustomer(): void {
+    if (!this.deleteTarget) return;
+    this.deleting.set(true);
+    this.http.delete(`${environment.apiUrl}/customers/${this.deleteTarget.id}`).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.deleteTarget = null;
+        this.load();
+      },
+      error: () => this.deleting.set(false)
+    });
+  }
 
   showModal = signal(false);
   submitted = signal(false);

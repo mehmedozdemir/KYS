@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Kys.Application.People.Commands.CreatePerson;
+using Kys.Application.People.Commands.DeletePerson;
 using Kys.Application.People.Commands.UpdateEmploymentStatus;
 using Kys.Application.People.Commands.UpdatePerson;
 using Kys.Application.People.Queries.GetPeople;
@@ -40,6 +41,15 @@ public sealed class PeopleController(IMediator mediator) : ControllerBase
     {
         var id = await mediator.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id, version = "1" }, new { id });
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await mediator.Send(new DeletePersonCommand(id), ct);
+        return NoContent();
     }
 
     [HttpPatch("{id:guid}")]

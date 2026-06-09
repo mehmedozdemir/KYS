@@ -16,6 +16,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.10.0] — 2026-06-09 (Sprint 13)
+
+### Eklendi
+- **Çalışma Alanım Widget'ı**: Dashboard'a Müşteri → Ürün → Ortam hiyerarşisinde anlık filtreli workspace widget eklendi; endpoint URL'leri tek tık kopyalanabilir, credential sayısı ortam detayına derin link olarak gösterilir
+- **Kapsam Toggle**: Widget'ta "Benim Müşterilerim" (atanan ürünler üzerinden) / "Tüm Müşteriler" geçişi
+- **`GET /api/v1/dashboard/my-workspace`**: Giriş yapan kişinin sorumlu olduğu ürünler (doğrudan atama + ekip üzerinden) filtreli environment ağacını döner; hiçbir credential değeri response'a dahil edilmez
+- **Soft Delete**: Ürün, Müşteri, Ekip ve Kişi listelerinde kebab menü (⋮) + onay dialog'u ile soft delete (`IsDeleted=true`)
+- **`DELETE /environments/{envId}/endpoints/{productEndpointId}`**: Ortam bazlı endpoint URL kaydını siler (ürün geneli endpoint tanımına dokunmaz); endpoint ekleme butonu ortam detayından kaldırıldı
+
+### Düzeltildi
+- `JsonStringEnumConverter` global kayıt eksikliği — endpoint tipi string enum değerleri 400 hatası veriyordu
+- `SetCredentialCommandValidator` `EndpointUrlId` branch'i eksikti — endpoint credential kaydı 422 veriyordu
+- Dashboard workspace widget'ında aynı müşteri birden fazla panel olarak görünüyordu — `GroupBy` entity referansı yerine `CustomerId` üzerinden yapılacak şekilde düzeltildi
+
+---
+
 ## [0.9.0] — 2026-06-08 (Sprint 11-12)
 
 ### Eklendi

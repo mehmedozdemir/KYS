@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Kys.Application.Environments.Commands.AddResourceToEnvironment;
 using Kys.Application.Environments.Commands.CreateCustomerEnvironment;
 using Kys.Application.Environments.Commands.RemoveEnvironmentResource;
+using Kys.Application.Environments.Commands.RemoveEnvironmentEndpointUrl;
 using Kys.Application.Environments.Commands.SetEnvironmentEndpointUrl;
 using Kys.Application.Environments.Queries.GetCustomerEnvironments;
 using Kys.Application.Environments.Queries.GetEnvironmentDetail;
@@ -64,6 +65,13 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> RemoveResource(Guid environmentId, Guid resourceId, CancellationToken ct)
     {
         await mediator.Send(new RemoveEnvironmentResourceCommand(resourceId), ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{environmentId:guid}/endpoints/{productEndpointId:guid}")]
+    public async Task<IActionResult> RemoveEndpointUrl(Guid environmentId, Guid productEndpointId, CancellationToken ct)
+    {
+        await mediator.Send(new RemoveEnvironmentEndpointUrlCommand(environmentId, productEndpointId), ct);
         return NoContent();
     }
 

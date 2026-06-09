@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Kys.Application.Customers.Commands.AddProductToCustomer;
 using Kys.Application.Customers.Commands.ArchiveCustomer;
 using Kys.Application.Customers.Commands.CreateCustomer;
+using Kys.Application.Customers.Commands.DeleteCustomer;
 using Kys.Application.Customers.Commands.RestoreCustomer;
 using Kys.Application.Customers.Commands.UpdateCustomer;
 using Kys.Application.Customers.Commands.UpdateCustomerProductStatus;
@@ -45,6 +46,15 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
     {
         var id = await mediator.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id, version = "1" }, new { id });
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await mediator.Send(new DeleteCustomerCommand(id), ct);
+        return NoContent();
     }
 
     [HttpPut("{id:guid}")]

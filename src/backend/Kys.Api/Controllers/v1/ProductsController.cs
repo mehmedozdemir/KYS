@@ -4,6 +4,7 @@ using Kys.Application.Products.Commands.AssignTeamToProduct;
 using Kys.Application.Products.Commands.CreateProduct;
 using Kys.Application.Products.Commands.CreateProductEndpoint;
 using Kys.Application.Products.Commands.CreateProductResourceTemplate;
+using Kys.Application.Products.Commands.DeleteProduct;
 using Kys.Application.Products.Commands.DeleteProductEndpoint;
 using Kys.Application.Products.Commands.DeleteProductResourceTemplate;
 using Kys.Application.Products.Commands.UpdateProduct;
@@ -47,6 +48,15 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     {
         var id = await mediator.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id, version = "1" }, new { id });
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await mediator.Send(new DeleteProductCommand(id), ct);
+        return NoContent();
     }
 
     [HttpPut("{id:guid}")]

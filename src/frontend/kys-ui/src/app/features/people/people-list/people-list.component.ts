@@ -101,6 +101,16 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
                   </td>
                   <td class="action-cell">
                     <a [routerLink]="['/people', p.id]" class="btn-link">Detay →</a>
+                    <div class="kebab-wrap">
+                      <button class="kebab-btn" (click)="$event.stopPropagation(); toggleMenu(p.id)"><i class="pi pi-ellipsis-v"></i></button>
+                      @if (openMenuId() === p.id) {
+                        <div class="kebab-menu">
+                          <button class="km-item km-danger" (click)="confirmDelete(p)">
+                            <i class="pi pi-trash"></i> Sil
+                          </button>
+                        </div>
+                      }
+                    </div>
                   </td>
                 </tr>
               }
@@ -118,6 +128,27 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
         }
       </div>
     </div>
+
+    @if (deleteTarget()) {
+      <div class="modal-overlay" (click)="cancelDelete()">
+        <div class="modal modal--sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Kişiyi Sil</h2>
+            <button class="modal-close" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <p style="margin:0;color:#374151"><strong>{{ deleteTarget()!.firstName }} {{ deleteTarget()!.lastName }}</strong> kişisini silmek istediğinize emin misiniz?</p>
+            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:#6B7280">Bu işlem geri alınamaz.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" (click)="cancelDelete()">İptal</button>
+            <button type="button" class="btn-danger" [disabled]="deleting()" (click)="deletePerson()">
+              {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- Create Person Modal -->
     @if (showCreate()) {
@@ -382,6 +413,15 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       border-radius: 0.5rem; padding: 0.75rem;
       font-size: 0.875rem; color: #991B1B;
     }
+
+    .action-cell { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; }
+    .kebab-wrap { position: relative; display: inline-block; }
+    .kebab-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 1rem; line-height: 1; &:hover { background: #F3F4F6; color: #374151; } }
+    .kebab-menu { position: absolute; right: 0; top: 100%; background: white; border: 1px solid #E5E7EB; border-radius: 0.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 120px; z-index: 50; padding: 0.25rem; }
+    .km-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 0.75rem; border: none; background: none; cursor: pointer; font-size: 0.875rem; border-radius: 0.375rem; white-space: nowrap; &:hover { background: #F3F4F6; } }
+    .km-danger { color: #DC2626; &:hover { background: #FEF2F2 !important; } }
+    .btn-danger { display: inline-flex; align-items: center; gap: 0.375rem; background: #DC2626; color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; &:hover:not(:disabled) { background: #B91C1C; } &:disabled { opacity: 0.6; cursor: not-allowed; } }
+    .modal--sm { max-width: 400px; }
   `]
 })
 export class PeopleListComponent implements OnInit {
@@ -393,6 +433,35 @@ export class PeopleListComponent implements OnInit {
   showCreate = signal(false);
   saving = signal(false);
   createError = signal('');
+
+  openMenuId = signal<string | null>(null);
+  deleteTarget = signal<PersonListItem | null>(null);
+  deleting = signal(false);
+
+  toggleMenu(id: string): void {
+    this.openMenuId.set(this.openMenuId() === id ? null : id);
+  }
+
+  confirmDelete(p: PersonListItem): void {
+    this.openMenuId.set(null);
+    this.deleteTarget.set(p);
+  }
+
+  cancelDelete(): void { this.deleteTarget.set(null); }
+
+  deletePerson(): void {
+    const target = this.deleteTarget();
+    if (!target) return;
+    this.deleting.set(true);
+    this.http.delete(`${environment.apiUrl}/people/${target.id}`).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.deleteTarget.set(null);
+        this.load();
+      },
+      error: () => this.deleting.set(false)
+    });
+  }
 
   search = '';
   statusFilter = '';

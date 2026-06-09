@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { environment } from '../../../environments/environment';
+import { WorkspaceWidgetComponent } from './workspace-widget.component';
 
 interface DashboardStats {
   activeCustomerCount: number;
@@ -25,7 +26,7 @@ interface RecentActivity {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, WorkspaceWidgetComponent],
   template: `
     <div class="page-content">
       <div class="page-header">
@@ -72,6 +73,8 @@ interface RecentActivity {
           </div>
         </div>
       }
+
+      <app-workspace-widget />
 
       <div class="dashboard-row">
         <div class="activity-card">

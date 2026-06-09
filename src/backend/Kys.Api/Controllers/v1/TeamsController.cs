@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Kys.Application.Teams.Commands.AddTeamMember;
 using Kys.Application.Teams.Commands.CreateTeam;
+using Kys.Application.Teams.Commands.DeleteTeam;
 using Kys.Application.Teams.Commands.EndTeamMembership;
 using Kys.Application.Teams.Queries.GetTeamDetail;
 using Kys.Application.Teams.Queries.GetTeams;
@@ -48,6 +49,15 @@ public sealed class TeamsController(IMediator mediator) : ControllerBase
         var membershipId = await mediator.Send(
             new AddTeamMemberCommand(teamId, request.PersonId, request.OrganizationRoleId, request.StartDate), ct);
         return Created(string.Empty, new { id = membershipId });
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await mediator.Send(new DeleteTeamCommand(id), ct);
+        return NoContent();
     }
 
     [HttpDelete("{teamId:guid}/members/{personId:guid}")]

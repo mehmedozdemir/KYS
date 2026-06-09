@@ -215,11 +215,13 @@ interface EnvironmentDetail {
 
         <!-- Endpoint URLs -->
         <div class="section">
-          <h2 class="section-title">Endpoint URL'leri</h2>
+          <div class="section-header">
+            <h2 class="section-title">Endpoint URL'leri</h2>
+          </div>
           @if (!env()!.endpoints.length) {
             <div class="empty-card">
               <i class="pi pi-link"></i>
-              <p>Bu ürün için henüz endpoint tanımlanmamış.</p>
+              <p>Bu ürün için henüz endpoint tanımlanmamış. Endpoint tanımları ürün yönetiminden eklenir.</p>
             </div>
           } @else {
             <div class="endpoint-grid">
@@ -255,6 +257,17 @@ interface EnvironmentDetail {
                       <button type="button" class="btn-ep-edit" (click)="openEndpointEdit(ep)" title="URL Düzenle">
                         <i class="pi pi-pencil"></i>
                       </button>
+                      @if (ep.id) {
+                        <button type="button" class="btn-ep-delete"
+                          [disabled]="deletingEndpointId() === ep.productEndpointId"
+                          (click)="deleteEndpoint(ep)" title="Bu ortamdaki URL kaydını kaldır">
+                          @if (deletingEndpointId() === ep.productEndpointId) {
+                            <i class="pi pi-spin pi-spinner"></i>
+                          } @else {
+                            <i class="pi pi-trash"></i>
+                          }
+                        </button>
+                      }
                     </div>
                   </div>
                   @if (ep.baseUrl) {
@@ -565,12 +578,14 @@ interface EnvironmentDetail {
               <div class="form-group">
                 <label>Değer <span class="required">*</span></label>
                 <div class="password-input-wrap">
-                  <input [type]="showNewValue ? 'text' : 'password'" [(ngModel)]="credForm.value"
+                  <input [type]="isValueHidden() ? 'password' : 'text'" [(ngModel)]="credForm.value"
                     placeholder="Değer giriniz"
                     [class.input-error]="credSubmitted() && !credForm.value.trim()" />
-                  <button type="button" class="pw-toggle" (click)="showNewValue = !showNewValue">
-                    <i class="pi" [class]="showNewValue ? 'pi-eye-slash' : 'pi-eye'"></i>
-                  </button>
+                  @if (isSecretField(activeFieldKey())) {
+                    <button type="button" class="pw-toggle" (click)="showNewValue = !showNewValue">
+                      <i class="pi" [class]="showNewValue ? 'pi-eye-slash' : 'pi-eye'"></i>
+                    </button>
+                  }
                 </div>
                 @if (credSubmitted() && !credForm.value.trim()) {
                   <span class="error-msg">Değer zorunludur</span>
@@ -658,6 +673,7 @@ interface EnvironmentDetail {
     .badge--auth { background: #FEF3C7; color: #92400E; }
     .btn-ep-auth { background: none; border: 1px solid #E5E7EB; border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: #9CA3AF; font-size: 0.75rem; flex-shrink: 0; &:hover { border-color: #F59E0B; color: #B45309; background: #FFFBEB; } }
     .btn-ep-edit { background: none; border: 1px solid #E5E7EB; border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: #9CA3AF; font-size: 0.75rem; flex-shrink: 0; &:hover { background: #F3F4F6; color: #374151; border-color: #D1D5DB; } }
+    .btn-ep-delete { background: none; border: 1px solid #E5E7EB; border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: #9CA3AF; font-size: 0.75rem; flex-shrink: 0; &:hover { border-color: #FCA5A5; color: #EF4444; background: #FEF2F2; } &:disabled { opacity: 0.5; cursor: not-allowed; } }
     .ep-no-url-hint { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #9CA3AF; padding: 0.5rem 0; i { font-size: 0.75rem; } }
     .btn-set-url { background: none; border: 1px solid #D1D5DB; border-radius: 0.375rem; padding: 0.2rem 0.625rem; font-size: 0.8125rem; cursor: pointer; color: #374151; margin-left: 0.25rem; &:hover { border-color: #3B82F6; color: #2563EB; background: #EFF6FF; } }
     .ep-urls { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -707,7 +723,8 @@ interface EnvironmentDetail {
     .cred-form-divider { display: flex; align-items: center; justify-content: space-between; font-size: 0.8125rem; font-weight: 600; color: #374151; border-top: 1px solid #E5E7EB; padding-top: 0.75rem; }
     .btn-cancel-edit { background: none; border: none; cursor: pointer; color: #9CA3AF; font-size: 0.8125rem; &:hover { color: #374151; } }
     .cred-form { display: flex; flex-direction: column; gap: 0.875rem; }
-    .form-group { display: flex; flex-direction: column; gap: 0.375rem; label { font-size: 0.8125rem; font-weight: 600; color: #374151; } input { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; color: #111827; &:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); } &:disabled { background: #F9FAFB; color: #9CA3AF; } } }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.375rem; label { font-size: 0.8125rem; font-weight: 600; color: #374151; } input, select { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; color: #111827; background: white; &:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); } &:disabled { background: #F9FAFB; color: #9CA3AF; } } }
     .password-input-wrap { position: relative; input { width: 100%; padding-right: 2.5rem; box-sizing: border-box; } }
     .pw-toggle { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 0.25rem; &:hover { color: #374151; } }
     .input-error { border-color: #EF4444 !important; }
@@ -889,6 +906,18 @@ export class EnvironmentDetailComponent implements OnInit {
     });
   }
 
+  deletingEndpointId = signal<string | null>(null);
+
+  deleteEndpoint(ep: EndpointUrl) {
+    if (!confirm(`"${ep.endpointName}" için bu ortamdaki URL kaydını kaldırmak istediğinizden emin misiniz?\n\nEndpoint tanımı ürün üzerinde kalır; sadece bu ortamın URL bilgisi silinir.`)) return;
+    this.deletingEndpointId.set(ep.productEndpointId);
+    const envId = this.env()!.id;
+    this.http.delete(`${environment.apiUrl}/environments/${envId}/endpoints/${ep.productEndpointId}`).subscribe({
+      next: () => { this.deletingEndpointId.set(null); this.load(); },
+      error: () => { this.deletingEndpointId.set(null); }
+    });
+  }
+
   // Endpoint edit modal state
   showEpModal = signal(false);
   editingEp = signal<EndpointUrl | null>(null);
@@ -1016,9 +1045,9 @@ export class EnvironmentDetailComponent implements OnInit {
     const ep = this.credEndpoint();
     if (ep) {
       if (ep.authTypeName === 'BasicAuth') return ['username', 'password'];
-      if (ep.authTypeName === 'BearerToken') return ['token'];
-      if (ep.authTypeName === 'ApiKey') return ['apiKey'];
-      if (ep.authTypeName === 'OAuth2') return ['clientId', 'clientSecret'];
+      if (ep.authTypeName === 'BearerToken') return ['tokenUrl', 'username', 'password', 'clientId', 'clientSecret', 'token'];
+      if (ep.authTypeName === 'ApiKey') return ['apiKey', 'apiKeyHeader'];
+      if (ep.authTypeName === 'OAuth2') return ['tokenUrl', 'clientId', 'clientSecret', 'scope'];
     }
     return [];
   }
@@ -1027,10 +1056,32 @@ export class EnvironmentDetailComponent implements OnInit {
     const schema = this.credResource()?.fieldSchema;
     if (schema?.[fieldKey]?.label) return schema[fieldKey].label;
     const commonLabels: Record<string, string> = {
-      username: 'Kullanıcı Adı', password: 'Şifre', token: 'Token',
-      apiKey: 'API Anahtarı', clientId: 'Client ID', clientSecret: 'Client Secret'
+      username: 'Kullanıcı Adı',
+      password: 'Şifre',
+      token: 'Token (statik)',
+      tokenUrl: 'Token URL',
+      apiKey: 'API Anahtarı',
+      apiKeyHeader: 'API Key Header Adı',
+      clientId: 'Client ID',
+      clientSecret: 'Client Secret',
+      scope: 'Scope',
     };
     return commonLabels[fieldKey] ?? fieldKey;
+  }
+
+  private readonly SECRET_FIELDS = new Set(['password', 'clientSecret', 'token', 'apiKey']);
+
+  isSecretField(key: string): boolean {
+    return this.SECRET_FIELDS.has(key);
+  }
+
+  activeFieldKey(): string {
+    const k = this.credForm.fieldKey;
+    return k === '__custom__' ? this.credForm.customFieldKey : k;
+  }
+
+  isValueHidden(): boolean {
+    return this.isSecretField(this.activeFieldKey()) && !this.showNewValue;
   }
 
   undefinedSchemaFields(): string[] {
@@ -1044,7 +1095,7 @@ export class EnvironmentDetailComponent implements OnInit {
     this.credForm = { fieldKey, customFieldKey: '', value: '' };
     this.credSubmitted.set(false);
     this.credError.set('');
-    this.showNewValue = false;
+    this.showNewValue = !this.isSecretField(fieldKey);
   }
 
   deleteCredential(credId: string) {
@@ -1107,7 +1158,7 @@ export class EnvironmentDetailComponent implements OnInit {
     this.credForm = { fieldKey: c.fieldKey, customFieldKey: '', value: '' };
     this.credSubmitted.set(false);
     this.credError.set('');
-    this.showNewValue = false;
+    this.showNewValue = !this.isSecretField(c.fieldKey);
   }
 
   cancelEdit() {
@@ -1164,8 +1215,8 @@ export class EnvironmentDetailComponent implements OnInit {
 
   epTypeIcon(type: string): string {
     const map: Record<string, string> = {
-      WebApp: 'pi-desktop', Api: 'pi-server', Database: 'pi-database',
-      MessageBroker: 'pi-envelope', Other: 'pi-box'
+      Frontend: 'pi-desktop', RestAPI: 'pi-server', Grpc: 'pi-bolt',
+      Soap: 'pi-code', GraphQL: 'pi-share-alt'
     };
     return map[type] ?? 'pi-box';
   }

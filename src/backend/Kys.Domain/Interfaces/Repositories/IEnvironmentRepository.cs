@@ -31,4 +31,5 @@ public interface IEnvironmentRepository
     Task<CustomerEnvironmentEndpoint?> GetEndpointAsync(Guid customerEnvironmentId, Guid productEndpointId, CancellationToken ct = default);
     Task AddEndpointUrlAsync(CustomerEnvironmentEndpoint endpoint, CancellationToken ct = default);
     void UpdateEndpointUrl(CustomerEnvironmentEndpoint endpoint);
+    void RemoveEndpointUrl(CustomerEnvironmentEndpoint endpoint);
 }

@@ -88,4 +88,7 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
 
     public void UpdateEndpointUrl(CustomerEnvironmentEndpoint endpoint)
         => db.CustomerEnvironmentEndpoints.Update(endpoint);
+
+    public void RemoveEndpointUrl(CustomerEnvironmentEndpoint endpoint)
+        => db.CustomerEnvironmentEndpoints.Remove(endpoint);
 }

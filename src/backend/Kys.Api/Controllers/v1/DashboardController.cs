@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Kys.Application.Dashboard.Queries.GetDashboardStats;
+using Kys.Application.Dashboard.Queries.GetMyWorkspace;
 using Kys.Application.Dashboard.Queries.GetRecentActivities;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -20,4 +21,8 @@ public sealed class DashboardController(IMediator mediator) : ControllerBase
     [HttpGet("recent-activities")]
     public async Task<IActionResult> GetRecentActivities([FromQuery] int count = 20, CancellationToken ct = default)
         => Ok(await mediator.Send(new GetRecentActivitiesQuery(Math.Clamp(count, 5, 50)), ct));
+
+    [HttpGet("my-workspace")]
+    public async Task<IActionResult> GetMyWorkspace([FromQuery] bool allCustomers = false, CancellationToken ct = default)
+        => Ok(await mediator.Send(new GetMyWorkspaceQuery(allCustomers), ct));
 }
