@@ -76,6 +76,36 @@ interface WorkspaceCustomer {
         </div>
       </div>
 
+      @if (!loading() && (availableResourceTypes().length || availableEndpointTypes().length)) {
+        <div class="ws-typefilters">
+          @if (availableResourceTypes().length) {
+            <div class="ws-tf-group">
+              <span class="ws-tf-label"><i class="pi pi-database"></i> Kaynak Tipi</span>
+              @for (t of availableResourceTypes(); track t) {
+                <button type="button" class="ws-tf-chip"
+                  [class.active]="selectedResourceTypes().has(t)"
+                  (click)="toggleResourceType(t)">{{ t }}</button>
+              }
+            </div>
+          }
+          @if (availableEndpointTypes().length) {
+            <div class="ws-tf-group">
+              <span class="ws-tf-label"><i class="pi pi-link"></i> Endpoint Türü</span>
+              @for (t of availableEndpointTypes(); track t) {
+                <button type="button" class="ws-tf-chip ws-tf-chip--ep"
+                  [class.active]="selectedEndpointTypes().has(t)"
+                  (click)="toggleEndpointType(t)">{{ epTypeLabel(t) }}</button>
+              }
+            </div>
+          }
+          @if (hasActiveTypeFilter()) {
+            <button type="button" class="ws-tf-clear" (click)="clearTypeFilters()">
+              <i class="pi pi-times"></i> Temizle
+            </button>
+          }
+        </div>
+      }
+
       @if (loading()) {
         <div class="ws-state">Yükleniyor...</div>
       } @else if (!customers().length) {
@@ -89,8 +119,14 @@ interface WorkspaceCustomer {
         </div>
       } @else if (!filteredCustomers().length) {
         <div class="ws-state">
-          <i class="pi pi-search"></i>
-          <p>"{{ filter() }}" ile eşleşen kayıt yok.</p>
+          <i class="pi pi-filter-slash"></i>
+          @if (filter() && hasActiveTypeFilter()) {
+            <p>Arama ve seçili tip filtreleriyle eşleşen kayıt yok.</p>
+          } @else if (hasActiveTypeFilter()) {
+            <p>Seçili tip filtreleriyle eşleşen kayıt yok.</p>
+          } @else {
+            <p>"{{ filter() }}" ile eşleşen kayıt yok.</p>
+          }
         </div>
       } @else {
         <div class="ws-list">
@@ -207,6 +243,13 @@ interface WorkspaceCustomer {
 
     .ws-state { text-align: center; padding: 2.5rem; color: #9CA3AF; i { font-size: 1.75rem; display: block; margin-bottom: 0.5rem; } p { font-size: 0.875rem; } }
 
+    .ws-typefilters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; padding: 0.75rem; margin-bottom: 1rem; background: #F9FAFB; border: 1px solid #F3F4F6; border-radius: 0.5rem; }
+    .ws-tf-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; }
+    .ws-tf-label { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; font-weight: 600; color: #6B7280; margin-right: 0.125rem; i { font-size: 0.75rem; } }
+    .ws-tf-chip { background: white; border: 1px solid #D1D5DB; color: #374151; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: all 0.12s; &:hover { border-color: #93C5FD; background: #EFF6FF; } &.active { background: #2563EB; border-color: #2563EB; color: white; } }
+    .ws-tf-chip--ep { &:hover { border-color: #6EE7B7; background: #ECFDF5; } &.active { background: #059669; border-color: #059669; color: white; } }
+    .ws-tf-clear { margin-left: auto; background: none; border: none; color: #9CA3AF; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.4rem; border-radius: 0.25rem; &:hover { color: #DC2626; background: #FEF2F2; } i { font-size: 0.7rem; } }
+
     .ws-list { display: flex; flex-direction: column; gap: 0.5rem; }
     .ws-customer { border: 1px solid #E5E7EB; border-radius: 0.5rem; overflow: hidden; }
     .ws-customer-head { width: 100%; display: flex; align-items: center; gap: 0.625rem; padding: 0.625rem 0.875rem; background: #F9FAFB; border: none; cursor: pointer; text-align: left; &:hover { background: #F3F4F6; } i { color: #9CA3AF; font-size: 0.75rem; flex-shrink: 0; } }
@@ -246,43 +289,80 @@ export class WorkspaceWidgetComponent implements OnInit {
   loading = signal(true);
   allCustomers = signal(false);
   filter = signal('');
+  selectedResourceTypes = signal<Set<string>>(new Set());
+  selectedEndpointTypes = signal<Set<string>>(new Set());
   private collapsed = signal<Set<string>>(new Set());
+
+  // Yüklü veriden türetilen mevcut tipler (boş filtre gösterilmez)
+  availableResourceTypes = computed(() => {
+    const set = new Set<string>();
+    for (const c of this.customers())
+      for (const e of c.environments)
+        for (const r of e.resources) set.add(r.resourceTypeName);
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'tr'));
+  });
+
+  availableEndpointTypes = computed(() => {
+    const set = new Set<string>();
+    for (const c of this.customers())
+      for (const e of c.environments)
+        for (const ep of e.endpoints) set.add(ep.endpointType);
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'tr'));
+  });
+
+  hasActiveTypeFilter = computed(() =>
+    this.selectedResourceTypes().size > 0 || this.selectedEndpointTypes().size > 0);
 
   filteredCustomers = computed(() => {
     const term = this.filter().trim().toLowerCase();
-    if (!term) return this.customers();
+    const selRes = this.selectedResourceTypes();
+    const selEp = this.selectedEndpointTypes();
+    const resActive = selRes.size > 0;
+    const epActive = selEp.size > 0;
+    const anyType = resActive || epActive;
+
+    if (!term && !anyType) return this.customers();
 
     const result: WorkspaceCustomer[] = [];
     for (const c of this.customers()) {
-      const customerMatches =
+      const customerMatches = !!term && (
         c.customerName.toLowerCase().includes(term) ||
         c.customerCode.toLowerCase().includes(term) ||
-        c.products.some(p => p.toLowerCase().includes(term));
+        c.products.some(p => p.toLowerCase().includes(term)));
 
       const envs: WorkspaceEnvironment[] = [];
       for (const e of c.environments) {
-        const envMatches = customerMatches ||
+        const envTextMatch = !term || customerMatches ||
           e.name.toLowerCase().includes(term) ||
           e.productName.toLowerCase().includes(term) ||
           e.environmentTypeName.toLowerCase().includes(term);
 
-        if (envMatches) {
-          envs.push(e);
-          continue;
+        let endpoints = e.endpoints;
+        let resources = e.resources;
+
+        // Metin filtresi: ortam adı eşleşmiyorsa satırları süz
+        if (term && !envTextMatch) {
+          endpoints = endpoints.filter(ep =>
+            ep.name.toLowerCase().includes(term) || ep.baseUrl.toLowerCase().includes(term));
+          resources = resources.filter(r =>
+            r.templateName.toLowerCase().includes(term) ||
+            r.resourceTypeName.toLowerCase().includes(term));
+          if (!endpoints.length && !resources.length) continue;
         }
-        const endpoints = e.endpoints.filter(ep =>
-          ep.name.toLowerCase().includes(term) || ep.baseUrl.toLowerCase().includes(term));
-        const resources = e.resources.filter(r =>
-          r.templateName.toLowerCase().includes(term) ||
-          r.resourceTypeName.toLowerCase().includes(term));
-        if (endpoints.length || resources.length) {
-          envs.push({ ...e, endpoints, resources });
+
+        // Tip filtresi (odak modu)
+        if (anyType) {
+          endpoints = epActive ? endpoints.filter(ep => selEp.has(ep.endpointType)) : [];
+          resources = resActive ? resources.filter(r => selRes.has(r.resourceTypeName)) : [];
+          if (!endpoints.length && !resources.length) continue;
         }
+
+        envs.push(endpoints === e.endpoints && resources === e.resources
+          ? e
+          : { ...e, endpoints, resources });
       }
 
-      if (envs.length || customerMatches) {
-        result.push({ ...c, environments: envs.length ? envs : c.environments });
-      }
+      if (envs.length) result.push({ ...c, environments: envs });
     }
     return result;
   });
@@ -308,8 +388,36 @@ export class WorkspaceWidgetComponent implements OnInit {
   }
 
   isExpanded(customerId: string): boolean {
-    if (this.filter().trim()) return true;
+    if (this.filter().trim() || this.hasActiveTypeFilter()) return true;
     return !this.collapsed().has(customerId);
+  }
+
+  toggleResourceType(type: string): void {
+    this.selectedResourceTypes.update(set => {
+      const next = new Set(set);
+      next.has(type) ? next.delete(type) : next.add(type);
+      return next;
+    });
+  }
+
+  toggleEndpointType(type: string): void {
+    this.selectedEndpointTypes.update(set => {
+      const next = new Set(set);
+      next.has(type) ? next.delete(type) : next.add(type);
+      return next;
+    });
+  }
+
+  clearTypeFilters(): void {
+    this.selectedResourceTypes.set(new Set());
+    this.selectedEndpointTypes.set(new Set());
+  }
+
+  epTypeLabel(type: string): string {
+    const map: Record<string, string> = {
+      RestAPI: 'REST API', Grpc: 'gRPC', Soap: 'SOAP', GraphQL: 'GraphQL', Frontend: 'Frontend'
+    };
+    return map[type] ?? type;
   }
 
   toggle(customerId: string): void {

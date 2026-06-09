@@ -361,6 +361,14 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 16 — Workspace Tip Filtreleri ✅ (2026-06-09)
+
+- [x] **Çalışma Alanım widget'ı tip filtreleri**: Kaynak tipi + endpoint türü için çoklu seçimli chip filtreleri (frontend-only, `workspace-widget.component.ts`)
+- [x] **Odak modu davranışı**: Seçilen tip grubuna göre ilgili satırlar gösterilir, diğer satır türü gizlenir; her iki grup seçiliyse ikisi de filtrelenir
+- [x] Filtre seçenekleri yüklü veriden türetilir; metin araması + kapsam toggle ile birlikte çalışır
+
+---
+
 ## Sprint 15 — Paylaşımlı Kaynak İyileştirmeleri ✅ (2026-06-09)
 
 Paylaşımlı kaynak (Graylog, Redis, RabbitMQ gibi ortak sunucular) akışı baştan sona düzeltildi.
