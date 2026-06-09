@@ -16,6 +16,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.13.0] — 2026-06-09 (Sprint 16 — Workspace Tip Filtreleri)
+
+### Eklendi
+- **Çalışma Alanım widget'ında tip filtreleri**: Kaynak tipine (PostgreSQL, Redis, RabbitMQ vb.) ve endpoint türüne (REST API, gRPC, Frontend vb.) göre çoklu seçimli chip filtreleri eklendi
+- **Odak modu**: Yalnızca kaynak tipi seçiliyse endpoint satırları gizlenir, yalnızca endpoint türü seçiliyse kaynak satırları gizlenir; ikisi de seçiliyse her ikisi filtrelenir
+- Filtre seçenekleri yüklü veriden türetilir (workspace'te var olmayan tip gösterilmez); mevcut metin araması ve "Benim/Tüm Müşteriler" kapsamıyla birlikte çalışır; tek tıkla "Temizle"
+- Tamamen frontend tarafında (client-side) çalışır — ek API çağrısı yok
+
+---
+
 ## [0.12.0] — 2026-06-09 (Sprint 15 — Paylaşımlı Kaynak İyileştirmeleri)
 
 ### Eklendi
