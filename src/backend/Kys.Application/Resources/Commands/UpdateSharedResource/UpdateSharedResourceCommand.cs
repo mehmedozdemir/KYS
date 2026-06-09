@@ -6,4 +6,5 @@ public sealed record UpdateSharedResourceCommand(
     Guid Id,
     string Name,
     string? Description,
-    string? EnvironmentScope) : IRequest;
+    string? EnvironmentScope,
+    Dictionary<string, object?> ConnectionFields) : IRequest;

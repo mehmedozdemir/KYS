@@ -15,6 +15,7 @@ public sealed class UpdateSharedResourceCommandHandler(
         resource.Name = request.Name;
         resource.Description = request.Description;
         resource.EnvironmentScope = request.EnvironmentScope;
+        resource.ConnectionFields = request.ConnectionFields;
 
         repository.UpdateSharedResource(resource);
         await unitOfWork.SaveChangesAsync(ct);

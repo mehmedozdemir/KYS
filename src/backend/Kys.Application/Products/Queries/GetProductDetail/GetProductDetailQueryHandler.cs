@@ -28,7 +28,7 @@ public sealed class GetProductDetailQueryHandler(IProductRepository productRepos
             product.Teams.Select(t => new ProductTeamDto(t.TeamId, t.Team.Name, t.Role, t.Since)).ToList(),
             product.Assignments.Select(a => new ProductAssignmentDto(a.PersonId, a.Person.FullName, a.Responsibility, a.StartedAt, a.IsActive)).ToList(),
             product.Endpoints.OrderBy(e => e.SortOrder).Select(e => new ProductEndpointDto(e.Id, e.Name, e.EndpointType, e.DefaultBaseUrl, e.SwaggerUrl, e.SortOrder)).ToList(),
-            product.ResourceTemplates.OrderBy(rt => rt.SortOrder).Select(rt => new ProductResourceTemplateDto(rt.Id, rt.Name, rt.ResourceTypeId, rt.ResourceType.Name, rt.IsRequired, rt.CanBeShared, rt.SortOrder)).ToList(),
+            product.ResourceTemplates.OrderBy(rt => rt.SortOrder).Select(rt => new ProductResourceTemplateDto(rt.Id, rt.Name, rt.ResourceTypeId, rt.ResourceType.Name, rt.IsRequired, rt.CanBeShared, rt.SortOrder, rt.SharedResourceId, rt.SharedResource?.Name)).ToList(),
             product.CustomFields
         );
     }

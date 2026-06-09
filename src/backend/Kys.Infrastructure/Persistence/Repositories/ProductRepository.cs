@@ -43,6 +43,7 @@ public sealed class ProductRepository(AppDbContext dbContext) : IProductReposito
             .Include(p => p.Assignments).ThenInclude(a => a.Person)
             .Include(p => p.Endpoints)
             .Include(p => p.ResourceTemplates).ThenInclude(rt => rt.ResourceType)
+            .Include(p => p.ResourceTemplates).ThenInclude(rt => rt.SharedResource)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
     public async Task AddAsync(Product product, CancellationToken ct = default)

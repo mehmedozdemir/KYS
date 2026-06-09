@@ -11,7 +11,11 @@ public sealed class ProductResourceTemplate
     public int SortOrder { get; set; }
     public bool CanBeShared { get; set; }
 
+    // Belirli bir paylaşımlı kaynağa bağlıysa (environment'ta otomatik kullanılır)
+    public Guid? SharedResourceId { get; set; }
+
     // Navigation
     public Product Product { get; set; } = null!;
     public ResourceType ResourceType { get; set; } = null!;
+    public SharedResource? SharedResource { get; set; }
 }

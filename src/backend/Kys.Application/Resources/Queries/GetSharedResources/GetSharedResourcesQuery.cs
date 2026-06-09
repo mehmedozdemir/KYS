@@ -9,6 +9,7 @@ public sealed record SharedResourceDto(
     Guid Id,
     string Name,
     string? Description,
+    Guid ResourceTypeId,
     string ResourceTypeName,
     string ResourceTypeCode,
     string? EnvironmentScope,

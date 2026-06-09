@@ -28,7 +28,9 @@ public sealed record AvailableResourceTemplateDto(
     string ResourceTypeName,
     bool IsRequired,
     bool CanBeShared,
-    Dictionary<string, object?> FieldSchema);
+    Dictionary<string, object?> FieldSchema,
+    Guid? SharedResourceId,
+    string? SharedResourceName);
 
 public sealed record EnvironmentResourceDto(
     Guid Id,
@@ -41,7 +43,9 @@ public sealed record EnvironmentResourceDto(
     bool IsActive,
     string? Notes,
     IReadOnlyList<CredentialStubDto> Credentials,
-    Dictionary<string, object?> FieldSchema);
+    Dictionary<string, object?> FieldSchema,
+    Dictionary<string, object?> SharedConnectionFields,
+    IReadOnlyList<CredentialStubDto> SharedCredentials);
 
 public sealed record CredentialStubDto(
     Guid Id,

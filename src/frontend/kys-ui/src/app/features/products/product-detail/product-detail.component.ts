@@ -362,18 +362,64 @@ interface ProductDetail {
           <div class="modal-body">
             @if (templateError()) { <div class="alert-error">{{ templateError() }}</div> }
             @if (!editingTemplateId()) {
-              <div class="form-group">
-                <label>Kaynak Tipi <span class="req">*</span></label>
-                <select [(ngModel)]="templateForm.resourceTypeId" [class.input-error]="templateSubmitted() && !templateForm.resourceTypeId">
-                  <option value="">Tip seçin</option>
-                  @for (rt of resourceTypes(); track rt.id) {
-                    <option [value]="rt.id">{{ rt.name }}</option>
-                  }
-                </select>
-                @if (templateSubmitted() && !templateForm.resourceTypeId) {
-                  <span class="field-error">Kaynak tipi zorunludur</span>
-                }
+              <!-- Mod seçimi -->
+              <div class="template-mode-toggle">
+                <button type="button"
+                  class="mode-btn" [class.mode-btn--active]="!templateFromShared()"
+                  (click)="onTemplateFromSharedToggle(false)">
+                  <i class="pi pi-file"></i> Sıfırdan Oluştur
+                </button>
+                <button type="button"
+                  class="mode-btn" [class.mode-btn--active]="templateFromShared()"
+                  (click)="onTemplateFromSharedToggle(true)">
+                  <i class="pi pi-share-alt"></i> Paylaşımlı Kaynaktan
+                </button>
               </div>
+
+              @if (templateFromShared()) {
+                <!-- Paylaşımlı kaynaktan seç -->
+                <div class="form-group">
+                  <label>Paylaşımlı Kaynak <span class="req">*</span></label>
+                  @if (!sharedResourcesForTemplate().length) {
+                    <p class="hint-text">Henüz paylaşımlı kaynak tanımlanmamış.
+                      <a routerLink="/resources/shared">Paylaşımlı Kaynaklar</a> sayfasından ekleyin.
+                    </p>
+                  } @else {
+                    <select
+                      [value]="selectedSharedForTemplate()?.id ?? ''"
+                      (change)="onSharedResourceForTemplateSelect($any($event.target).value)"
+                      [class.input-error]="templateSubmitted() && !selectedSharedForTemplate()">
+                      <option value="">Seçin</option>
+                      @for (sr of sharedResourcesForTemplate(); track sr.id) {
+                        <option [value]="sr.id">{{ sr.name }} ({{ sr.resourceTypeName }})</option>
+                      }
+                    </select>
+                    @if (templateSubmitted() && !selectedSharedForTemplate()) {
+                      <span class="field-error">Paylaşımlı kaynak seçimi zorunludur</span>
+                    }
+                  }
+                </div>
+                @if (selectedSharedForTemplate(); as sr) {
+                  <div class="form-group">
+                    <label>Kaynak Tipi</label>
+                    <input type="text" [value]="sr.resourceTypeName" readonly class="input-readonly" />
+                  </div>
+                }
+              } @else {
+                <!-- Manuel kaynak tipi seçimi -->
+                <div class="form-group">
+                  <label>Kaynak Tipi <span class="req">*</span></label>
+                  <select [(ngModel)]="templateForm.resourceTypeId" [class.input-error]="templateSubmitted() && !templateForm.resourceTypeId">
+                    <option value="">Tip seçin</option>
+                    @for (rt of resourceTypes(); track rt.id) {
+                      <option [value]="rt.id">{{ rt.name }}</option>
+                    }
+                  </select>
+                  @if (templateSubmitted() && !templateForm.resourceTypeId) {
+                    <span class="field-error">Kaynak tipi zorunludur</span>
+                  }
+                </div>
+              }
             }
             <div class="form-group">
               <label>Şablon Adı <span class="req">*</span></label>
@@ -718,6 +764,11 @@ interface ProductDetail {
     .form-group { display: flex; flex-direction: column; gap: 0.375rem; position: relative; label { font-size: 0.875rem; font-weight: 500; color: #374151; } input, select, textarea { padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; width: 100%; box-sizing: border-box; resize: vertical; &:focus { outline: none; border-color: #3B82F6; } } }
     .input-error { border-color: #EF4444 !important; }
     .field-error { font-size: 0.75rem; color: #EF4444; }
+    .hint-text { font-size: 0.8125rem; color: #6B7280; margin: 0; a { color: #3B82F6; } }
+    .input-readonly { background: #F3F4F6 !important; color: #6B7280; cursor: not-allowed; border-color: #E5E7EB !important; }
+    .template-mode-toggle { display: flex; gap: 0.5rem; border: 1px solid #E5E7EB; border-radius: 0.5rem; padding: 0.25rem; background: #F9FAFB; }
+    .mode-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border: none; border-radius: 0.375rem; font-size: 0.8125rem; font-weight: 500; color: #6B7280; background: none; cursor: pointer; transition: all 0.15s; &:hover { color: #374151; background: white; } }
+    .mode-btn--active { background: white !important; color: #1D4ED8 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .req { color: #EF4444; }
     .hint { font-size: 0.75rem; color: #9CA3AF; }
     .section-divider { font-size: 0.8125rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; border-top: 1px solid #F3F4F6; padding-top: 0.75rem; }
@@ -1045,11 +1096,17 @@ export class ProductDetailComponent implements OnInit {
   templateError = signal('');
   editingTemplateId = signal<string | null>(null);
   templateForm = { resourceTypeId: '', name: '', description: '', isRequired: false, canBeShared: false, sortOrder: 0 };
+  templateFromShared = signal(false);
   resourceTypes = signal<{ id: string; name: string; code: string }[]>([]);
   private resourceTypesLoaded = false;
+  sharedResourcesForTemplate = signal<{ id: string; name: string; resourceTypeName: string; resourceTypeId: string }[]>([]);
+  private sharedResourcesForTemplateLoaded = false;
+  selectedSharedForTemplate = signal<{ id: string; name: string; resourceTypeName: string; resourceTypeId: string } | null>(null);
 
   openAddTemplate() {
     this.editingTemplateId.set(null);
+    this.templateFromShared.set(false);
+    this.selectedSharedForTemplate.set(null);
     this.templateForm = { resourceTypeId: '', name: '', description: '', isRequired: false, canBeShared: false, sortOrder: this.product()!.resourceTemplates.length };
     this.templateSubmitted.set(false);
     this.templateError.set('');
@@ -1059,10 +1116,35 @@ export class ProductDetailComponent implements OnInit {
         next: r => { this.resourceTypes.set(r); this.resourceTypesLoaded = true; }
       });
     }
+    if (!this.sharedResourcesForTemplateLoaded) {
+      this.http.get<{ id: string; name: string; resourceTypeName: string; resourceTypeId: string }[]>(`${environment.apiUrl}/resources/shared`).subscribe({
+        next: r => { this.sharedResourcesForTemplate.set(r); this.sharedResourcesForTemplateLoaded = true; }
+      });
+    }
+  }
+
+  onTemplateFromSharedToggle(fromShared: boolean) {
+    this.templateFromShared.set(fromShared);
+    this.selectedSharedForTemplate.set(null);
+    this.templateForm.resourceTypeId = '';
+    this.templateForm.name = '';
+    this.templateForm.canBeShared = fromShared;
+  }
+
+  onSharedResourceForTemplateSelect(id: string) {
+    const sr = this.sharedResourcesForTemplate().find(x => x.id === id) ?? null;
+    this.selectedSharedForTemplate.set(sr);
+    if (sr) {
+      this.templateForm.resourceTypeId = sr.resourceTypeId;
+      this.templateForm.name = sr.name;
+      this.templateForm.canBeShared = true;
+    }
   }
 
   openEditTemplate(t: { id: string; name: string; resourceTypeId: string; isRequired: boolean; canBeShared: boolean; sortOrder: number; description?: string }) {
     this.editingTemplateId.set(t.id);
+    this.templateFromShared.set(false);
+    this.selectedSharedForTemplate.set(null);
     this.templateForm = {
       resourceTypeId: t.resourceTypeId,
       name: t.name,
@@ -1078,6 +1160,7 @@ export class ProductDetailComponent implements OnInit {
 
   saveTemplate() {
     this.templateSubmitted.set(true);
+    if (this.templateFromShared() && !this.selectedSharedForTemplate()) return;
     if (!this.templateForm.resourceTypeId || !this.templateForm.name.trim()) return;
     this.templateSaving.set(true);
     this.templateError.set('');
@@ -1088,7 +1171,8 @@ export class ProductDetailComponent implements OnInit {
       description: this.templateForm.description.trim() || null,
       isRequired: this.templateForm.isRequired,
       canBeShared: this.templateForm.canBeShared,
-      sortOrder: this.templateForm.sortOrder
+      sortOrder: this.templateForm.sortOrder,
+      sharedResourceId: this.templateFromShared() ? this.selectedSharedForTemplate()?.id ?? null : null
     }).subscribe({
       next: () => { this.templateSaving.set(false); this.showTemplateModal.set(false); this.reload(); },
       error: err => { this.templateSaving.set(false); this.templateError.set(err.error?.detail ?? 'Şablon eklenemedi'); }

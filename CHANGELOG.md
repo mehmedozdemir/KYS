@@ -16,6 +16,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.12.0] — 2026-06-09 (Sprint 15 — Paylaşımlı Kaynak İyileştirmeleri)
+
+### Eklendi
+- **Paylaşımlı kaynak ortak bağlantı bilgileri**: Admin → Paylaşımlı Kaynaklar sayfasında kaynak tipine göre dinamik bağlantı formu; hassas olmayan alanlar (host/port/vhost) `ConnectionFields`'a, şifre alanları AES-256 şifreli **shared credential** olarak saklanır
+- **`GET /api/v1/resources/shared/{id}`**: Paylaşımlı kaynak detayı (bağlantı alanları + field schema + credential stub'ları) — düzenleme ekranı ve environment kalıtımı için
+- **Environment'ta otomatik kalıtım**: Paylaşımlı kaynak bir ortama eklenirken ortak bilgiler (host/port/şifre) salt okunur olarak otomatik gelir; tekrar girilmez. "Bu ortam için bazı bilgileri override et" ile ortama özgü değer girilebilir
+- **Şablon → Paylaşımlı Kaynak bağlama**: `ProductResourceTemplate.SharedResourceId` ile bir şablon belirli bir paylaşımlı kaynağa bağlanabilir; bu durumda environment kaynak ekleme ekranında "Paylaşımlı kaynak kullan" checkbox'ı ve seçim dropdown'ı **gizlenir**, kaynak otomatik kullanılır
+- **Env detay kaynak kartı**: Paylaşımlı kaynaktan kalıtılan değerler "Paylaşılan değerler" kutusunda gösterilir (şifreler göz butonuyla açılır)
+
+### Düzeltildi
+- `SetCredentialCommandHandler` `SharedResourceId` için mevcut kayıt kontrolü yapmıyordu → güncellemede mükerrer credential oluşuyordu (`GetSharedCredentialAsync` lookup'ı eklendi)
+- `GetEnvironmentByIdAsync` `SharedResource`'u include etmiyordu → `sharedResourceName` her zaman null geliyordu
+- `UpdateSharedResourceCommand` `ConnectionFields`'ı kaydetmiyordu → düzenlemede bağlantı bilgileri kayboluyordu
+
+### Migration
+- `Sprint14_TemplateSharedResourceLink`: `product_resource_templates` tablosuna `shared_resource_id` (nullable FK → `shared_resources`, ON DELETE SET NULL)
+
+---
+
 ## [0.11.0] — 2026-06-09 (Sprint 14)
 
 ### Eklendi
