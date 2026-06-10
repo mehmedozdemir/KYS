@@ -388,8 +388,8 @@ Bkz. `docs/AUTHORIZATION.md` §10. **Katman B (kayıt düzeyi yazma)**.
 - [x] `ScopeAuthorizationBehavior` (MediatR pipeline) + `ScopeService` impl + DI
 - [x] 19 yazma komutu marker'landı (ürün + ortam + alt kayıtları); endpoint/template komutlarına `ProductId`
 - [x] `ScopeAuthorizationBehaviorTests` (3 test geçti)
-- [ ] **Faz 2b:** müşteri + credential yazma kapsamı
-- [ ] **Faz 3:** okuma kapsamı (liste filtreleme)
+- [x] **Faz 2b:** müşteri (CreatedBy/PO/ekip) + credential yazma kapsamı
+- [x] **Faz 3:** okuma kapsamı (liste filtreleme)
 
 ---
 

@@ -94,6 +94,16 @@ public sealed class ScopeService(
                     p.Teams.Any(pt => pt.Team.Memberships.Any(m => m.PersonId == userId && m.EndDate == null)),
                     ct),
 
+            // Müşteri yazma: oluşturan VEYA kapsamdaki bir ürünü kullanan (PO/ekip)
+            ScopeKind.Customer => await db.Customers
+                .Where(c => c.Id == target.Id)
+                .AnyAsync(c =>
+                    c.CreatedBy == userId ||
+                    c.Products.Any(cp =>
+                        cp.Product.PoPersonId == userId ||
+                        cp.Product.Teams.Any(pt => pt.Team.Memberships.Any(m => m.PersonId == userId && m.EndDate == null))),
+                    ct),
+
             ScopeKind.CustomerProduct => await db.CustomerProducts
                 .Where(cp => cp.Id == target.Id)
                 .AnyAsync(cp =>

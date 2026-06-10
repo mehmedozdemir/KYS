@@ -1,4 +1,5 @@
 using Kys.Application.CustomFields;
+using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
 using MediatR;
 
@@ -16,8 +17,9 @@ public sealed record UpdateCustomerCommand(
     string? PrimaryContactEmail,
     string? PrimaryContactPhone,
     Dictionary<string, object?>? CustomFields
-) : IRequest, IHasCustomFields
+) : IRequest, IHasCustomFields, IScopedCommand
 {
     CustomFieldEntityType IHasCustomFields.EntityType => CustomFieldEntityType.Customer;
     Dictionary<string, object?> IHasCustomFields.CustomFields => CustomFields ?? [];
+    public ScopeTarget ScopeTarget => new(ScopeKind.Customer, Id);
 }

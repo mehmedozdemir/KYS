@@ -16,6 +16,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.28.0] — 2026-06-10 (Sprint 31 — Yetkilendirme Faz 2b: Müşteri & Credential Yazma Kapsamı)
+
+### Eklendi / Güvenlik
+- **Müşteri yazma kapsamı**: müşteri güncelle/durum/arşiv/sil/ürün-ekle-çıkar işlemleri artık **oluşturan (`CreatedBy`) VEYA kapsamdaki ürünü kullanan (PO/ekip)** ile sınırlı (8 komut marker'landı); global roller serbest
+- **Credential yazma kapsamı**: credential set/sil, hedef kaynağın (env-resource/endpoint/shared) sahiplik kapsamı `ResourceAuthorizationService` ile kontrol edilir
+- Müşteri sahipliği için mevcut `AuditableEntity.CreatedBy` (TimestampInterceptor dolduruyor) kullanıldı — yeni alan/migration yok
+
+---
+
 ## [0.27.1] — 2026-06-10 (Sprint 30 — Yetkilendirme Faz 3b: Ortam Okuma Kapsamı)
 
 ### Eklendi / Güvenlik
