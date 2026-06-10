@@ -1,16 +1,20 @@
+using Kys.Domain.Authorization;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
 using MediatR;
 
 namespace Kys.Application.Customers.Queries.GetCustomerDetail;
 
-public sealed class GetCustomerDetailQueryHandler(ICustomerRepository customerRepository)
+public sealed class GetCustomerDetailQueryHandler(ICustomerRepository customerRepository, IScopeService scope)
     : IRequestHandler<GetCustomerDetailQuery, CustomerDetailDto>
 {
     public async Task<CustomerDetailDto> Handle(GetCustomerDetailQuery request, CancellationToken cancellationToken)
     {
         var customer = await customerRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(Domain.Entities.Customer), request.Id);
+
+        if (!await scope.CanReadAsync(new ScopeTarget(ScopeKind.Customer, customer.Id), cancellationToken))
+            throw new ForbiddenException("Bu müşteriyi görme yetkiniz yok.");
 
         return new CustomerDetailDto(
             customer.Id, customer.Name, customer.Code, customer.ShortName,

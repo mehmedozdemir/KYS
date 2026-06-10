@@ -8,7 +8,8 @@ public enum ScopeKind
     Product,
     Environment,
     CustomerProduct,
-    EnvironmentResource
+    EnvironmentResource,
+    Customer
 }
 
 /// <summary>Yazma yetkisinin kontrol edileceği kayıt (tür + id).</summary>
@@ -29,5 +30,15 @@ public interface IScopedCommand
 /// </summary>
 public interface IScopeService
 {
+    /// <summary>Geçerli kullanıcının id'si (yoksa null).</summary>
+    Guid? CurrentUserId { get; }
+
+    /// <summary>Global okuma yetkisi var mı (Admin/Director "*" veya CTO "scope:global").</summary>
+    bool HasGlobalReadAccess();
+
+    /// <summary>Kayıt üzerinde yazma yetkisi (Katman B).</summary>
     Task<bool> CanWriteAsync(ScopeTarget target, CancellationToken ct = default);
+
+    /// <summary>Kayıt üzerinde okuma yetkisi (global okuma VEYA kapsam: PO/ekip üyeliği/atama).</summary>
+    Task<bool> CanReadAsync(ScopeTarget target, CancellationToken ct = default);
 }

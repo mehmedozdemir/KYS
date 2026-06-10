@@ -14,6 +14,43 @@ public sealed class ScopeService(
     AppDbContext db,
     ICurrentUserService currentUser) : IScopeService
 {
+    public Guid? CurrentUserId => currentUser.UserId;
+
+    public bool HasGlobalReadAccess() => currentUser.HasPermission(Capabilities.ScopeGlobal);
+
+    public async Task<bool> CanReadAsync(ScopeTarget target, CancellationToken ct = default)
+    {
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+            return false;
+
+        if (HasGlobalReadAccess())
+            return true;
+
+        var userId = currentUser.UserId.Value;
+
+        return target.Kind switch
+        {
+            // Ürün okuma kapsamı: PO VEYA aktif ekip üyeliği VEYA aktif atama
+            ScopeKind.Product => await db.Products
+                .Where(p => p.Id == target.Id)
+                .AnyAsync(p =>
+                    p.PoPersonId == userId ||
+                    p.Teams.Any(pt => pt.Team.Memberships.Any(m => m.PersonId == userId && m.EndDate == null)) ||
+                    p.Assignments.Any(a => a.PersonId == userId && a.IsActive), ct),
+
+            // Müşteri okuma kapsamı: kapsamdaki bir ürünü kullanıyorsa
+            ScopeKind.Customer => await db.Customers
+                .Where(c => c.Id == target.Id)
+                .AnyAsync(c => c.Products.Any(cp =>
+                    cp.Product.PoPersonId == userId ||
+                    cp.Product.Teams.Any(pt => pt.Team.Memberships.Any(m => m.PersonId == userId && m.EndDate == null)) ||
+                    cp.Product.Assignments.Any(a => a.PersonId == userId && a.IsActive)), ct),
+
+            // Diğer türler için okuma kapsamı = yazma kapsamı (henüz ayrı gerek yok)
+            _ => await CanWriteAsync(target, ct)
+        };
+    }
+
     public async Task<bool> CanWriteAsync(ScopeTarget target, CancellationToken ct = default)
     {
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)

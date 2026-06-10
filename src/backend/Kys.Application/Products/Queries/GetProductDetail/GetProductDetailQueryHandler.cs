@@ -1,16 +1,20 @@
+using Kys.Domain.Authorization;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
 using MediatR;
 
 namespace Kys.Application.Products.Queries.GetProductDetail;
 
-public sealed class GetProductDetailQueryHandler(IProductRepository productRepository)
+public sealed class GetProductDetailQueryHandler(IProductRepository productRepository, IScopeService scope)
     : IRequestHandler<GetProductDetailQuery, ProductDetailDto>
 {
     public async Task<ProductDetailDto> Handle(GetProductDetailQuery request, CancellationToken cancellationToken)
     {
         var product = await productRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(Domain.Entities.Product), request.Id);
+
+        if (!await scope.CanReadAsync(new ScopeTarget(ScopeKind.Product, product.Id), cancellationToken))
+            throw new ForbiddenException("Bu ürünü görme yetkiniz yok.");
 
         return new ProductDetailDto(
             product.Id,
