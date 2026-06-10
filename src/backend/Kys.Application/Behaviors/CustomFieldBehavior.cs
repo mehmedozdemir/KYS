@@ -8,7 +8,7 @@ namespace Kys.Application.Behaviors;
 
 public sealed class CustomFieldBehavior<TRequest, TResponse>(ICustomFieldValidatorService validator)
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull
 {
     public async Task<TResponse> Handle(
         TRequest request,
