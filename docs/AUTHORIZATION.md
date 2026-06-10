@@ -58,7 +58,7 @@ Bu ayrım, kullanıcının cevaplarındaki CTO=global-gözlemci, Developer=scope
 | **Developer** | Scoped (ekip/atama) | Read (varsayılan) | Kendi çalıştığı ürünleri görür; yazma yalnızca grant ile |
 | **ReadOnly** | *Atandığı kapsama göre* | Read | Salt-okuma katmanı. Pratikte: global atanırsa CTO gibi, kişiye atanırsa kendi ürünlerini okur. (Çoğu durum CTO/Developer ile karşılanır; sözleşmeli/dış kullanıcı için ayrı tutulur.) |
 
-> **Director ↔ PlatformAdmin sınırı (tek açık nokta):** Director tüm **iş** yetkilerine + kullanıcı/grant yönetimine sahip; **sistem/teknik config** (ortam-tipi, barındırma platformu, özel alan, kaynak tipi, entegrasyon) `PlatformAdmin`'de kalır. "Director herşeye yetkili" istiyorsan config'i de Director'a verebiliriz — onayında netleşsin.
+> **Director ↔ PlatformAdmin:** ✅ Karar: Director'a sistem/teknik config (`admin:config`) **dahil** — Director yetenek olarak fiilen her şeye yetkili. Fark artık ünvansaldır: `PlatformAdmin` teknik/IT yöneticisi, `Director` en üst iş yöneticisi; yetkiler eşdeğer (`*`).
 
 ### 4.2. Bağlamsal roller (kayda özgü, türetilmiş)
 - **PO (Product Owner):** `Product.PoPersonId == kullanıcı`. Bir ürünün sahibi.
@@ -135,7 +135,7 @@ Biçim: `<alan>:<aksiyon>`. (Öneri; onayda kesinleşir.)
 | kb:read | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅(kapsam) |
 | kb:write | ✅ | ✅ | ✅(K) | — | ✅(K) | ✅(K) | — |
 | grant ver/kaldır | ✅ | ✅ | kendi ürünü | — | customer:create + PO-devir | — | — |
-| admin:config | ✅ | (opsiyon) | — | — | — | — | — |
+| admin:config | ✅ | ✅ | — | — | — | — | — |
 | admin:users | ✅ | ✅ | — | — | — | — | — |
 | admin:audit | ✅ | ✅ | — | ✅(read) | — | — | — |
 
@@ -216,5 +216,6 @@ YazabilirÜrün(user, p) = GlobalGörür(user)
 4. ✅ **ReadOnly atandığı kapsama göre**: global atanırsa tüm sistemi, kişiye atanırsa kendi ürünlerini salt-okur.
 5. ✅ **Grant süreli olabilir** (`ExpiresAt`, zorunlu değil). **PO kendi ürününe grant verebilir.**
 
-### Kalan tek netleştirme
-- **Director'a `admin:config` (sistem/teknik config) de verilsin mi?** Taslak: hayır (PlatformAdmin'de kalır). "Director herşeye yetkili" istiyorsan açarız.
+6. ✅ **Director'a `admin:config` dahil** — Director fiilen her şeye yetkili (`*`). `PlatformAdmin` ile fark ünvansal (teknik vs iş otoritesi).
+
+> Tüm kararlar netleşti. Sonraki adım: **Faz 0/1 kodlaması.**
