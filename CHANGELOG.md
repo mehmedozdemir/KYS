@@ -22,6 +22,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 - **Özel alanlar admin listesinde görünmüyordu**: Liste `entityType === 0/1` (sayı) ile filtreliyordu ama API `JsonStringEnumConverter` nedeniyle `"Customer"/"Product"` (string) döndürüyor → filtre boş kalıyordu. Karşılaştırma string'e çevrildi
 - **Ürün/müşteri formunda özel alan tipi yanlış görünüyordu** (seçim listesi textbox olarak): `fieldType === 4` (sayı) yerine artık `=== 'Select'` (string) karşılaştırması; tüm tip eşlemeleri (Number/Date/Boolean/Url/Email/Select) string enum adına göre düzeltildi
 - Etkilenen bileşenler: shared `custom-field-inputs`, admin `custom-fields`, müşteri liste/detay, ürün liste/detay
+- **Ürün düzenleme modalında "Durum" alanı boş geliyordu**: aynı enum-string sorunu — ürün `status` (`Active/Deprecated/Discontinued`) sayıyla eşleşmiyordu; ürün detay + liste durum badge'leri ve düzenleme select'i string'e çevrildi
+- **Özel alan bileşeninin stili yoktu**: `custom-field-inputs` paylaşımlı bileşeninin kendi `styles` bloğu yoktu (parent'ın scoped stilleri içine sızmaz); form/görünüm stilleri token tabanlı olarak bileşene eklendi
+- **Ürün özel alan DEĞERLERİ hiç kaydedilmiyordu**: `CreateProductCommand`/`UpdateProductCommand` `CustomFields`'ı yok sayıyordu (Customer aksine `IHasCustomFields` implement etmiyordu) → kaydedilen değer ne ürün detayında ne düzenleme ekranında görünüyordu. Her iki command `IHasCustomFields` ile `CustomFields`'ı kalıcılaştıracak şekilde düzeltildi (request DTO + handler)
+- Ürün özel alan tanımları artık her açılışta taze çekilir (`loadCustomFieldDefs` cache kaldırıldı)
 
 ---
 

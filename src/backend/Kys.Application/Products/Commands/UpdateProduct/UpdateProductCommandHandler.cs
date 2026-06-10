@@ -22,6 +22,7 @@ public sealed class UpdateProductCommandHandler(
         product.TechStack = request.TechStack ?? [];
         product.RepositoryUrl = request.RepositoryUrl;
         product.DocumentationUrl = request.DocumentationUrl;
+        product.CustomFields = request.CustomFields ?? [];
 
         productRepository.Update(product);
         await unitOfWork.SaveChangesAsync(cancellationToken);

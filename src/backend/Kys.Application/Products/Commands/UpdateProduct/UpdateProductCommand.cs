@@ -1,3 +1,4 @@
+using Kys.Application.CustomFields;
 using Kys.Domain.Enumerations;
 using MediatR;
 
@@ -12,5 +13,10 @@ public sealed record UpdateProductCommand(
     Guid? PoPersonId,
     List<string>? TechStack,
     string? RepositoryUrl,
-    string? DocumentationUrl
-) : IRequest;
+    string? DocumentationUrl,
+    Dictionary<string, object?>? CustomFields = null
+) : IRequest, IHasCustomFields
+{
+    CustomFieldEntityType IHasCustomFields.EntityType => CustomFieldEntityType.Product;
+    Dictionary<string, object?> IHasCustomFields.CustomFields => CustomFields ?? [];
+}

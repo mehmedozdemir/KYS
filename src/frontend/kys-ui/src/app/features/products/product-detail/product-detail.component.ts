@@ -8,8 +8,8 @@ import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/comp
 
 const PRODUCT_TYPE: Record<number, string> = { 0: 'SaaS', 1: 'Müşteriye Özel', 2: 'Hibrit' };
 const PRODUCT_TYPE_CSS: Record<number, string> = { 0: 'badge--saas', 1: 'badge--custom', 2: 'badge--hybrid' };
-const STATUS_LABEL: Record<number, string> = { 0: 'Aktif', 1: 'Kullanımdan Kalkıyor', 2: 'Kapatıldı' };
-const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--deprecated', 2: 'badge--archived' };
+const STATUS_LABEL: Record<string, string> = { Active: 'Aktif', Deprecated: 'Kullanımdan Kalkıyor', Discontinued: 'Kapatıldı' };
+const STATUS_CSS: Record<string, string> = { Active: 'badge--active', Deprecated: 'badge--deprecated', Discontinued: 'badge--archived' };
 const ENDPOINT_TYPE: Record<number, string> = { 0: 'Frontend', 1: 'REST API', 2: 'gRPC', 3: 'SOAP', 4: 'GraphQL' };
 const ENDPOINT_ICON: Record<number, string> = { 0: 'pi-desktop', 1: 'pi-server', 2: 'pi-server', 3: 'pi-server', 4: 'pi-code' };
 
@@ -20,7 +20,7 @@ interface ProductDetail {
   description: string | null;
   version: string | null;
   productType: number;
-  status: number;
+  status: string;
   poPersonId: string | null;
   poName: string | null;
   techStack: string[];
@@ -632,9 +632,9 @@ interface ProductDetail {
               <div class="form-group">
                 <label>Durum</label>
                 <select [(ngModel)]="editForm.status">
-                  <option value="0">Aktif</option>
-                  <option value="1">Kullanımdan Kalkıyor</option>
-                  <option value="2">Kapatıldı</option>
+                  <option value="Active">Aktif</option>
+                  <option value="Deprecated">Kullanımdan Kalkıyor</option>
+                  <option value="Discontinued">Kapatıldı</option>
                 </select>
               </div>
             </div>
@@ -816,13 +816,12 @@ export class ProductDetailComponent implements OnInit {
   activeTab = signal('info');
 
   customFieldDefs = signal<CustomFieldDef[]>([]);
-  private cfDefsLoaded = false;
   editCfValues: Record<string, string> = {};
 
   private loadCustomFieldDefs(onDone?: () => void): void {
-    if (this.cfDefsLoaded) { onDone?.(); return; }
     this.http.get<CustomFieldDef[]>(`${environment.apiUrl}/custom-field-definitions?entityType=1`).subscribe({
-      next: defs => { this.customFieldDefs.set(defs); this.cfDefsLoaded = true; onDone?.(); }
+      next: defs => { this.customFieldDefs.set(defs); onDone?.(); },
+      error: () => { onDone?.(); }
     });
   }
 
@@ -846,7 +845,7 @@ export class ProductDetailComponent implements OnInit {
   editSaving = signal(false);
   editSubmitted = signal(false);
   editError = signal('');
-  editForm = { name: '', description: '', version: '', status: '0', repositoryUrl: '', documentationUrl: '', techStack: '' };
+  editForm = { name: '', description: '', version: '', status: 'Active', repositoryUrl: '', documentationUrl: '', techStack: '' };
 
   editPoId = '';
   editPoName = '';
@@ -886,8 +885,8 @@ export class ProductDetailComponent implements OnInit {
 
   typeLabel(t: number) { return PRODUCT_TYPE[t] ?? t; }
   typeCss(t: number) { return PRODUCT_TYPE_CSS[t] ?? ''; }
-  statusLabel(s: number) { return STATUS_LABEL[s] ?? s; }
-  statusCss(s: number) { return STATUS_CSS[s] ?? ''; }
+  statusLabel(s: string) { return STATUS_LABEL[s] ?? s; }
+  statusCss(s: string) { return STATUS_CSS[s] ?? ''; }
   endpointTypeLabel(t: number) { return ENDPOINT_TYPE[t] ?? t; }
   endpointIcon(t: number) { return ENDPOINT_ICON[t] ?? 'pi-server'; }
 
@@ -905,7 +904,7 @@ export class ProductDetailComponent implements OnInit {
       name: p.name,
       description: p.description ?? '',
       version: p.version ?? '',
-      status: String(p.status),
+      status: p.status,
       repositoryUrl: p.repositoryUrl ?? '',
       documentationUrl: p.documentationUrl ?? '',
       techStack: p.techStack.join(', ')
@@ -943,7 +942,7 @@ export class ProductDetailComponent implements OnInit {
       name: this.editForm.name.trim(),
       description: this.editForm.description.trim() || null,
       version: this.editForm.version.trim() || null,
-      status: Number(this.editForm.status),
+      status: this.editForm.status,
       poPersonId: this.editPoId || null,
       techStack: techStack.length ? techStack : null,
       repositoryUrl: this.editForm.repositoryUrl.trim() || null,

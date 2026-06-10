@@ -22,7 +22,8 @@ public sealed class CreateProductCommandHandler(
             PoPersonId = request.PoPersonId,
             TechStack = request.TechStack ?? [],
             RepositoryUrl = request.RepositoryUrl,
-            DocumentationUrl = request.DocumentationUrl
+            DocumentationUrl = request.DocumentationUrl,
+            CustomFields = request.CustomFields ?? []
         };
 
         await productRepository.AddAsync(product, cancellationToken);
