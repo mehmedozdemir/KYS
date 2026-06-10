@@ -375,7 +375,7 @@ Bkz. `docs/AUTHORIZATION.md` §10. **Katman B (kayıt düzeyi okuma) — ürün 
 - [x] `IScopeService`: `CanReadAsync` + `HasGlobalReadAccess` + `CurrentUserId`; `ScopeKind.Customer`
 - [x] Ürün/müşteri repo `GetAllAsync(scopeUserId)` filtresi
 - [x] Liste handler'ları kapsam geçirir; detay handler'ları kapsam dışıysa 403
-- [ ] **Faz 3b:** ortam/ekip/kişi liste filtreleme
+- [x] **Faz 3b:** ortam okuma kapsamı (detay + liste 403); ekip/kişi bilinçli global dizin
 - [ ] **Faz 4:** açık `Grant` tablosu + ekran
 
 ---

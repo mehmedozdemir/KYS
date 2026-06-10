@@ -46,7 +46,30 @@ public sealed class ScopeService(
                     cp.Product.Teams.Any(pt => pt.Team.Memberships.Any(m => m.PersonId == userId && m.EndDate == null)) ||
                     cp.Product.Assignments.Any(a => a.PersonId == userId && a.IsActive)), ct),
 
-            // Diğer türler için okuma kapsamı = yazma kapsamı (henüz ayrı gerek yok)
+            // CustomerProduct okuma: bağlı ürün kapsamda mı
+            ScopeKind.CustomerProduct => await db.CustomerProducts
+                .Where(cp => cp.Id == target.Id)
+                .AnyAsync(cp =>
+                    cp.Product.PoPersonId == userId ||
+                    cp.Product.Teams.Any(pt => pt.Team.Memberships.Any(m => m.PersonId == userId && m.EndDate == null)) ||
+                    cp.Product.Assignments.Any(a => a.PersonId == userId && a.IsActive), ct),
+
+            // Ortam okuma: bağlı ürün kapsamda mı
+            ScopeKind.Environment => await db.CustomerEnvironments
+                .Where(e => e.Id == target.Id)
+                .AnyAsync(e =>
+                    e.CustomerProduct.Product.PoPersonId == userId ||
+                    e.CustomerProduct.Product.Teams.Any(pt => pt.Team.Memberships.Any(m => m.PersonId == userId && m.EndDate == null)) ||
+                    e.CustomerProduct.Product.Assignments.Any(a => a.PersonId == userId && a.IsActive), ct),
+
+            // EnvironmentResource okuma: bağlı ürün kapsamda mı
+            ScopeKind.EnvironmentResource => await db.EnvironmentResources
+                .Where(er => er.Id == target.Id)
+                .AnyAsync(er =>
+                    er.CustomerEnvironment.CustomerProduct.Product.PoPersonId == userId ||
+                    er.CustomerEnvironment.CustomerProduct.Product.Teams.Any(pt => pt.Team.Memberships.Any(m => m.PersonId == userId && m.EndDate == null)) ||
+                    er.CustomerEnvironment.CustomerProduct.Product.Assignments.Any(a => a.PersonId == userId && a.IsActive), ct),
+
             _ => await CanWriteAsync(target, ct)
         };
     }

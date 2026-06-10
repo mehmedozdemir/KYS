@@ -204,7 +204,7 @@ YazabilirÜrün(user, p) = GlobalGörür(user)
 - **Faz 2 — Yazma kapsamı:** ✅ (ürün + ortam) `IScopeService` + `IScopedCommand` marker + `ScopeAuthorizationBehavior`. Ürün/ortam ve alt kayıtları (endpoint, kaynak şablonu, ortam kaynağı, endpoint URL'i, barındırma platformu) yazımı: global rol **VEYA** PO **VEYA** sahibi ekibin aktif üyesi.
   - **Ertelendi (Faz 2b):** Müşteri yazma kapsamı (müşteri sahiplik modeli gerek; şu an `customer:*` yeteneğiyle sınırlı) + credential yazma kapsamı (reveal zaten `ResourceAuthorizationService` ile kapsamlı).
 - **Faz 3 — Okuma kapsamı:** ✅ (ürün + müşteri) Scoped roller için liste sorguları kişiye filtrelenir; detay (GET by id) erişimi kapsam dışıysa 403. Global okuma `scope:global` yeteneği ile (Admin/Director `*`, **CTO açık**). `IScopeService.CanReadAsync` + repo `GetAllAsync(scopeUserId)`. Ürün okuma kapsamı = PO **VEYA** aktif ekip üyeliği **VEYA** aktif atama; müşteri = kapsamdaki ürünü kullanan.
-  - **Kalan (Faz 3b):** ortam/ekip/kişi liste filtreleme.
+- **Faz 3b — Ortam okuma kapsamı:** ✅ Ortam detayı + müşteri-ürün ortam listesi kapsam dışıysa 403 (`CanReadAsync` Environment/CustomerProduct/EnvironmentResource türlerini de kapsar). **Ekip ve kişi listeleri bilinçli olarak global** (org dizini; gizli veri yok, erişilebilirliği korunur).
 - **Faz 4 — Açık grant:** `AccessGrant` tablosu + migration + admin "Erişim Yetkileri" ekranı.
 - **Faz 5 — Frontend cila:** Yeteneğe göre buton/menü gizleme, "erişim yok" UX, kapsam rozeti.
 

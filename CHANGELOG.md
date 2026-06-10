@@ -16,6 +16,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.27.1] — 2026-06-10 (Sprint 30 — Yetkilendirme Faz 3b: Ortam Okuma Kapsamı)
+
+### Eklendi / Güvenlik
+- **Ortam okuma kapsamı**: ortam detayı ve müşteri-ürün ortam listesi, kullanıcının kapsamı dışındaysa 403. `IScopeService.CanReadAsync` artık Environment/CustomerProduct/EnvironmentResource türlerini de (atama dahil) çözer
+- **Karar:** ekip ve kişi listeleri bilinçli olarak tüm kullanıcılara açık (organizasyon dizini; gizli veri içermez)
+
+---
+
 ## [0.27.0] — 2026-06-10 (Sprint 30 — Yetkilendirme Faz 3: Okuma Kapsamı)
 
 ### Eklendi / Güvenlik

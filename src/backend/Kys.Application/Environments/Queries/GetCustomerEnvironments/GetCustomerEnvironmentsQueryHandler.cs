@@ -1,13 +1,18 @@
+using Kys.Domain.Authorization;
+using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
 using MediatR;
 
 namespace Kys.Application.Environments.Queries.GetCustomerEnvironments;
 
-public sealed class GetCustomerEnvironmentsQueryHandler(IEnvironmentRepository repository)
+public sealed class GetCustomerEnvironmentsQueryHandler(IEnvironmentRepository repository, IScopeService scope)
     : IRequestHandler<GetCustomerEnvironmentsQuery, IReadOnlyList<CustomerEnvironmentSummaryDto>>
 {
     public async Task<IReadOnlyList<CustomerEnvironmentSummaryDto>> Handle(GetCustomerEnvironmentsQuery request, CancellationToken ct)
     {
+        if (!await scope.CanReadAsync(new ScopeTarget(ScopeKind.CustomerProduct, request.CustomerProductId), ct))
+            throw new ForbiddenException("Bu ürünün ortamlarını görme yetkiniz yok.");
+
         var envs = await repository.GetByCustomerProductAsync(request.CustomerProductId, ct);
         return envs.Select(e => new CustomerEnvironmentSummaryDto(
             e.Id,
