@@ -70,7 +70,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
         await mediator.Send(new UpdateProductCommand(
             id, request.Name, request.Description, request.Version,
             request.Status, request.PoPersonId, request.TechStack,
-            request.RepositoryUrl, request.DocumentationUrl), ct);
+            request.RepositoryUrl, request.DocumentationUrl, request.CustomFields), ct);
         return NoContent();
     }
 
@@ -182,7 +182,8 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
 
 public sealed record UpdateProductRequest(
     string Name, string? Description, string? Version, ProductStatus Status,
-    Guid? PoPersonId, List<string>? TechStack, string? RepositoryUrl, string? DocumentationUrl);
+    Guid? PoPersonId, List<string>? TechStack, string? RepositoryUrl, string? DocumentationUrl,
+    Dictionary<string, object?>? CustomFields);
 
 public sealed record AssignTeamRequest(Guid TeamId, string? Role, DateOnly? Since);
 public sealed record AssignPersonRequest(Guid PersonId, string? Responsibility, DateOnly? StartedAt);
