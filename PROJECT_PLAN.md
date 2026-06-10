@@ -361,6 +361,12 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 25 — Dashboard Sadeleştirme ✅ (2026-06-10)
+
+- [x] Dashboard "Son Aktiviteler" paneli kaldırıldı (orphan frontend kod + CSS temizlendi); `GET /dashboard/recent-activities` endpoint'i ileride yeniden kullanım için korundu
+
+---
+
 ## Sprint 24 — Barındırma Platformu ✅ (2026-06-10)
 
 Ortamların hangi platformda çalıştığını (K8s/Linux/Windows/AWS/Azure/GCP) tanımlama ve gösterme.
