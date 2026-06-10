@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using Kys.Application.CustomFields.Commands.CreateCustomFieldDefinition;
 using Kys.Application.CustomFields.Commands.ToggleCustomFieldDefinition;
 using Kys.Application.CustomFields.Commands.UpdateCustomFieldDefinition;
@@ -14,7 +15,7 @@ namespace Kys.Api.Controllers.v1.Admin;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/admin/custom-fields")]
-[RequirePermission(SystemRole.Codes.PlatformAdmin)]
+[RequirePermission(Capabilities.AdminConfig)]
 public sealed class CustomFieldsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

@@ -5,6 +5,8 @@ using Kys.Application.KnowledgeBase.Commands.UpdateArticle;
 using Kys.Application.KnowledgeBase.Queries.GetArticleDetail;
 using Kys.Application.KnowledgeBase.Queries.GetArticles;
 using Kys.Application.KnowledgeBase.Queries.GetTags;
+using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -43,6 +45,7 @@ public sealed class KnowledgeBaseController(IMediator mediator) : ControllerBase
         => Ok(await mediator.Send(new GetTagsQuery(), ct));
 
     [HttpPost]
+    [RequirePermission(Capabilities.KbWrite)]
     public async Task<IActionResult> Create(CreateArticleRequest request, CancellationToken ct)
     {
         var id = await mediator.Send(new CreateArticleCommand(
@@ -57,6 +60,7 @@ public sealed class KnowledgeBaseController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [RequirePermission(Capabilities.KbWrite)]
     public async Task<IActionResult> Update(Guid id, UpdateArticleRequest request, CancellationToken ct)
     {
         await mediator.Send(new UpdateArticleCommand(
@@ -72,6 +76,7 @@ public sealed class KnowledgeBaseController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [RequirePermission(Capabilities.KbWrite)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeleteArticleCommand(id), ct);

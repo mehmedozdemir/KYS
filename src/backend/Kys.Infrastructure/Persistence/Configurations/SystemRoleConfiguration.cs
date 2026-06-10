@@ -25,7 +25,7 @@ public sealed class SystemRoleConfiguration : IEntityTypeConfiguration<SystemRol
                 Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
                 Name = "Platform Yöneticisi",
                 Code = SystemRole.Codes.PlatformAdmin,
-                Description = "Tüm sistem yetkilerine sahip",
+                Description = "Sistem/teknik yönetici — tüm yetkiler",
                 Permissions = ["*"],
                 IsSystem = true
             },
@@ -34,8 +34,8 @@ public sealed class SystemRoleConfiguration : IEntityTypeConfiguration<SystemRol
                 Id = Guid.Parse("00000000-0000-0000-0000-000000000002"),
                 Name = "Direktör",
                 Code = SystemRole.Codes.Director,
-                Description = "Okuma ve raporlama yetkileri",
-                Permissions = ["read:*", "report:*"],
+                Description = "En üst iş otoritesi — tüm yetkiler",
+                Permissions = ["*"],
                 IsSystem = true
             },
             new SystemRole
@@ -43,8 +43,8 @@ public sealed class SystemRoleConfiguration : IEntityTypeConfiguration<SystemRol
                 Id = Guid.Parse("00000000-0000-0000-0000-000000000003"),
                 Name = "Ekip Lideri",
                 Code = SystemRole.Codes.TeamLead,
-                Description = "Ekip yönetimi ve kaynak düzenleme",
-                Permissions = ["read:*", "write:teams", "write:resources", "write:people.team"],
+                Description = "Kendi ekibinin ürünlerini yönetir (müşteri oluşturamaz)",
+                Permissions = ["customer:read", "product:*", "environment:*", "credential:*", "team:*", "person:read", "kb:*"],
                 IsSystem = true
             },
             new SystemRole
@@ -52,8 +52,8 @@ public sealed class SystemRoleConfiguration : IEntityTypeConfiguration<SystemRol
                 Id = Guid.Parse("00000000-0000-0000-0000-000000000004"),
                 Name = "Geliştirici",
                 Code = SystemRole.Codes.Developer,
-                Description = "Atandığı ürün ve müşteri kayıtlarını görme",
-                Permissions = ["read:assigned"],
+                Description = "Kendi çalıştığı ürünleri görür; yazma yetki (grant) ile",
+                Permissions = ["customer:read", "product:read", "environment:read", "credential:view", "team:read", "person:read", "kb:read", "kb:write"],
                 IsSystem = true
             },
             new SystemRole
@@ -61,8 +61,26 @@ public sealed class SystemRoleConfiguration : IEntityTypeConfiguration<SystemRol
                 Id = Guid.Parse("00000000-0000-0000-0000-000000000005"),
                 Name = "Salt Okuma",
                 Code = SystemRole.Codes.ReadOnly,
-                Description = "Sadece genel listeleri okuma",
-                Permissions = ["read:lists"],
+                Description = "Atandığı kapsamda salt okuma",
+                Permissions = ["customer:read", "product:read", "team:read", "person:read", "environment:read", "kb:read"],
+                IsSystem = true
+            },
+            new SystemRole
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000006"),
+                Name = "Ürün Sahibi (PO)",
+                Code = SystemRole.Codes.ProductOwner,
+                Description = "Müşteri/ürün oluşturur; sahibi olduğu ürünün tüm verisini yönetir",
+                Permissions = ["customer:*", "product:*", "environment:*", "credential:*", "team:read", "team:write", "team:member", "person:read", "kb:*"],
+                IsSystem = true
+            },
+            new SystemRole
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000007"),
+                Name = "CTO",
+                Code = SystemRole.Codes.CTO,
+                Description = "Gözlemci — tüm sistemi salt okur",
+                Permissions = ["customer:read", "product:read", "team:read", "person:read", "environment:read", "kb:read", "admin:audit"],
                 IsSystem = true
             }
         );

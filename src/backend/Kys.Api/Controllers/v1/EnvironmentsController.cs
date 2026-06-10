@@ -10,6 +10,8 @@ using Kys.Application.Environments.Queries.GetCustomerEnvironments;
 using Kys.Application.Environments.Queries.GetEnvironmentDetail;
 using Kys.Application.Environments.Queries.GetEnvironmentTypes;
 using Kys.Application.Environments.Queries.GetHostingPlatforms;
+using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -42,6 +44,7 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission(Capabilities.EnvironmentWrite)]
     public async Task<IActionResult> Create(CreateCustomerEnvironmentRequest request, CancellationToken ct)
     {
         var id = await mediator.Send(new CreateCustomerEnvironmentCommand(
@@ -56,6 +59,7 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
     [HttpPut("{environmentId:guid}/hosting-platform")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.EnvironmentWrite)]
     public async Task<IActionResult> SetHostingPlatform(Guid environmentId, SetHostingPlatformRequest request, CancellationToken ct)
     {
         await mediator.Send(new SetEnvironmentHostingPlatformCommand(environmentId, request.HostingPlatformId), ct);
@@ -66,6 +70,7 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [RequirePermission(Capabilities.EnvironmentWrite)]
     public async Task<IActionResult> DeleteEnvironment(Guid environmentId, CancellationToken ct)
     {
         await mediator.Send(new DeleteCustomerEnvironmentCommand(environmentId), ct);
@@ -73,6 +78,7 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{environmentId:guid}/resources")]
+    [RequirePermission(Capabilities.EnvironmentWrite)]
     public async Task<IActionResult> AddResource(
         Guid environmentId,
         AddResourceToEnvironmentRequest request,
@@ -89,6 +95,7 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{environmentId:guid}/resources/{resourceId:guid}")]
+    [RequirePermission(Capabilities.EnvironmentWrite)]
     public async Task<IActionResult> RemoveResource(Guid environmentId, Guid resourceId, CancellationToken ct)
     {
         await mediator.Send(new RemoveEnvironmentResourceCommand(resourceId), ct);
@@ -96,6 +103,7 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{environmentId:guid}/endpoints/{productEndpointId:guid}")]
+    [RequirePermission(Capabilities.EnvironmentWrite)]
     public async Task<IActionResult> RemoveEndpointUrl(Guid environmentId, Guid productEndpointId, CancellationToken ct)
     {
         await mediator.Send(new RemoveEnvironmentEndpointUrlCommand(environmentId, productEndpointId), ct);
@@ -103,6 +111,7 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{environmentId:guid}/endpoints/{productEndpointId:guid}")]
+    [RequirePermission(Capabilities.EnvironmentWrite)]
     public async Task<IActionResult> SetEndpointUrl(
         Guid environmentId,
         Guid productEndpointId,

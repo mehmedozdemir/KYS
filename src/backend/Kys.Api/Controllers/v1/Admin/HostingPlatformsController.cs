@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Kys.Domain.Authorization;
 using Kys.Application.Environments.Commands.CreateHostingPlatform;
 using Kys.Application.Environments.Commands.UpdateHostingPlatform;
 using Kys.Application.Environments.Commands.DeleteHostingPlatform;
@@ -12,7 +13,7 @@ namespace Kys.Api.Controllers.v1.Admin;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/admin/hosting-platforms")]
-[RequirePermission(SystemRole.Codes.PlatformAdmin)]
+[RequirePermission(Capabilities.AdminConfig)]
 public sealed class HostingPlatformsController(IMediator mediator) : ControllerBase
 {
     [HttpPost]

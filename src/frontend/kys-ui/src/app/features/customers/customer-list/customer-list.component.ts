@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgClass, DatePipe } from '@angular/common';
 import { environment } from '../../../../environments/environment';
+import { PermissionService } from '../../../core/services/permission.service';
 
 const STATUS_LABEL: Record<string, string> = { Prospect: 'Potansiyel', Onboarding: 'Onboarding', Active: 'Aktif', Inactive: 'Pasif', Churned: 'Ayrıldı' };
 const STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
@@ -46,9 +47,11 @@ interface Customer {
     <div class="page-content">
       <div class="flex-between" style="margin-bottom:1.5rem">
         <h1 style="font-size:1.5rem;font-weight:700;color:var(--text-strong)">Müşteriler</h1>
-        <button class="btn-primary-sm" (click)="openModal()">
-          <i class="pi pi-plus"></i> Yeni Müşteri
-        </button>
+        @if (perms.has('customer:create')) {
+          <button class="btn-primary-sm" (click)="openModal()">
+            <i class="pi pi-plus"></i> Yeni Müşteri
+          </button>
+        }
       </div>
 
       <div class="filter-bar">
@@ -360,6 +363,7 @@ interface Customer {
 })
 export class CustomerListComponent implements OnInit {
   private http = inject(HttpClient);
+  protected perms = inject(PermissionService);
   private router = inject(Router);
 
   customers: Customer[] = [];

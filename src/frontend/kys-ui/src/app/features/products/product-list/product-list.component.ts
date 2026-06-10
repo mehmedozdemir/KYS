@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { PermissionService } from '../../../core/services/permission.service';
 
 interface CustomFieldDef {
   id: string;
@@ -64,9 +65,11 @@ interface CreateProductForm {
           <h1 class="page-title">Ürünler</h1>
           <p class="page-subtitle">{{ totalCount() }} ürün</p>
         </div>
-        <button class="btn btn-primary" (click)="openModal()">
-          <i class="pi pi-plus"></i> Yeni Ürün
-        </button>
+        @if (perms.has('product:create')) {
+          <button class="btn btn-primary" (click)="openModal()">
+            <i class="pi pi-plus"></i> Yeni Ürün
+          </button>
+        }
       </div>
 
       <!-- Filters -->
@@ -359,6 +362,7 @@ interface CreateProductForm {
 export class ProductListComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
+  protected perms = inject(PermissionService);
 
   products = signal<ProductListItem[]>([]);
   loading = signal(true);

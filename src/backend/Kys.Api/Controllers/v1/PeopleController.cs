@@ -5,6 +5,8 @@ using Kys.Application.People.Commands.UpdateEmploymentStatus;
 using Kys.Application.People.Commands.UpdatePerson;
 using Kys.Application.People.Queries.GetPeople;
 using Kys.Application.People.Queries.GetPersonDetail;
+using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -37,6 +39,7 @@ public sealed class PeopleController(IMediator mediator) : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [RequirePermission(Capabilities.PersonCreate)]
     public async Task<IActionResult> Create([FromBody] CreatePersonCommand command, CancellationToken ct)
     {
         var id = await mediator.Send(command, ct);
@@ -46,6 +49,7 @@ public sealed class PeopleController(IMediator mediator) : ControllerBase
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.PersonWrite)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeletePersonCommand(id), ct);
@@ -55,6 +59,7 @@ public sealed class PeopleController(IMediator mediator) : ControllerBase
     [HttpPatch("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.PersonWrite)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePersonRequest request, CancellationToken ct)
     {
         await mediator.Send(new UpdatePersonCommand(id, request.FirstName, request.LastName, request.Phone, request.Title, request.HireDate), ct);
@@ -64,6 +69,7 @@ public sealed class PeopleController(IMediator mediator) : ControllerBase
     [HttpPatch("{id:guid}/employment-status")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.PersonWrite)]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateEmploymentStatusRequest request, CancellationToken ct)
     {
         await mediator.Send(new UpdateEmploymentStatusCommand(id, request.NewStatus, request.TerminationDate, request.TerminationReason), ct);

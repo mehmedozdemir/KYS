@@ -367,6 +367,19 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 28 — Yetkilendirme Faz 0+1 ✅ (2026-06-10)
+
+Bkz. `docs/AUTHORIZATION.md`. İki katmanlı modelin **Katman A (aksiyon yetkisi)** kısmı.
+
+- [x] `Capabilities` sabitleri + `PermissionAuthorizationHandler`/`PermissionService` wildcard (`*`, `alan:*`)
+- [x] Rol seed yenilendi: PO + CTO eklendi, Director=`*`, TeamLead/Developer/ReadOnly capability'leri (migration `Sprint28_AuthzCapabilities`)
+- [x] Tüm yazma endpoint'lerine `[RequirePermission(capability)]` (customers/products/teams/people/environments/kb/credentials/admin/resources)
+- [x] Frontend ana create butonları yeteneğe göre gizlenir
+- [ ] **Faz 2-3 (kapsam):** kayıt düzeyi okuma/yazma filtreleme (Developer/PO/TeamLead kendi kapsamı)
+- [ ] **Faz 4:** `Grant` tablosu (süreli yetki + PO-devir) + admin ekranı
+
+---
+
 ## Sprint 27 — Hesabım & Şifre Değiştirme ✅ (2026-06-10)
 
 - [x] `ChangePassword` command + `POST /auth/change-password` (mevcut şifre doğrulama, min 8, refresh token sıfırlama)

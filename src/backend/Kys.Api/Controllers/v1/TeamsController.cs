@@ -5,6 +5,8 @@ using Kys.Application.Teams.Commands.DeleteTeam;
 using Kys.Application.Teams.Commands.EndTeamMembership;
 using Kys.Application.Teams.Queries.GetTeamDetail;
 using Kys.Application.Teams.Queries.GetTeams;
+using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +37,7 @@ public sealed class TeamsController(IMediator mediator) : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [RequirePermission(Capabilities.TeamCreate)]
     public async Task<IActionResult> Create([FromBody] CreateTeamCommand command, CancellationToken ct)
     {
         var id = await mediator.Send(command, ct);
@@ -44,6 +47,7 @@ public sealed class TeamsController(IMediator mediator) : ControllerBase
     [HttpPost("{teamId:guid}/members")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.TeamMember)]
     public async Task<IActionResult> AddMember(Guid teamId, [FromBody] AddMemberRequest request, CancellationToken ct)
     {
         var membershipId = await mediator.Send(
@@ -54,6 +58,7 @@ public sealed class TeamsController(IMediator mediator) : ControllerBase
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.TeamWrite)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeleteTeamCommand(id), ct);
@@ -63,6 +68,7 @@ public sealed class TeamsController(IMediator mediator) : ControllerBase
     [HttpDelete("{teamId:guid}/members/{personId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.TeamMember)]
     public async Task<IActionResult> EndMembership(Guid teamId, Guid personId, [FromQuery] DateOnly endDate, CancellationToken ct)
     {
         await mediator.Send(new EndTeamMembershipCommand(personId, teamId, endDate), ct);

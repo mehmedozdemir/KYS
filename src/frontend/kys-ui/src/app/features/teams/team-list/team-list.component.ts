@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { PermissionService } from '../../../core/services/permission.service';
 
 interface TeamSummary {
   id: string;
@@ -40,9 +41,11 @@ interface CreateTeamRequest {
           <h1 class="page-title">Ekipler</h1>
           <p class="page-subtitle">{{ totalCount() }} ekip</p>
         </div>
-        <button class="btn btn-primary" (click)="showModal.set(true)">
-          <i class="pi pi-plus"></i> Yeni Ekip
-        </button>
+        @if (perms.has('team:create')) {
+          <button class="btn btn-primary" (click)="showModal.set(true)">
+            <i class="pi pi-plus"></i> Yeni Ekip
+          </button>
+        }
       </div>
 
       <!-- Search -->
@@ -259,6 +262,7 @@ interface CreateTeamRequest {
 })
 export class TeamListComponent implements OnInit {
   private http = inject(HttpClient);
+  protected perms = inject(PermissionService);
 
   teams = signal<TeamSummary[]>([]);
   loading = signal(true);

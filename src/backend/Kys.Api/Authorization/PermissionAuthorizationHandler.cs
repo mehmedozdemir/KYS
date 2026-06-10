@@ -8,10 +8,37 @@ public sealed class PermissionAuthorizationHandler : AuthorizationHandler<Permis
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        // "*" wildcard grants all permissions (PlatformAdmin role)
-        if (context.User.HasClaim("permission", "*") ||
-            context.User.HasClaim("permission", requirement.Permission))
-            context.Succeed(requirement);
+        var required = requirement.Permission;
+
+        foreach (var claim in context.User.FindAll("permission"))
+        {
+            var granted = claim.Value;
+
+            // Tam yetki
+            if (granted == "*")
+            {
+                context.Succeed(requirement);
+                break;
+            }
+
+            // Birebir eşleşme
+            if (granted == required)
+            {
+                context.Succeed(requirement);
+                break;
+            }
+
+            // Alan wildcard: "customer:*" -> "customer:create" vb.
+            if (granted.EndsWith(":*", StringComparison.Ordinal))
+            {
+                var prefix = granted[..^1]; // "customer:"
+                if (required.StartsWith(prefix, StringComparison.Ordinal))
+                {
+                    context.Succeed(requirement);
+                    break;
+                }
+            }
+        }
 
         return Task.CompletedTask;
     }

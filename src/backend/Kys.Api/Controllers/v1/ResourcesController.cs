@@ -9,6 +9,7 @@ using Kys.Application.Resources.Queries.GetResourceTypes;
 using Kys.Application.Resources.Queries.GetSharedResources;
 using Kys.Application.Resources.Queries.GetSharedResourceDetail;
 using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using Kys.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -27,7 +28,7 @@ public sealed class ResourcesController(IMediator mediator) : ControllerBase
         => Ok(await mediator.Send(new GetResourceTypesQuery(activeOnly), ct));
 
     [HttpPost("types")]
-    [RequirePermission(SystemRole.Codes.PlatformAdmin)]
+    [RequirePermission(Capabilities.AdminConfig)]
     public async Task<IActionResult> CreateType(CreateResourceTypeRequest request, CancellationToken ct)
     {
         var id = await mediator.Send(new CreateResourceTypeCommand(
@@ -41,7 +42,7 @@ public sealed class ResourcesController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("types/{id:guid}")]
-    [RequirePermission(SystemRole.Codes.PlatformAdmin)]
+    [RequirePermission(Capabilities.AdminConfig)]
     public async Task<IActionResult> DeleteType(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeleteResourceTypeCommand(id), ct);
@@ -49,7 +50,7 @@ public sealed class ResourcesController(IMediator mediator) : ControllerBase
     }
 
     [HttpPatch("types/{id:guid}")]
-    [RequirePermission(SystemRole.Codes.PlatformAdmin)]
+    [RequirePermission(Capabilities.AdminConfig)]
     public async Task<IActionResult> UpdateType(Guid id, UpdateResourceTypeRequest request, CancellationToken ct)
     {
         await mediator.Send(new UpdateResourceTypeCommand(
@@ -64,7 +65,7 @@ public sealed class ResourcesController(IMediator mediator) : ControllerBase
     }
 
     [HttpPatch("shared/{id:guid}")]
-    [RequirePermission(SystemRole.Codes.PlatformAdmin)]
+    [RequirePermission(Capabilities.AdminConfig)]
     public async Task<IActionResult> UpdateSharedResource(Guid id, UpdateSharedResourceRequest request, CancellationToken ct)
     {
         await mediator.Send(new UpdateSharedResourceCommand(id, request.Name, request.Description, request.EnvironmentScope, request.ConnectionFields ?? []), ct);
@@ -72,7 +73,7 @@ public sealed class ResourcesController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("shared/{id:guid}")]
-    [RequirePermission(SystemRole.Codes.PlatformAdmin)]
+    [RequirePermission(Capabilities.AdminConfig)]
     public async Task<IActionResult> DeleteSharedResource(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeleteSharedResourceCommand(id), ct);
@@ -91,7 +92,7 @@ public sealed class ResourcesController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("shared")]
-    [RequirePermission(SystemRole.Codes.PlatformAdmin)]
+    [RequirePermission(Capabilities.AdminConfig)]
     public async Task<IActionResult> CreateSharedResource(CreateSharedResourceRequest request, CancellationToken ct)
     {
         var id = await mediator.Send(new CreateSharedResourceCommand(
