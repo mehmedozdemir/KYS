@@ -376,7 +376,9 @@ Bkz. `docs/AUTHORIZATION.md` §10. **Katman B (kayıt düzeyi okuma) — ürün 
 - [x] Ürün/müşteri repo `GetAllAsync(scopeUserId)` filtresi
 - [x] Liste handler'ları kapsam geçirir; detay handler'ları kapsam dışıysa 403
 - [x] **Faz 3b:** ortam okuma kapsamı (detay + liste 403); ekip/kişi bilinçli global dizin
-- [ ] **Faz 4:** açık `Grant` tablosu + ekran
+- [x] **Faz 4a:** açık `AccessGrant` tablosu + `IGrantService` + ScopeService/PermissionHandler entegrasyonu + admin API
+- [ ] **Faz 4b:** "Erişim Yetkileri" frontend ekranı
+- [ ] **Faz 5:** frontend cila (yetkiye göre UI + 403 UX)
 
 ---
 

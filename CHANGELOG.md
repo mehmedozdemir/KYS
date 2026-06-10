@@ -16,6 +16,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.29.0] — 2026-06-10 (Sprint 32 — Yetkilendirme Faz 4a: Açık Grant (Backend))
+
+### Eklendi
+- **`AccessGrant` tablosu**: açık yetki — Scope (Product/Team/Customer üzerinde Read/Write) veya Capability (ör. `customer:create`); opsiyonel süre (`ExpiresAt`). Migration `Sprint32_AccessGrant`
+- **`IGrantService`/`GrantService`**: scope grant (hedef→ürün/müşteri çözümlemesiyle) ve capability grant kontrolü; süre dikkate alınır
+- **Entegrasyon**: `ScopeService` sahiplik yoksa aktif scope grant'ı; `PermissionAuthorizationHandler` statik izin yoksa aktif capability grant'ı dikkate alır (yalnızca statik kontrol başarısızsa DB sorgusu)
+- **Admin API**: `/admin/access-grants` GET/POST/DELETE (`admin:users` yetkisi)
+
+### Notlar
+- Bu fazda grant yönetimi `admin:users` (Admin/Director) ile sınırlı; PO/TeamLead'in grant verme yetkisi ile Team-grant ürün devralımı sonraki adımda. Frontend ekranı Faz 4b.
+
+---
+
 ## [0.28.0] — 2026-06-10 (Sprint 31 — Yetkilendirme Faz 2b: Müşteri & Credential Yazma Kapsamı)
 
 ### Eklendi / Güvenlik
