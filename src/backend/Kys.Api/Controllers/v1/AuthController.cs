@@ -1,7 +1,9 @@
 using Asp.Versioning;
+using Kys.Application.Auth.Commands.ChangePassword;
 using Kys.Application.Auth.Commands.Login;
 using Kys.Application.Auth.Commands.RefreshToken;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -28,12 +30,23 @@ public sealed class AuthController(IMediator mediator) : ControllerBase
         => Ok(await mediator.Send(command, ct));
 
     [HttpGet("me")]
-    [Microsoft.AspNetCore.Authorization.Authorize]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult Me()
     {
         var claims = User.Claims.Select(c => new { c.Type, c.Value });
         return Ok(new { claims });
+    }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command, CancellationToken ct)
+    {
+        await mediator.Send(command, ct);
+        return NoContent();
     }
 }

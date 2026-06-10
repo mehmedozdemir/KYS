@@ -16,6 +16,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.24.0] — 2026-06-10 (Sprint 27 — Hesabım & Şifre Değiştirme)
+
+### Eklendi
+- **Hesabım sayfası** (`/account`): profil özeti (ad, e-posta, izinler) + kendi şifresini değiştirme formu; topbar'daki kullanıcı adına tıklanınca açılır
+- **`POST /auth/change-password`**: giriş yapan kullanıcı mevcut şifresini doğrulayıp yeni şifre belirler (BCrypt/Identity hasher ile doğrulama; min 8 karakter; şifre değişince refresh token sıfırlanır)
+- Self-servis şifre değişimi sayesinde her şifre işlemi için admin'e ihtiyaç kalmadı
+
+---
+
 ## [0.23.0] — 2026-06-10 (Sprint 26 — Ürün Ekip/Çalışan Kaldırma)
 
 ### Eklendi

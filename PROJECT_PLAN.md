@@ -361,6 +361,14 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 27 — Hesabım & Şifre Değiştirme ✅ (2026-06-10)
+
+- [x] `ChangePassword` command + `POST /auth/change-password` (mevcut şifre doğrulama, min 8, refresh token sıfırlama)
+- [x] **Hesabım** sayfası (`/account`): profil özeti + şifre değiştir formu; topbar kullanıcı adı link
+- [x] Kapsam dışı (bilinçli): profil bilgisi düzenleme — Kişiler modülü zaten karşılıyor
+
+---
+
 ## Sprint 26 — Ürün Ekip/Çalışan Kaldırma ✅ (2026-06-10)
 
 - [x] Ürün detayı Ekipler + Çalışanlar sekmelerine kaldır (çöp kutusu) butonu
