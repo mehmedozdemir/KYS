@@ -207,7 +207,7 @@ YazabilirÜrün(user, p) = GlobalGörür(user)
 - **Faz 3b — Ortam okuma kapsamı:** ✅ Ortam detayı + müşteri-ürün ortam listesi kapsam dışıysa 403 (`CanReadAsync` Environment/CustomerProduct/EnvironmentResource türlerini de kapsar). **Ekip ve kişi listeleri bilinçli olarak global** (org dizini; gizli veri yok, erişilebilirliği korunur).
 - **Faz 4a — Açık grant (backend):** ✅ `AccessGrant` tablosu (Scope/Capability, süreli) + `IGrantService`. ScopeService artık sahiplik yoksa aktif **scope grant**'ı (Product/Customer çözümlemesiyle) dikkate alır; `PermissionAuthorizationHandler` statik izin yoksa aktif **capability grant**'ı kontrol eder. Admin CRUD API (`/admin/access-grants`, `admin:users`). Team-grant ürün devralımı + PO/TeamLead'in grant verme yetkisi sonraki adımda.
 - **Faz 4b — Açık grant (ekran):** ✅ admin "Erişim Yetkileri" arayüzü (`/admin/access-grants`): grant listesi + kaldırma + ekleme (kişi/tür/kapsam-hedef/seviye/yetenek/süre). Menü + admin paneli kartı.
-- **Faz 5 — Frontend cila:** Yeteneğe göre buton/menü gizleme, "erişim yok" UX, kapsam rozeti.
+- **Faz 5 — Frontend cila:** ✅ Global 403 yakalama → "Bu işlem için yetkiniz yok" toast (`NotificationService` + AppComponent toast container, auth interceptor). Ürün/müşteri detay "Düzenle/Durum" butonları yeteneğe (`product:write`/`customer:write`) göre gizlenir. (Yeteneği olup kapsamı olmayan kullanıcı butonu görür ama işlemde 403 + dostça toast alır.)
 
 ---
 

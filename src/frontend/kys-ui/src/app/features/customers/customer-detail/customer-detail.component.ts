@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
+import { PermissionService } from '../../../core/services/permission.service';
 import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
 
 const CUST_STATUS: Record<string, string> = { Prospect: 'Potansiyel', Onboarding: 'Onboarding', Active: 'Aktif', Inactive: 'Pasif', Churned: 'Ayrıldı' };
@@ -130,12 +131,14 @@ interface CustomerDetail {
             @if (customer()!.isArchived) {
               <span class="badge badge--archived">Arşivlendi</span>
             }
-            <button type="button" class="btn-edit" (click)="openStatusChange()">
-              <i class="pi pi-sync"></i> Durum
-            </button>
-            <button type="button" class="btn-edit" (click)="openEdit()">
-              <i class="pi pi-pencil"></i> Düzenle
-            </button>
+            @if (perms.has('customer:write')) {
+              <button type="button" class="btn-edit" (click)="openStatusChange()">
+                <i class="pi pi-sync"></i> Durum
+              </button>
+              <button type="button" class="btn-edit" (click)="openEdit()">
+                <i class="pi pi-pencil"></i> Düzenle
+              </button>
+            }
           </div>
         </div>
 
@@ -664,6 +667,7 @@ interface CustomerDetail {
 })
 export class CustomerDetailComponent implements OnInit {
   private http = inject(HttpClient);
+  protected perms = inject(PermissionService);
   private route = inject(ActivatedRoute);
 
   customer = signal<CustomerDetail | null>(null);

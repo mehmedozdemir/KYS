@@ -378,7 +378,12 @@ Bkz. `docs/AUTHORIZATION.md` §10. **Katman B (kayıt düzeyi okuma) — ürün 
 - [x] **Faz 3b:** ortam okuma kapsamı (detay + liste 403); ekip/kişi bilinçli global dizin
 - [x] **Faz 4a:** açık `AccessGrant` tablosu + `IGrantService` + ScopeService/PermissionHandler entegrasyonu + admin API
 - [x] **Faz 4b:** "Erişim Yetkileri" frontend ekranı (`/admin/access-grants`)
-- [ ] **Faz 5:** frontend cila (yetkiye göre UI + 403 UX)
+- [x] **Faz 5:** frontend cila — global 403 toast + detay aksiyon butonları yeteneğe göre gizli
+
+### Yetkilendirme kalan (opsiyonel iyileştirmeler)
+- Team-grant'ın ürün devralımı; PO/TeamLead'in grant verme yetkisi (şu an admin:users)
+- Ekip/kişi liste kapsamı (şu an bilinçli global dizin)
+- Detay alt-aksiyon butonlarının (endpoint/atama/şablon ekle-sil) yeteneğe göre gizlenmesi (şu an 403+toast ile korunuyor)
 
 ---
 

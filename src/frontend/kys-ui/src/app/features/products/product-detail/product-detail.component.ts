@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
+import { PermissionService } from '../../../core/services/permission.service';
 import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
 
 const PRODUCT_TYPE: Record<number, string> = { 0: 'SaaS', 1: 'Müşteriye Özel', 2: 'Hibrit' };
@@ -69,9 +70,11 @@ interface ProductDetail {
           <div class="header-right">
             <span class="badge" [ngClass]="typeCss(product()!.productType)">{{ typeLabel(product()!.productType) }}</span>
             <span class="badge" [ngClass]="statusCss(product()!.status)">{{ statusLabel(product()!.status) }}</span>
-            <button type="button" class="btn-edit" (click)="openEdit()">
-              <i class="pi pi-pencil"></i> Düzenle
-            </button>
+            @if (perms.has('product:write')) {
+              <button type="button" class="btn-edit" (click)="openEdit()">
+                <i class="pi pi-pencil"></i> Düzenle
+              </button>
+            }
           </div>
         </div>
 
@@ -809,6 +812,7 @@ interface ProductDetail {
 })
 export class ProductDetailComponent implements OnInit {
   private http = inject(HttpClient);
+  protected perms = inject(PermissionService);
   private route = inject(ActivatedRoute);
 
   product = signal<ProductDetail | null>(null);

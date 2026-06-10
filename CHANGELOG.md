@@ -16,6 +16,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.31.0] — 2026-06-10 (Sprint 34 — Yetkilendirme Faz 5: Frontend Cila)
+
+### Eklendi
+- **Global 403 bildirimi**: yetkisiz işlemde "Bu işlem için yetkiniz yok" toast (`NotificationService` + AppComponent toast container; auth interceptor 403'ü yakalar)
+- **Yeteneğe göre buton gizleme**: ürün/müşteri detay "Düzenle/Durum" butonları `product:write`/`customer:write` yoksa görünmez
+- Önceki fazda eklenen liste create butonları zaten yeteneğe göre gizli; bu faz detay aksiyonlarını ve 403 UX'i tamamlar
+
+---
+
 ## [0.30.0] — 2026-06-10 (Sprint 33 — Yetkilendirme Faz 4b: Erişim Yetkileri Ekranı)
 
 ### Eklendi
