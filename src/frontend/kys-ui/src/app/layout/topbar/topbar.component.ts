@@ -2,7 +2,7 @@ import { Component, inject, HostListener, signal, ElementRef } from '@angular/co
 import { AsyncPipe, NgClass } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
@@ -28,7 +28,7 @@ const CATEGORY_ROUTE: Record<string, string> = {
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [FormsModule, AsyncPipe, NgClass],
+  imports: [FormsModule, AsyncPipe, NgClass, RouterLink],
   template: `
     <header class="topbar">
       <div class="topbar__search" [class.topbar__search--active]="showDropdown()">
@@ -109,7 +109,9 @@ const CATEGORY_ROUTE: Record<string, string> = {
           }
         </div>
         @if (user$ | async; as user) {
-          <span class="topbar__user">{{ user.fullName }}</span>
+          <a class="topbar__user" routerLink="/account" title="Hesabım">
+            <i class="pi pi-user"></i> {{ user.fullName }}
+          </a>
         }
         <button class="topbar__logout" (click)="onLogout()" title="Çıkış Yap">
           <i class="pi pi-sign-out"></i>
@@ -196,7 +198,7 @@ const CATEGORY_ROUTE: Record<string, string> = {
     }
 
     .topbar__right { display: flex; align-items: center; gap: 1rem; }
-    .topbar__user { font-size: 0.875rem; font-weight: 500; color: var(--text); }
+    .topbar__user { font-size: 0.875rem; font-weight: 500; color: var(--text); text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.6rem; border-radius: 0.5rem; &:hover { background: var(--hover); color: var(--primary); text-decoration: none; } i { font-size: 0.8rem; } }
     .topbar__logout {
       background: none; border: none; cursor: pointer; color: var(--text-muted);
       font-size: 1rem; padding: 0.25rem; border-radius: 0.25rem;
