@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { NgClass, DatePipe } from '@angular/common';
 import { environment } from '../../../../environments/environment';
+import { PermissionService } from '../../../core/services/permission.service';
 
 interface PersonListItem {
   id: string;
@@ -36,9 +37,11 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
           <h1 class="page-title">Kişiler</h1>
           <p class="page-subtitle">{{ result()?.totalCount ?? 0 }} kişi</p>
         </div>
-        <button class="btn-primary" (click)="openCreate()">
-          <i class="pi pi-plus"></i> Yeni Kişi
-        </button>
+        @if (perms.has('person:create')) {
+          <button class="btn-primary" (click)="openCreate()">
+            <i class="pi pi-plus"></i> Yeni Kişi
+          </button>
+        }
       </div>
 
       <!-- Filters -->
@@ -426,6 +429,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
 })
 export class PeopleListComponent implements OnInit {
   private http = inject(HttpClient);
+  protected perms = inject(PermissionService);
   private fb = inject(FormBuilder);
 
   result = signal<GetPeopleResult | null>(null);

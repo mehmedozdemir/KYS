@@ -16,6 +16,8 @@ public sealed class SystemRole
     {
         public const string PlatformAdmin = "PlatformAdmin";
         public const string Director = "Director";
+        public const string CTO = "CTO";
+        public const string ProductOwner = "PO";
         public const string TeamLead = "TeamLead";
         public const string Developer = "Developer";
         public const string ReadOnly = "ReadOnly";

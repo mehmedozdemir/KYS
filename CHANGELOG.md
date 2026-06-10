@@ -16,6 +16,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.25.0] — 2026-06-10 (Sprint 28 — Yetkilendirme Faz 0+1: Aksiyon Kapısı)
+
+### Eklendi
+- **Yetenek (capability) modeli**: `Capabilities` sabitleri (`customer:create`, `product:write`, `environment:write`, `admin:config`...); izinler "alan:aksiyon" biçimine geçti
+- **Yeni roller**: `PO` (Ürün Sahibi) ve `CTO` (gözlemci); `Director` tam yetkili (`*`); TeamLead/Developer/ReadOnly yeni yeteneklere çevrildi (migration `Sprint28_AuthzCapabilities`)
+- **Wildcard yetki**: backend `PermissionAuthorizationHandler` + frontend `PermissionService` artık `*` ve `alan:*` destekler
+
+### Değişti / Güvenlik
+- **Tüm yazma endpoint'leri yetenek ile korundu** (`[RequirePermission(...)]`): müşteri/ürün/ekip/kişi/ortam/KB/credential/admin. Önceden giriş yapan herkes yapabiliyordu — artık role bağlı
+- Admin/Resource/Credential uçları ince yeteneklere bağlandı (`admin:config`, `admin:users`, `admin:audit`, `credential:view/write`)
+- Frontend: ana create butonları (müşteri/ürün/ekip/kişi) yeteneğe göre gizleniyor
+
+### Notlar
+- Bu faz **aksiyon düzeyi** (Katman A). **Kayıt düzeyi kapsam** (Katman B) Faz 2-3'te; `Grant` tablosu Faz 4'te.
+
+---
+
 ## [0.24.1] — 2026-06-10 (Düzeltme — Özel Alan Enum Eşleşmesi)
 
 ### Düzeltildi

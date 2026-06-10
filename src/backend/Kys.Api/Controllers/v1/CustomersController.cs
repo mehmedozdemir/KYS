@@ -10,6 +10,8 @@ using Kys.Application.Customers.Commands.UpdateCustomerProductStatus;
 using Kys.Application.Customers.Commands.UpdateCustomerStatus;
 using Kys.Application.Customers.Queries.GetCustomerDetail;
 using Kys.Application.Customers.Queries.GetCustomers;
+using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -41,6 +43,7 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
         => Ok(await mediator.Send(new GetCustomerDetailQuery(id), ct));
 
     [HttpPost]
+    [RequirePermission(Capabilities.CustomerCreate)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Create([FromBody] CreateCustomerCommand command, CancellationToken ct)
@@ -50,6 +53,7 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [RequirePermission(Capabilities.CustomerArchive)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
@@ -59,6 +63,7 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [RequirePermission(Capabilities.CustomerWrite)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCustomerRequest request, CancellationToken ct)
@@ -72,6 +77,7 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
     }
 
     [HttpPatch("{id:guid}/status")]
+    [RequirePermission(Capabilities.CustomerWrite)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request, CancellationToken ct)
@@ -82,6 +88,7 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{id:guid}/archive")]
+    [RequirePermission(Capabilities.CustomerArchive)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Archive(Guid id, CancellationToken ct)
@@ -91,6 +98,7 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{id:guid}/restore")]
+    [RequirePermission(Capabilities.CustomerArchive)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Restore(Guid id, CancellationToken ct)
@@ -102,6 +110,7 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
     // --- Products ---
 
     [HttpPost("{customerId:guid}/products")]
+    [RequirePermission(Capabilities.CustomerWrite)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AddProduct(Guid customerId, [FromBody] AddProductRequest request, CancellationToken ct)
@@ -112,6 +121,7 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{customerId:guid}/customer-products/{customerProductId:guid}")]
+    [RequirePermission(Capabilities.CustomerWrite)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -122,6 +132,7 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
     }
 
     [HttpPatch("{customerId:guid}/products/{productId:guid}/status")]
+    [RequirePermission(Capabilities.CustomerWrite)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateProductStatus(

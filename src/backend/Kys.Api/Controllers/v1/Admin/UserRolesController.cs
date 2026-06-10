@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using Kys.Application.Admin.Commands.AssignSystemRole;
 using Kys.Application.Admin.Commands.RemoveSystemRole;
 using Kys.Application.Admin.Commands.ResetPassword;
@@ -14,7 +15,7 @@ namespace Kys.Api.Controllers.v1.Admin;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/admin/users/{personId:guid}/system-roles")]
-[RequirePermission(SystemRole.Codes.PlatformAdmin)]
+[RequirePermission(Capabilities.AdminUsers)]
 public sealed class UserRolesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

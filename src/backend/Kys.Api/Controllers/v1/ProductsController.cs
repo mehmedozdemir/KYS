@@ -14,6 +14,8 @@ using Kys.Application.Products.Commands.UpdateProductResourceTemplate;
 using Kys.Application.Products.Commands.UpdateProductEndpoint;
 using Kys.Application.Products.Queries.GetProductDetail;
 using Kys.Application.Products.Queries.GetProducts;
+using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -45,6 +47,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
         => Ok(await mediator.Send(new GetProductDetailQuery(id), ct));
 
     [HttpPost]
+    [RequirePermission(Capabilities.ProductCreate)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Create([FromBody] CreateProductCommand command, CancellationToken ct)
@@ -56,6 +59,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductWrite)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeleteProductCommand(id), ct);
@@ -65,6 +69,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpPut("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductWrite)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken ct)
     {
         await mediator.Send(new UpdateProductCommand(
@@ -79,6 +84,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpPost("{productId:guid}/teams")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductAssign)]
     public async Task<IActionResult> AssignTeam(Guid productId, [FromBody] AssignTeamRequest request, CancellationToken ct)
     {
         await mediator.Send(new AssignTeamToProductCommand(productId, request.TeamId, request.Role, request.Since), ct);
@@ -88,6 +94,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpDelete("{productId:guid}/teams/{teamId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductAssign)]
     public async Task<IActionResult> RemoveTeam(Guid productId, Guid teamId, CancellationToken ct)
     {
         await mediator.Send(new RemoveTeamFromProductCommand(productId, teamId), ct);
@@ -99,6 +106,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpPost("{productId:guid}/assignments")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductAssign)]
     public async Task<IActionResult> AssignPerson(Guid productId, [FromBody] AssignPersonRequest request, CancellationToken ct)
     {
         var id = await mediator.Send(new AssignPersonToProductCommand(productId, request.PersonId, request.Responsibility, request.StartedAt), ct);
@@ -108,6 +116,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpDelete("{productId:guid}/assignments/{personId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductAssign)]
     public async Task<IActionResult> RemovePerson(Guid productId, Guid personId, CancellationToken ct)
     {
         await mediator.Send(new RemovePersonFromProductCommand(productId, personId), ct);
@@ -119,6 +128,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpPost("{productId:guid}/endpoints")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductWrite)]
     public async Task<IActionResult> CreateEndpoint(Guid productId, [FromBody] CreateEndpointRequest request, CancellationToken ct)
     {
         var id = await mediator.Send(new CreateProductEndpointCommand(
@@ -131,6 +141,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpPut("{productId:guid}/endpoints/{endpointId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductWrite)]
     public async Task<IActionResult> UpdateEndpoint(Guid productId, Guid endpointId, [FromBody] UpdateEndpointRequest request, CancellationToken ct)
     {
         await mediator.Send(new UpdateProductEndpointCommand(
@@ -142,6 +153,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpDelete("{productId:guid}/endpoints/{endpointId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductWrite)]
     public async Task<IActionResult> DeleteEndpoint(Guid productId, Guid endpointId, CancellationToken ct)
     {
         await mediator.Send(new DeleteProductEndpointCommand(endpointId), ct);
@@ -153,6 +165,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpPost("{productId:guid}/resource-templates")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductWrite)]
     public async Task<IActionResult> CreateResourceTemplate(Guid productId, [FromBody] CreateResourceTemplateRequest request, CancellationToken ct)
     {
         var id = await mediator.Send(new CreateProductResourceTemplateCommand(
@@ -164,6 +177,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [HttpPut("{productId:guid}/resource-templates/{templateId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.ProductWrite)]
     public async Task<IActionResult> UpdateResourceTemplate(Guid productId, Guid templateId, [FromBody] UpdateResourceTemplateRequest request, CancellationToken ct)
     {
         await mediator.Send(new UpdateProductResourceTemplateCommand(
@@ -173,6 +187,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{productId:guid}/resource-templates/{templateId:guid}")]
+    [RequirePermission(Capabilities.ProductWrite)]
     public async Task<IActionResult> DeleteResourceTemplate(Guid productId, Guid templateId, CancellationToken ct)
     {
         await mediator.Send(new DeleteProductResourceTemplateCommand(templateId), ct);

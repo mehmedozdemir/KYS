@@ -3,6 +3,7 @@ using Kys.Application.Credentials.Commands.DeleteCredential;
 using Kys.Application.Credentials.Commands.RevealCredential;
 using Kys.Application.Credentials.Commands.SetCredential;
 using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,7 @@ namespace Kys.Api.Controllers.v1;
 public sealed class CredentialsController(IMediator mediator) : ControllerBase
 {
     [HttpPut]
-    [RequirePermission("Credentials.Write")]
+    [RequirePermission(Capabilities.CredentialWrite)]
     public async Task<IActionResult> Set(SetCredentialRequest request, CancellationToken ct)
     {
         var id = await mediator.Send(new SetCredentialCommand(
@@ -29,7 +30,7 @@ public sealed class CredentialsController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [RequirePermission("Credentials.Write")]
+    [RequirePermission(Capabilities.CredentialWrite)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeleteCredentialCommand(id), ct);
@@ -37,7 +38,7 @@ public sealed class CredentialsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id:guid}/reveal")]
-    [RequirePermission("Credentials.View")]
+    [RequirePermission(Capabilities.CredentialView)]
     public async Task<IActionResult> Reveal(Guid id, CancellationToken ct)
     {
         var value = await mediator.Send(new RevealCredentialCommand(id), ct);
