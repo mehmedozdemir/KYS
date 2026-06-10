@@ -16,6 +16,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.22.0] — 2026-06-10 (Sprint 25 — Dashboard Sadeleştirme)
+
+### Değişti
+- Dashboard'dan "Son Aktiviteler" paneli kaldırıldı (ileride başka bir ekranda kullanılmak üzere). Backend `GET /dashboard/recent-activities` endpoint'i korundu; yalnızca frontend paneli ve ona ait orphan kod/CSS temizlendi
+
+---
+
 ## [0.21.0] — 2026-06-10 (Sprint 24 — Barındırma Platformu)
 
 ### Eklendi
