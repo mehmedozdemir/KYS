@@ -40,17 +40,25 @@ Kullanıcının **hangi kayıtlar** üzerinde işlem yapabileceği. Bir `IScopeS
 
 ## 4. Roller
 
-### 4.1. Platform rolleri (global, `PersonSystemRole`)
-| Rol | Açıklama | Kapsam |
-|---|---|---|
-| **PlatformAdmin** | Sistem yöneticisi | Global, her şey |
-| **CTO** *(yeni)* | Üst teknik yönetim | Global (iş verisi); platform config hariç |
-| **Director** | Gözetim/raporlama | Global salt-okuma |
-| **TeamLead** | Ekip lideri (genel rol) | Kapsamlı (kendi ekipleri) |
-| **Developer** | Yazılımcı | Kapsamlı (kendi ekibi/atamaları) |
-| **ReadOnly** | İzleyici | Liste salt-okuma |
+### 4.0. İki boyut: Kapsam × Erişim
+Roller iki bağımsız eksenle düşünülür:
+- **Kapsam (Scope):** *Global* (tüm sistem) ya da *Scoped* (kullanıcının ürün/ekip kapsamı)
+- **Erişim (Access):** *Read* (okuma) · *Write* (yazma) · *Admin* (sistem config)
 
-> Not: **CTO** rolü eklenecek. "PO müşteri tanımlayabilmeli" gereksinimi PO'nun bağlamsal değil, bir yetenek olduğunu gösteriyor → aşağıda ele alınıyor.
+Bu ayrım, kullanıcının cevaplarındaki CTO=global-gözlemci, Developer=scoped-okuma, Director=global-tam-yetki durumlarını temiz modeller.
+
+### 4.1. Platform rolleri (global, `PersonSystemRole`) — **güncellendi**
+| Rol | Kapsam | Erişim | Açıklama |
+|---|---|---|---|
+| **PlatformAdmin** | Global | Admin + Write | Sistem/teknik yönetici (config, kullanıcı, her şey) |
+| **Director** | Global | Write | **En üst iş otoritesi** — tüm iş verisinde tam yetki + kullanıcı/grant yönetimi |
+| **PO** *(yeni)* | Scoped (kendi ürünleri) | Write + **create** | Müşteri & ürün oluşturur; sahibi olduğu ürünün tüm alt verisini (ekip, çalışan, ortam, kaynak) girer |
+| **CTO** *(yeni)* | Global | **Read (gözlemci)** | Tüm sistemi salt-okur; gerekirse Director seviyesine yükseltilebilir (grant) |
+| **TeamLead** | Scoped (kendi ekipleri) | Write | Ekibinin ürünlerini yönetir; PO yokken yerine bakabilir (grant); müşteri **oluşturamaz** ama `customer:create` grant'ı atayıp kaldırabilir |
+| **Developer** | Scoped (ekip/atama) | Read (varsayılan) | Kendi çalıştığı ürünleri görür; yazma yalnızca grant ile |
+| **ReadOnly** | *Atandığı kapsama göre* | Read | Salt-okuma katmanı. Pratikte: global atanırsa CTO gibi, kişiye atanırsa kendi ürünlerini okur. (Çoğu durum CTO/Developer ile karşılanır; sözleşmeli/dış kullanıcı için ayrı tutulur.) |
+
+> **Director ↔ PlatformAdmin sınırı (tek açık nokta):** Director tüm **iş** yetkilerine + kullanıcı/grant yönetimine sahip; **sistem/teknik config** (ortam-tipi, barındırma platformu, özel alan, kaynak tipi, entegrasyon) `PlatformAdmin`'de kalır. "Director herşeye yetkili" istiyorsan config'i de Director'a verebiliriz — onayında netleşsin.
 
 ### 4.2. Bağlamsal roller (kayda özgü, türetilmiş)
 - **PO (Product Owner):** `Product.PoPersonId == kullanıcı`. Bir ürünün sahibi.
@@ -58,19 +66,35 @@ Kullanıcının **hangi kayıtlar** üzerinde işlem yapabileceği. Bir `IScopeS
 
 > "PO" hem bir **yetenek** (müşteri/ürün oluşturabilme) hem bir **kapsam** kaynağıdır (sahibi olduğu ürünler). İkisi ayrı düşünülür.
 
-### 4.3. Açık yetki (hibrit istisna) — `AccessGrant` *(yeni tablo)*
-Türetilen kapsamın dışına çıkmak için admin/PO tarafından verilen açık erişim.
+### 4.3. Açık yetki (hibrit istisna) — `Grant` *(yeni tablo)*
+Türetilen kapsam/yeteneğin dışına çıkmak için verilen açık yetki. İki türü tek tabloda tutuyoruz:
+
 ```
-AccessGrant {
+Grant {
   Id
-  PersonId            -> kime
-  ScopeType           -> Product | Team | Customer
-  ScopeId             -> hangi kayıt
-  Level               -> Read | Write
-  GrantedBy, GrantedAt, ExpiresAt?
+  PersonId                 -> kime
+  Kind                     -> Scope | Capability
+  -- Kind=Scope ise:
+  ScopeType                -> Product | Team | Customer
+  ScopeId                  -> hangi kayıt
+  Level                    -> Read | Write
+  -- Kind=Capability ise:
+  Capability               -> ör. "customer:create"
+  --
+  GrantedBy, GrantedAt
+  ExpiresAt?               -> opsiyonel (süreli olabilir)
 }
 ```
-"Bir yazılımcıya yetki atanırsa kendi ürünlerine veri girebilir" = o kişiye ilgili Product için **Write** grant'ı.
+- **Scope grant:** "Yazılımcıya yetki atanırsa kendi ürününe veri girebilir" = o kişiye ilgili Product için `Write` scope grant'ı.
+- **Capability grant:** "TeamLead'e müşteri oluşturma yetkisi atanabilir/silinebilir" = TeamLead'e `customer:create` capability grant'ı.
+- **PO yokken devir:** PO izne çıkınca TeamLead'e PO'nun ürünleri için `Write` scope grant'ı (+gerekirse `customer:create`) verilir; süreli (`ExpiresAt`) olabilir.
+
+**Grant verme yetkisi (kim kime grant atayabilir):**
+| Veren | Verebileceği grant |
+|---|---|
+| PlatformAdmin / Director | Her türlü |
+| PO | Kendi ürünleri için `Scope` (Read/Write) grant |
+| TeamLead | `customer:create` capability grant (atama/kaldırma) + kendi ekibinin ürünleri için PO-devir grant'ı |
 
 ---
 
@@ -93,30 +117,32 @@ Biçim: `<alan>:<aksiyon>`. (Öneri; onayda kesinleşir.)
 
 ---
 
-## 6. Rol → Yetenek Matrisi (taslak)
+## 6. Rol → Yetenek Matrisi — **güncellendi**
 
-| Yetenek | Admin | CTO | Director | TeamLead | Developer | ReadOnly |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|
-| customer:read | ✅ | ✅ | ✅ | ✅(K) | ✅(K) | ✅ |
-| customer:create | ✅ | ✅ | — | — | — | — |
-| customer:write/archive | ✅ | ✅ | — | — | — | — |
-| product:read | ✅ | ✅ | ✅ | ✅(K) | ✅(K) | ✅ |
-| product:create | ✅ | ✅ | — | ✅(K) | — | — |
-| product:write/assign | ✅ | ✅ | — | ✅(K) | grant(K) | — |
-| environment:write | ✅ | ✅ | — | ✅(K) | grant(K) | — |
-| credential:view | ✅ | ✅ | — | ✅(K) | ✅(K) | — |
-| credential:write | ✅ | ✅ | — | ✅(K) | grant(K) | — |
-| team:write/member | ✅ | ✅ | — | ✅(K) | — | — |
-| person:create/write | ✅ | ✅ | — | — | — | — |
-| kb:read | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| kb:write | ✅ | ✅ | — | ✅ | ✅(K) | — |
-| admin:* | ✅ | — | — | — | — | — |
+| Yetenek | Admin | Director | PO | CTO | TeamLead | Developer | ReadOnly |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| customer:read | ✅ | ✅ | ✅(K) | ✅ | ✅(K) | ✅(K) | (kapsam) |
+| customer:create | ✅ | ✅ | ✅ | — | grant | — | — |
+| customer:write/archive | ✅ | ✅ | ✅(K) | — | grant(K) | — | — |
+| product:read | ✅ | ✅ | ✅(K) | ✅ | ✅(K) | ✅(K) | (kapsam) |
+| product:create | ✅ | ✅ | ✅ | — | ✅(K) | — | — |
+| product:write/assign | ✅ | ✅ | ✅(K) | — | ✅(K) | grant(K) | — |
+| environment:write | ✅ | ✅ | ✅(K) | — | ✅(K) | grant(K) | — |
+| credential:view | ✅ | ✅ | ✅(K) | ✅* | ✅(K) | ✅(K) | (kapsam) |
+| credential:write | ✅ | ✅ | ✅(K) | — | ✅(K) | grant(K) | — |
+| team:write/member | ✅ | ✅ | ✅(K) | — | ✅(K) | — | — |
+| person:create/write | ✅ | ✅ | — | — | — | — | — |
+| kb:read | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅(kapsam) |
+| kb:write | ✅ | ✅ | ✅(K) | — | ✅(K) | ✅(K) | — |
+| grant ver/kaldır | ✅ | ✅ | kendi ürünü | — | customer:create + PO-devir | — | — |
+| admin:config | ✅ | (opsiyon) | — | — | — | — | — |
+| admin:users | ✅ | ✅ | — | — | — | — | — |
+| admin:audit | ✅ | ✅ | — | ✅(read) | — | — | — |
 
-- **(K)** = yetenek var **ama yalnızca kullanıcının kapsamındaki kayıtlarda** geçerli (Katman B).
-- **grant(K)** = yalnızca açık `AccessGrant` Write verilmişse, ve yine kapsam içinde.
-- Boş = yok.
-
-> CTO'nun müşteri/ürün oluşturmada global olması, PO'nun ise (PoPersonId üzerinden) kendi ürünlerinde yetkili olması bu matrisle örtüşür. "PO müşteri oluşturabilir" gereksinimi: PO'lara `customer:create` yeteneği verilebilir — bunu **onayda netleştirelim** (PO ayrı bir platform rolü mü, yoksa CTO/TeamLead'e mi yedirilecek?).
+- **(K)** = yetenek var **ama yalnızca kullanıcının kapsamındaki kayıtlarda** (Katman B).
+- **grant / grant(K)** = yalnızca açık `Grant` verilmişse (capability ve/veya scope).
+- **✅\*** (CTO credential:view) = gözlemci olarak metaveriyi görür; **şifre değerini görme** varsayılan kapalı, gerekiyorsa grant ile açılır (onayda netleşsin).
+- **(kapsam)** = ReadOnly'nin erişimi atandığı kapsamla sınırlı (global ya da kişisel).
 
 ---
 
@@ -182,10 +208,13 @@ YazabilirÜrün(user, p) = GlobalGörür(user)
 
 ---
 
-## 11. Açık Kararlar (onayda netleşecek)
+## 11. Kararlar (kullanıcı onayı — 2026-06-10)
 
-1. **PO bir platform rolü mü** yoksa yetenekleri CTO/TeamLead'e mi yediriyoruz? (PoPersonId zaten kapsam veriyor; soru yetenek tarafı.)
-2. **TeamLead müşteri oluşturabilsin mi?** (Şu an taslakta hayır; talep halinde `customer:create`.)
-3. **Director vs CTO** ayrımı: Director salt-okuma gözetim, CTO yazabilen üst yönetim — doğru mu?
-4. **ReadOnly** gerçekten her şeyi mi okusun, yoksa o da kapsamlı mı? (Taslak: global liste okuma.)
-5. **Grant'ın süresi/devri:** `ExpiresAt` ve "PO kendi ürününe grant verebilir mi" yetkisi.
+1. ✅ **PO platform rolü** (aynı zamanda ünvan). Müşteri + ürün oluşturur, sahibi olduğu ürünün tüm alt verisini (ekip/çalışan/ortam/kaynak) girer.
+2. ✅ **TeamLead müşteri oluşturamaz** ama `customer:create` grant'ını **atayıp kaldırabilir**; PO izne çıkınca onun ürünlerine **bakabilir** (PO-devir grant'ı).
+3. ✅ **Director = en üst yetkili** (tüm iş verisi + write). **CTO = gözlemci** (global salt-okuma), gerekirse Director seviyesine yükseltilebilir.
+4. ✅ **ReadOnly atandığı kapsama göre**: global atanırsa tüm sistemi, kişiye atanırsa kendi ürünlerini salt-okur.
+5. ✅ **Grant süreli olabilir** (`ExpiresAt`, zorunlu değil). **PO kendi ürününe grant verebilir.**
+
+### Kalan tek netleştirme
+- **Director'a `admin:config` (sistem/teknik config) de verilsin mi?** Taslak: hayır (PlatformAdmin'de kalır). "Director herşeye yetkili" istiyorsan açarız.
