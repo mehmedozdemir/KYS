@@ -5,7 +5,7 @@ export interface CustomFieldDef {
   id: string;
   fieldKey: string;
   displayName: string;
-  fieldType: number; // 0=Text 1=Number 2=Date 3=Boolean 4=Select 5=Url 6=Email
+  fieldType: string; // Text | Number | Date | Boolean | Select | Url | Email
   isRequired: boolean;
   defaultValue?: string;
   selectOptions?: string[];
@@ -35,14 +35,14 @@ export interface CustomFieldDef {
         @for (def of defs; track def.id) {
           <div class="form-group">
             <label>{{ def.displayName }} @if (def.isRequired) { <span class="required">*</span> }</label>
-            @if (def.fieldType === 4) {
+            @if (def.fieldType === 'Select') {
               <select [(ngModel)]="editValues[def.fieldKey]">
                 <option value="">Seçiniz...</option>
                 @for (opt of def.selectOptions ?? []; track opt) {
                   <option [value]="opt">{{ opt }}</option>
                 }
               </select>
-            } @else if (def.fieldType === 3) {
+            } @else if (def.fieldType === 'Boolean') {
               <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer">
                 <input type="checkbox"
                   [checked]="editValues[def.fieldKey] === 'true'"
@@ -70,19 +70,19 @@ export class CustomFieldInputsComponent {
   @Input() submitted = false;
   @Input() mode: 'view' | 'edit' = 'view';
 
-  inputType(fieldType: number): string {
+  inputType(fieldType: string): string {
     switch (fieldType) {
-      case 1: return 'number';
-      case 2: return 'date';
-      case 5: return 'url';
-      case 6: return 'email';
+      case 'Number': return 'number';
+      case 'Date': return 'date';
+      case 'Url': return 'url';
+      case 'Email': return 'email';
       default: return 'text';
     }
   }
 
   displayValue(def: CustomFieldDef, val: unknown): string {
     if (val === undefined || val === null || val === '') return '—';
-    if (def.fieldType === 3) return val ? 'Evet' : 'Hayır';
+    if (def.fieldType === 'Boolean') return val ? 'Evet' : 'Hayır';
     return String(val);
   }
 }
