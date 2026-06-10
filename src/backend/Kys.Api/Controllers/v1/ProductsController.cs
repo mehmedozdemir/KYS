@@ -145,7 +145,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> UpdateEndpoint(Guid productId, Guid endpointId, [FromBody] UpdateEndpointRequest request, CancellationToken ct)
     {
         await mediator.Send(new UpdateProductEndpointCommand(
-            endpointId, request.Name, request.Description, request.SortOrder,
+            productId, endpointId, request.Name, request.Description, request.SortOrder,
             request.DefaultBaseUrl, request.SwaggerUrl, request.HealthCheckUrl, request.DefaultAuthType), ct);
         return NoContent();
     }
@@ -156,7 +156,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [RequirePermission(Capabilities.ProductWrite)]
     public async Task<IActionResult> DeleteEndpoint(Guid productId, Guid endpointId, CancellationToken ct)
     {
-        await mediator.Send(new DeleteProductEndpointCommand(endpointId), ct);
+        await mediator.Send(new DeleteProductEndpointCommand(productId, endpointId), ct);
         return NoContent();
     }
 
@@ -181,7 +181,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> UpdateResourceTemplate(Guid productId, Guid templateId, [FromBody] UpdateResourceTemplateRequest request, CancellationToken ct)
     {
         await mediator.Send(new UpdateProductResourceTemplateCommand(
-            templateId, request.Name, request.Description,
+            productId, templateId, request.Name, request.Description,
             request.IsRequired, request.CanBeShared, request.SortOrder), ct);
         return NoContent();
     }
@@ -190,7 +190,7 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     [RequirePermission(Capabilities.ProductWrite)]
     public async Task<IActionResult> DeleteResourceTemplate(Guid productId, Guid templateId, CancellationToken ct)
     {
-        await mediator.Send(new DeleteProductResourceTemplateCommand(templateId), ct);
+        await mediator.Send(new DeleteProductResourceTemplateCommand(productId, templateId), ct);
         return NoContent();
     }
 }

@@ -1,3 +1,4 @@
+using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
 using MediatR;
 
@@ -11,4 +12,7 @@ public sealed record SetEnvironmentEndpointUrlCommand(
     string? HealthCheckUrl,
     AuthType? AuthType,
     Dictionary<string, object?> AuthConfig,
-    string? Notes) : IRequest<Guid>;
+    string? Notes) : IRequest<Guid>, IScopedCommand
+{
+    public ScopeTarget ScopeTarget => new(ScopeKind.Environment, CustomerEnvironmentId);
+}
