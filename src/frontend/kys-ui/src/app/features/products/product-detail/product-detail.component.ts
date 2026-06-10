@@ -816,13 +816,12 @@ export class ProductDetailComponent implements OnInit {
   activeTab = signal('info');
 
   customFieldDefs = signal<CustomFieldDef[]>([]);
-  private cfDefsLoaded = false;
   editCfValues: Record<string, string> = {};
 
   private loadCustomFieldDefs(onDone?: () => void): void {
-    if (this.cfDefsLoaded) { onDone?.(); return; }
     this.http.get<CustomFieldDef[]>(`${environment.apiUrl}/custom-field-definitions?entityType=1`).subscribe({
-      next: defs => { this.customFieldDefs.set(defs); this.cfDefsLoaded = true; onDone?.(); }
+      next: defs => { this.customFieldDefs.set(defs); onDone?.(); },
+      error: () => { onDone?.(); }
     });
   }
 
