@@ -1,15 +1,20 @@
+using Kys.Domain.Authorization;
+using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
 using MediatR;
 
 namespace Kys.Application.Environments.Queries.GetEnvironmentDetail;
 
-public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repository)
+public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repository, IScopeService scope)
     : IRequestHandler<GetEnvironmentDetailQuery, EnvironmentDetailDto?>
 {
     public async Task<EnvironmentDetailDto?> Handle(GetEnvironmentDetailQuery request, CancellationToken ct)
     {
         var env = await repository.GetEnvironmentByIdAsync(request.EnvironmentId, ct);
         if (env is null) return null;
+
+        if (!await scope.CanReadAsync(new ScopeTarget(ScopeKind.Environment, env.Id), ct))
+            throw new ForbiddenException("Bu ortamı görme yetkiniz yok.");
 
         // Paylaşımlı kaynakların ortak credential'larını (şifreli alanlar) yükle
         var sharedCredentialMap = new Dictionary<Guid, IReadOnlyList<CredentialStubDto>>();
