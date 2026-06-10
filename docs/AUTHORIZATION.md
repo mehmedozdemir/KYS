@@ -206,7 +206,7 @@ YazabilirÜrün(user, p) = GlobalGörür(user)
 - **Faz 3 — Okuma kapsamı:** ✅ (ürün + müşteri) Scoped roller için liste sorguları kişiye filtrelenir; detay (GET by id) erişimi kapsam dışıysa 403. Global okuma `scope:global` yeteneği ile (Admin/Director `*`, **CTO açık**). `IScopeService.CanReadAsync` + repo `GetAllAsync(scopeUserId)`. Ürün okuma kapsamı = PO **VEYA** aktif ekip üyeliği **VEYA** aktif atama; müşteri = kapsamdaki ürünü kullanan.
 - **Faz 3b — Ortam okuma kapsamı:** ✅ Ortam detayı + müşteri-ürün ortam listesi kapsam dışıysa 403 (`CanReadAsync` Environment/CustomerProduct/EnvironmentResource türlerini de kapsar). **Ekip ve kişi listeleri bilinçli olarak global** (org dizini; gizli veri yok, erişilebilirliği korunur).
 - **Faz 4a — Açık grant (backend):** ✅ `AccessGrant` tablosu (Scope/Capability, süreli) + `IGrantService`. ScopeService artık sahiplik yoksa aktif **scope grant**'ı (Product/Customer çözümlemesiyle) dikkate alır; `PermissionAuthorizationHandler` statik izin yoksa aktif **capability grant**'ı kontrol eder. Admin CRUD API (`/admin/access-grants`, `admin:users`). Team-grant ürün devralımı + PO/TeamLead'in grant verme yetkisi sonraki adımda.
-- **Faz 4b — Açık grant (ekran):** admin "Erişim Yetkileri" arayüzü.
+- **Faz 4b — Açık grant (ekran):** ✅ admin "Erişim Yetkileri" arayüzü (`/admin/access-grants`): grant listesi + kaldırma + ekleme (kişi/tür/kapsam-hedef/seviye/yetenek/süre). Menü + admin paneli kartı.
 - **Faz 5 — Frontend cila:** Yeteneğe göre buton/menü gizleme, "erişim yok" UX, kapsam rozeti.
 
 ---

@@ -32,5 +32,9 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'resource-types',
     loadComponent: () => import('./resource-types/resource-types.component').then(m => m.ResourceTypesComponent)
+  },
+  {
+    path: 'access-grants',
+    loadComponent: () => import('./access-grants/access-grants.component').then(m => m.AccessGrantsComponent)
   }
 ];
