@@ -158,6 +158,10 @@ Her geliştirme görevi için aşağıdaki adımlar **tartışmasız** uygulanı
    git merge --no-ff feature/environment-type-crud
    git branch -d feature/environment-type-crud
    ```
+6. **Push et:** Her merge işleminden sonra `main`'i uzağa gönder
+   ```
+   git push origin main
+   ```
 
 > **Not:** Sadece dokümantasyon güncellemeleri (CHANGELOG, PROJECT_PLAN, CLAUDE.md) doğrudan `main`'e commit edilebilir.
 
