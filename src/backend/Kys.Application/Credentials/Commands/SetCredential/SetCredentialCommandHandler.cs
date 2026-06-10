@@ -9,12 +9,21 @@ namespace Kys.Application.Credentials.Commands.SetCredential;
 public sealed class SetCredentialCommandHandler(
     IEnvironmentRepository envRepository,
     IEncryptionService encryption,
+    IResourceAuthorizationService authorization,
     IUnitOfWork unitOfWork) : IRequestHandler<SetCredentialCommand, Guid>
 {
     public async Task<Guid> Handle(SetCredentialCommand request, CancellationToken ct)
     {
         if (request.EnvironmentResourceId is null && request.SharedResourceId is null && request.EndpointUrlId is null)
             throw new DomainException("EnvironmentResourceId, SharedResourceId or EndpointUrlId must be provided.");
+
+        // Katman B — kaynağın sahiplik kapsamı kontrolü
+        var canWrite =
+            request.EnvironmentResourceId.HasValue ? await authorization.CanAccessEnvironmentResourceAsync(request.EnvironmentResourceId.Value, ct) :
+            request.EndpointUrlId.HasValue ? await authorization.CanAccessEndpointUrlAsync(request.EndpointUrlId.Value, ct) :
+            await authorization.CanAccessSharedResourceAsync(request.SharedResourceId!.Value, ct);
+        if (!canWrite)
+            throw new ForbiddenException("Bu kaynağın bilgilerini düzenleme yetkiniz yok.");
 
         var (encryptedValue, iv) = encryption.EncryptWithRandomIv(request.PlainValue);
 

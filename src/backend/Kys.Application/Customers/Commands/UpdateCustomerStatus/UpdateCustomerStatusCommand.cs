@@ -1,3 +1,4 @@
+using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
 using MediatR;
 
@@ -8,4 +9,7 @@ public sealed record UpdateCustomerStatusCommand(
     CustomerStatus NewStatus,
     DateOnly? ServiceEndedAt,
     string? ChurnReason
-) : IRequest;
+) : IRequest, IScopedCommand
+{
+    public ScopeTarget ScopeTarget => new(ScopeKind.Customer, Id);
+}
