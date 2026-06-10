@@ -205,7 +205,8 @@ YazabilirÜrün(user, p) = GlobalGörür(user)
 - **Faz 2b — Müşteri + credential yazma kapsamı:** ✅ Müşteri yazma = oluşturan (`CreatedBy`) **VEYA** kapsamdaki ürünü kullanan (PO/ekip); 8 müşteri yazma komutu marker'landı. Credential set/sil = `ResourceAuthorizationService` ile kaynağın kapsamı kontrol edilir (env-resource/endpoint/shared). Müşteri sahipliği için `TimestampInterceptor`'ın doldurduğu `AuditableEntity.CreatedBy` kullanıldı (yeni alan/migration gerekmedi).
 - **Faz 3 — Okuma kapsamı:** ✅ (ürün + müşteri) Scoped roller için liste sorguları kişiye filtrelenir; detay (GET by id) erişimi kapsam dışıysa 403. Global okuma `scope:global` yeteneği ile (Admin/Director `*`, **CTO açık**). `IScopeService.CanReadAsync` + repo `GetAllAsync(scopeUserId)`. Ürün okuma kapsamı = PO **VEYA** aktif ekip üyeliği **VEYA** aktif atama; müşteri = kapsamdaki ürünü kullanan.
 - **Faz 3b — Ortam okuma kapsamı:** ✅ Ortam detayı + müşteri-ürün ortam listesi kapsam dışıysa 403 (`CanReadAsync` Environment/CustomerProduct/EnvironmentResource türlerini de kapsar). **Ekip ve kişi listeleri bilinçli olarak global** (org dizini; gizli veri yok, erişilebilirliği korunur).
-- **Faz 4 — Açık grant:** `AccessGrant` tablosu + migration + admin "Erişim Yetkileri" ekranı.
+- **Faz 4a — Açık grant (backend):** ✅ `AccessGrant` tablosu (Scope/Capability, süreli) + `IGrantService`. ScopeService artık sahiplik yoksa aktif **scope grant**'ı (Product/Customer çözümlemesiyle) dikkate alır; `PermissionAuthorizationHandler` statik izin yoksa aktif **capability grant**'ı kontrol eder. Admin CRUD API (`/admin/access-grants`, `admin:users`). Team-grant ürün devralımı + PO/TeamLead'in grant verme yetkisi sonraki adımda.
+- **Faz 4b — Açık grant (ekran):** admin "Erişim Yetkileri" arayüzü.
 - **Faz 5 — Frontend cila:** Yeteneğe göre buton/menü gizleme, "erişim yok" UX, kapsam rozeti.
 
 ---

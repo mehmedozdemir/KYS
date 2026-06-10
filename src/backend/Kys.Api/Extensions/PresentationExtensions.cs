@@ -27,7 +27,7 @@ public static class PresentationExtensions
         services.AddJwtAuthentication(configuration);
         services.AddAuthorization();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-        services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
         services.AddSwaggerWithVersioning();
 

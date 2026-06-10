@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<ITeamMembershipRepository, TeamMembershipRepository>();
         services.AddScoped<ISystemRoleRepository, SystemRoleRepository>();
+        services.AddScoped<IAccessGrantRepository, AccessGrantRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICustomFieldDefinitionRepository, CustomFieldDefinitionRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
@@ -68,6 +69,7 @@ public static class DependencyInjection
         // Services
         services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
         services.AddScoped<Kys.Domain.Authorization.IScopeService, ScopeService>();
+        services.AddScoped<Kys.Domain.Authorization.IGrantService, GrantService>();
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<IJwtService, JwtService>();

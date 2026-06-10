@@ -1,4 +1,5 @@
 using Kys.Domain.Authorization;
+using Kys.Domain.Enumerations;
 using Kys.Domain.Interfaces.Services;
 using Kys.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,8 @@ namespace Kys.Infrastructure.Services;
 /// </summary>
 public sealed class ScopeService(
     AppDbContext db,
-    ICurrentUserService currentUser) : IScopeService
+    ICurrentUserService currentUser,
+    IGrantService grants) : IScopeService
 {
     public Guid? CurrentUserId => currentUser.UserId;
 
@@ -28,7 +30,7 @@ public sealed class ScopeService(
 
         var userId = currentUser.UserId.Value;
 
-        return target.Kind switch
+        var owned = target.Kind switch
         {
             // Ürün okuma kapsamı: PO VEYA aktif ekip üyeliği VEYA aktif atama
             ScopeKind.Product => await db.Products
@@ -72,6 +74,9 @@ public sealed class ScopeService(
 
             _ => await CanWriteAsync(target, ct)
         };
+
+        // Sahiplik yoksa açık Read/Write grant'ı dikkate al
+        return owned || await grants.HasScopeAsync(userId, target, GrantLevel.Read, ct);
     }
 
     public async Task<bool> CanWriteAsync(ScopeTarget target, CancellationToken ct = default)
@@ -85,7 +90,7 @@ public sealed class ScopeService(
 
         var userId = currentUser.UserId.Value;
 
-        return target.Kind switch
+        var owned = target.Kind switch
         {
             ScopeKind.Product => await db.Products
                 .Where(p => p.Id == target.Id)
@@ -127,5 +132,8 @@ public sealed class ScopeService(
 
             _ => false
         };
+
+        // Sahiplik yoksa açık Write grant'ı dikkate al
+        return owned || await grants.HasScopeAsync(userId, target, GrantLevel.Write, ct);
     }
 }
