@@ -16,6 +16,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.30.0] — 2026-06-10 (Sprint 33 — Yetkilendirme Faz 4b: Erişim Yetkileri Ekranı)
+
+### Eklendi
+- **Admin "Erişim Yetkileri" ekranı** (`/admin/access-grants`): grant listesi (kişi/tür/hedef/seviye/bitiş) + kaldırma + "Yeni Yetki" formu (kapsam veya yetenek, ürün/müşteri hedefi, Read/Write, opsiyonel süre)
+- Menüye (Yönetim) + admin paneline kart eklendi
+
+---
+
 ## [0.29.0] — 2026-06-10 (Sprint 32 — Yetkilendirme Faz 4a: Açık Grant (Backend))
 
 ### Eklendi
