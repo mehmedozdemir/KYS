@@ -835,8 +835,8 @@ export class ProductDetailComponent implements OnInit {
       const raw = this.editCfValues[def.fieldKey];
       if (!raw && raw !== 'false') continue;
       hasAny = true;
-      if (def.fieldType === 1) result[def.fieldKey] = Number(raw);
-      else if (def.fieldType === 3) result[def.fieldKey] = raw === 'true';
+      if (def.fieldType === 'Number') result[def.fieldKey] = Number(raw);
+      else if (def.fieldType === 'Boolean') result[def.fieldKey] = raw === 'true';
       else result[def.fieldKey] = raw;
     }
     return hasAny ? result : null;
@@ -922,7 +922,7 @@ export class ProductDetailComponent implements OnInit {
       for (const def of this.customFieldDefs()) {
         const val = existing[def.fieldKey];
         if (val !== undefined && val !== null) {
-          this.editCfValues[def.fieldKey] = def.fieldType === 3 ? (val ? 'true' : 'false') : String(val);
+          this.editCfValues[def.fieldKey] = def.fieldType === 'Boolean' ? (val ? 'true' : 'false') : String(val);
         }
       }
     });

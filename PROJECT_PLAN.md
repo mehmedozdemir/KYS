@@ -361,6 +361,12 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Düzeltme — Özel Alan Enum Eşleşmesi ✅ (2026-06-10)
+
+- [x] Frontend'de özel alan `entityType`/`fieldType` sayısal karşılaştırmaları string enum adına çevrildi (JsonStringEnumConverter uyumu) → admin liste + ürün/müşteri form tip render hatası giderildi
+
+---
+
 ## Sprint 27 — Hesabım & Şifre Değiştirme ✅ (2026-06-10)
 
 - [x] `ChangePassword` command + `POST /auth/change-password` (mevcut şifre doğrulama, min 8, refresh token sıfırlama)

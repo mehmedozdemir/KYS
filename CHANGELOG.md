@@ -16,6 +16,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.24.1] — 2026-06-10 (Düzeltme — Özel Alan Enum Eşleşmesi)
+
+### Düzeltildi
+- **Özel alanlar admin listesinde görünmüyordu**: Liste `entityType === 0/1` (sayı) ile filtreliyordu ama API `JsonStringEnumConverter` nedeniyle `"Customer"/"Product"` (string) döndürüyor → filtre boş kalıyordu. Karşılaştırma string'e çevrildi
+- **Ürün/müşteri formunda özel alan tipi yanlış görünüyordu** (seçim listesi textbox olarak): `fieldType === 4` (sayı) yerine artık `=== 'Select'` (string) karşılaştırması; tüm tip eşlemeleri (Number/Date/Boolean/Url/Email/Select) string enum adına göre düzeltildi
+- Etkilenen bileşenler: shared `custom-field-inputs`, admin `custom-fields`, müşteri liste/detay, ürün liste/detay
+
+---
+
 ## [0.24.0] — 2026-06-10 (Sprint 27 — Hesabım & Şifre Değiştirme)
 
 ### Eklendi

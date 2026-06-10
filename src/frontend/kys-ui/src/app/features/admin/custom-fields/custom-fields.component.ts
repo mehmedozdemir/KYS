@@ -7,10 +7,10 @@ import { environment } from '../../../../environments/environment';
 
 interface CustomFieldDef {
   id: string;
-  entityType: number; // 0=Customer,1=Product
+  entityType: string; // Customer | Product
   fieldKey: string;
   displayName: string;
-  fieldType: number; // 0=Text,1=Number,2=Date,3=Boolean,4=Select,5=Url,6=Email
+  fieldType: string;  // Text | Number | Date | Boolean | Select | Url | Email
   isRequired: boolean;
   defaultValue: string | null;
   selectOptions: string[] | null;
@@ -19,9 +19,12 @@ interface CustomFieldDef {
   isActive: boolean;
 }
 
-const FIELD_TYPE_LABEL: Record<number, string> = {
-  0: 'Metin', 1: 'Sayı', 2: 'Tarih', 3: 'Evet/Hayır', 4: 'Seçim Listesi', 5: 'URL', 6: 'E-posta'
+const FIELD_TYPE_LABEL: Record<string, string> = {
+  Text: 'Metin', Number: 'Sayı', Date: 'Tarih', Boolean: 'Evet/Hayır', Select: 'Seçim Listesi', Url: 'URL', Email: 'E-posta'
 };
+// Form select'leri sayısal index kullanır; enum adı <-> index dönüşümü için
+const FIELD_TYPE_NAMES = ['Text', 'Number', 'Date', 'Boolean', 'Select', 'Url', 'Email'];
+const ENTITY_TYPE_NAMES = ['Customer', 'Product'];
 
 @Component({
   selector: 'app-custom-fields',
@@ -275,8 +278,8 @@ export class CustomFieldsComponent implements OnInit {
   allFields = signal<CustomFieldDef[]>([]);
   showInactive = false;
 
-  customerFields = computed(() => this.allFields().filter(f => f.entityType === 0));
-  productFields = computed(() => this.allFields().filter(f => f.entityType === 1));
+  customerFields = computed(() => this.allFields().filter(f => f.entityType === 'Customer'));
+  productFields = computed(() => this.allFields().filter(f => f.entityType === 'Product'));
 
   showModal = signal(false);
   saving = signal(false);
@@ -311,7 +314,7 @@ export class CustomFieldsComponent implements OnInit {
 
   switchTab(t: number) { this.entityTab.set(t); }
 
-  fieldTypeLabel(t: number) { return FIELD_TYPE_LABEL[t] ?? t; }
+  fieldTypeLabel(t: string) { return FIELD_TYPE_LABEL[t] ?? t; }
 
   slugify(v: string) { return v.toLowerCase().replace(/[^a-z0-9_]/g, '_'); }
 
@@ -327,10 +330,10 @@ export class CustomFieldsComponent implements OnInit {
   openEdit(f: CustomFieldDef) {
     this.editingId = f.id;
     this.form = {
-      entityType: String(f.entityType),
+      entityType: String(Math.max(0, ENTITY_TYPE_NAMES.indexOf(f.entityType))),
       fieldKey: f.fieldKey,
       displayName: f.displayName,
-      fieldType: String(f.fieldType),
+      fieldType: String(Math.max(0, FIELD_TYPE_NAMES.indexOf(f.fieldType))),
       isRequired: f.isRequired,
       defaultValue: f.defaultValue ?? '',
       groupName: f.groupName ?? '',

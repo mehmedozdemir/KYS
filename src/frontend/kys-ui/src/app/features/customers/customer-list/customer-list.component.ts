@@ -12,7 +12,7 @@ interface CustomFieldDef {
   id: string;
   fieldKey: string;
   displayName: string;
-  fieldType: number; // 0=Text,1=Number,2=Date,3=Boolean,4=Select,5=Url,6=Email
+  fieldType: string; // Text | Number | Date | Boolean | Select | Url | Email
   isRequired: boolean;
   defaultValue: string | null;
   selectOptions: string[] | null;
@@ -215,14 +215,14 @@ interface Customer {
               @for (def of customFieldDefs(); track def.id) {
                 <div class="form-group">
                   <label>{{ def.displayName }} @if (def.isRequired) { <span class="required">*</span> }</label>
-                  @if (def.fieldType === 4) {
+                  @if (def.fieldType === 'Select') {
                     <select [(ngModel)]="cfValues[def.fieldKey]">
                       <option value="">Seçiniz...</option>
                       @for (opt of def.selectOptions ?? []; track opt) {
                         <option [value]="opt">{{ opt }}</option>
                       }
                     </select>
-                  } @else if (def.fieldType === 3) {
+                  } @else if (def.fieldType === 'Boolean') {
                     <label class="checkbox-label" style="font-weight:400">
                       <input type="checkbox" [checked]="cfValues[def.fieldKey] === 'true'" (change)="cfValues[def.fieldKey] = $any($event.target).checked ? 'true' : 'false'" />
                       Evet
@@ -462,12 +462,12 @@ export class CustomerListComponent implements OnInit {
     };
   }
 
-  cfInputType(fieldType: number): string {
+  cfInputType(fieldType: string): string {
     switch (fieldType) {
-      case 1: return 'number';
-      case 2: return 'date';
-      case 5: return 'url';
-      case 6: return 'email';
+      case 'Number': return 'number';
+      case 'Date': return 'date';
+      case 'Url': return 'url';
+      case 'Email': return 'email';
       default: return 'text';
     }
   }
@@ -481,8 +481,8 @@ export class CustomerListComponent implements OnInit {
       const raw = this.cfValues[def.fieldKey];
       if (!raw && raw !== 'false') continue;
       hasAny = true;
-      if (def.fieldType === 1) result[def.fieldKey] = Number(raw);
-      else if (def.fieldType === 3) result[def.fieldKey] = raw === 'true';
+      if (def.fieldType === 'Number') result[def.fieldKey] = Number(raw);
+      else if (def.fieldType === 'Boolean') result[def.fieldKey] = raw === 'true';
       else result[def.fieldKey] = raw;
     }
     return hasAny ? result : null;
