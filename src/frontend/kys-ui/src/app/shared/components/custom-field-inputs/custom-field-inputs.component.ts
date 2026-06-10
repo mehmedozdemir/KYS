@@ -61,7 +61,28 @@ export interface CustomFieldDef {
         }
       }
     }
-  `
+  `,
+  styles: [`
+    :host { display: contents; }
+
+    /* Edit modu */
+    .section-title { font-size: 0.8125rem; font-weight: 700; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.05em; padding-top: 0.5rem; margin-bottom: 0.25rem; border-top: 1px solid var(--border-light); }
+    .form-group { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 0.875rem;
+      label { font-size: 0.875rem; font-weight: 500; color: var(--text); }
+      input, select { padding: 0.5rem 0.75rem; border: 1px solid var(--border-strong); border-radius: 0.375rem; font-size: 0.875rem; width: 100%; box-sizing: border-box; background: var(--surface); color: var(--text-strong);
+        &:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft-bg); } }
+    }
+    .required { color: var(--danger); }
+    .error-msg { font-size: 0.75rem; color: var(--danger); }
+
+    /* View modu */
+    .custom-fields-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-light);
+      h3 { font-size: 0.9375rem; font-weight: 600; color: var(--text-strong); margin-bottom: 0.75rem; } }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .info-item { display: flex; flex-direction: column; gap: 0.25rem;
+      label { font-size: 0.75rem; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.04em; }
+      span { font-size: 0.875rem; color: var(--text-strong); } }
+  `]
 })
 export class CustomFieldInputsComponent {
   @Input() defs: CustomFieldDef[] = [];

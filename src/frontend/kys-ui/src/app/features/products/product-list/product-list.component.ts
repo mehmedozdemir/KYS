@@ -18,8 +18,8 @@ interface CustomFieldDef {
 // 0=SaaS, 1=CustomerBased, 2=Hybrid | 0=Active, 1=Deprecated, 2=Discontinued
 const TYPE_LABELS: Record<number, string> = { 0: 'SaaS', 1: 'Müşteriye Özel', 2: 'Hibrit' };
 const TYPE_CSS: Record<number, string> = { 0: 'badge--saas', 1: 'badge--custom', 2: 'badge--hybrid' };
-const STATUS_LABELS: Record<number, string> = { 0: 'Aktif', 1: 'Kullanımdan Kalkıyor', 2: 'Kapatıldı' };
-const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--deprecated', 2: 'badge--archived' };
+const STATUS_LABELS: Record<string, string> = { Active: 'Aktif', Deprecated: 'Kullanımdan Kalkıyor', Discontinued: 'Kapatıldı' };
+const STATUS_CSS: Record<string, string> = { Active: 'badge--active', Deprecated: 'badge--deprecated', Discontinued: 'badge--archived' };
 
 interface TeamBadge {
   teamId: string;
@@ -32,7 +32,7 @@ interface ProductListItem {
   name: string;
   code: string;
   productType: number;
-  status: number;
+  status: string;
   poName: string | null;
   teamCount: number;
   assignmentCount: number;
@@ -474,8 +474,8 @@ export class ProductListComponent implements OnInit {
 
   typeLabel(t: number) { return TYPE_LABELS[t] ?? t; }
   typeCss(t: number) { return TYPE_CSS[t] ?? ''; }
-  statusLabel(s: number) { return STATUS_LABELS[s] ?? s; }
-  statusCss(s: number) { return STATUS_CSS[s] ?? ''; }
+  statusLabel(s: string) { return STATUS_LABELS[s] ?? s; }
+  statusCss(s: string) { return STATUS_CSS[s] ?? ''; }
 
   goToTeam(teamId: string) { this.router.navigate(['/teams', teamId]); }
 
