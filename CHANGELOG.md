@@ -16,6 +16,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.23.0] — 2026-06-10 (Sprint 26 — Ürün Ekip/Çalışan Kaldırma)
+
+### Eklendi
+- **Ürün detayında ekip ve çalışan kaldırma**: Ekipler sekmesinde ekip kartına, Çalışanlar sekmesinde satıra çöp kutusu butonu eklendi; onay sonrası atama kaldırılır
+- **`DELETE /products/{id}/teams/{teamId}`** ve **`DELETE /products/{id}/assignments/{personId}`** endpoint'leri + `RemoveTeamFromProduct` / `RemovePersonFromProduct` command'ları
+
+---
+
 ## [0.22.0] — 2026-06-10 (Sprint 25 — Dashboard Sadeleştirme)
 
 ### Değişti

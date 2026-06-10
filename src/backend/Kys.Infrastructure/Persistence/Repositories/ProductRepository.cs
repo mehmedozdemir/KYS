@@ -78,6 +78,9 @@ public sealed class ProductRepository(AppDbContext dbContext) : IProductReposito
     public async Task AddTeamAssignmentAsync(ProductTeam assignment, CancellationToken ct = default)
         => await dbContext.ProductTeams.AddAsync(assignment, ct);
 
+    public void RemoveTeamAssignment(ProductTeam assignment)
+        => dbContext.ProductTeams.Remove(assignment);
+
     public async Task<IReadOnlyList<ProductAssignment>> GetAssignmentsAsync(Guid productId, CancellationToken ct = default)
         => await dbContext.ProductAssignments
             .Include(a => a.Person)
@@ -94,6 +97,9 @@ public sealed class ProductRepository(AppDbContext dbContext) : IProductReposito
 
     public void UpdatePersonAssignment(ProductAssignment assignment)
         => dbContext.ProductAssignments.Update(assignment);
+
+    public void RemovePersonAssignment(ProductAssignment assignment)
+        => dbContext.ProductAssignments.Remove(assignment);
 
     public async Task<IReadOnlyList<ProductResourceTemplate>> GetResourceTemplatesAsync(Guid productId, CancellationToken ct = default)
         => await dbContext.ProductResourceTemplates
