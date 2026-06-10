@@ -67,6 +67,7 @@ public static class DependencyInjection
 
         // Services
         services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
+        services.AddScoped<Kys.Domain.Authorization.IScopeService, ScopeService>();
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<IJwtService, JwtService>();

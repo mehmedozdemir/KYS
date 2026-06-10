@@ -367,6 +367,19 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 29 — Yetkilendirme Faz 2 (Yazma Kapsamı) ✅ (2026-06-10)
+
+Bkz. `docs/AUTHORIZATION.md` §10. **Katman B (kayıt düzeyi yazma)**.
+
+- [x] `IScopeService` + `ScopeTarget`/`ScopeKind` + `IScopedCommand` marker (Domain)
+- [x] `ScopeAuthorizationBehavior` (MediatR pipeline) + `ScopeService` impl + DI
+- [x] 19 yazma komutu marker'landı (ürün + ortam + alt kayıtları); endpoint/template komutlarına `ProductId`
+- [x] `ScopeAuthorizationBehaviorTests` (3 test geçti)
+- [ ] **Faz 2b:** müşteri + credential yazma kapsamı
+- [ ] **Faz 3:** okuma kapsamı (liste filtreleme)
+
+---
+
 ## Sprint 28 — Yetkilendirme Faz 0+1 ✅ (2026-06-10)
 
 Bkz. `docs/AUTHORIZATION.md`. İki katmanlı modelin **Katman A (aksiyon yetkisi)** kısmı.

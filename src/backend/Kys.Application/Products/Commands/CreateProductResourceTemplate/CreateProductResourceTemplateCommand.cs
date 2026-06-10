@@ -1,3 +1,4 @@
+using Kys.Domain.Authorization;
 using MediatR;
 
 namespace Kys.Application.Products.Commands.CreateProductResourceTemplate;
@@ -11,4 +12,7 @@ public sealed record CreateProductResourceTemplateCommand(
     bool CanBeShared,
     int SortOrder,
     Guid? SharedResourceId = null
-) : IRequest<Guid>;
+) : IRequest<Guid>, IScopedCommand
+{
+    public ScopeTarget ScopeTarget => new(ScopeKind.Product, ProductId);
+}

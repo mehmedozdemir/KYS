@@ -199,9 +199,10 @@ YazabilirÜrün(user, p) = GlobalGörür(user)
 
 ## 10. Fazlı Uygulama Planı
 
-- **Faz 0 — Temel:** Bu doküman + yetenek sabitleri + rol→yetenek seed güncellemesi (+CTO) + JWT'ye roller/yetenekler + `IScopeService` iskeleti.
-- **Faz 1 — Aksiyon kapısı:** Tüm yazma endpoint'lerine yetenek politikası. (En hızlı güvenlik kazancı.)
-- **Faz 2 — Yazma kapsamı:** Müşteri/ürün/ortam/credential yazımında sahiplik kontrolü (`RequireWrite`).
+- **Faz 0 — Temel:** ✅ Yetenek sabitleri + rol→yetenek seed (+PO, +CTO) + wildcard.
+- **Faz 1 — Aksiyon kapısı:** ✅ Tüm yazma endpoint'lerine yetenek politikası.
+- **Faz 2 — Yazma kapsamı:** ✅ (ürün + ortam) `IScopeService` + `IScopedCommand` marker + `ScopeAuthorizationBehavior`. Ürün/ortam ve alt kayıtları (endpoint, kaynak şablonu, ortam kaynağı, endpoint URL'i, barındırma platformu) yazımı: global rol **VEYA** PO **VEYA** sahibi ekibin aktif üyesi.
+  - **Ertelendi (Faz 2b):** Müşteri yazma kapsamı (müşteri sahiplik modeli gerek; şu an `customer:*` yeteneğiyle sınırlı) + credential yazma kapsamı (reveal zaten `ResourceAuthorizationService` ile kapsamlı).
 - **Faz 3 — Okuma kapsamı:** Scoped roller için liste sorgularının filtrelenmesi (ürün→müşteri→ortam sırası).
 - **Faz 4 — Açık grant:** `AccessGrant` tablosu + migration + admin "Erişim Yetkileri" ekranı.
 - **Faz 5 — Frontend cila:** Yeteneğe göre buton/menü gizleme, "erişim yok" UX, kapsam rozeti.

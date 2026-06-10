@@ -1,3 +1,4 @@
+using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
 using MediatR;
 
@@ -13,4 +14,7 @@ public sealed record CreateProductEndpointCommand(
     string? SwaggerUrl,
     string? HealthCheckUrl,
     AuthType DefaultAuthType
-) : IRequest<Guid>;
+) : IRequest<Guid>, IScopedCommand
+{
+    public ScopeTarget ScopeTarget => new(ScopeKind.Product, ProductId);
+}

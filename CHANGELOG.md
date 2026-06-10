@@ -16,6 +16,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.26.0] — 2026-06-10 (Sprint 29 — Yetkilendirme Faz 2: Yazma Kapsamı)
+
+### Eklendi / Güvenlik
+- **Kayıt düzeyi yazma yetkisi (Katman B)**: `IScopeService` + `IScopedCommand` marker + `ScopeAuthorizationBehavior` (MediatR pipeline). Yetenek (Katman A) "ne tür", kapsam (Katman B) "hangi kayıt" sorusunu çözer
+- **Ürün ve ortam yazımı sahipliğe bağlandı**: ürün güncelle/sil/atama, endpoint & kaynak şablonu CRUD, ortam oluştur/sil, ortam kaynağı/endpoint URL'i/barındırma platformu artık **global rol (PlatformAdmin/Director) VEYA ürünün PO'su VEYA sahibi ekibin aktif üyesi** ile sınırlı; aksi halde 403
+- Birim test: `ScopeAuthorizationBehaviorTests`
+
+### Notlar
+- **Ertelendi (Faz 2b):** müşteri + credential yazma kapsamı. Okuma kapsamı (liste filtreleme) Faz 3; açık `Grant` Faz 4.
+
+---
+
 ## [0.25.0] — 2026-06-10 (Sprint 28 — Yetkilendirme Faz 0+1: Aksiyon Kapısı)
 
 ### Eklendi
