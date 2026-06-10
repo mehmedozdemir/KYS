@@ -9,9 +9,16 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
 {
     public async Task<(IReadOnlyList<Customer> Items, int TotalCount)> GetAllAsync(
         string? search, CustomerStatus? status, bool includeArchived,
-        int page, int pageSize, CancellationToken ct = default)
+        int page, int pageSize, Guid? scopeUserId = null, CancellationToken ct = default)
     {
         var query = dbContext.Customers.AsNoTracking();
+
+        // Katman B okuma kapsamı: scopeUserId verildiyse yalnızca kapsamdaki ürünü kullanan müşteriler
+        if (scopeUserId is { } uid)
+            query = query.Where(c => c.Products.Any(cp =>
+                cp.Product.PoPersonId == uid ||
+                cp.Product.Teams.Any(pt => pt.Team.Memberships.Any(m => m.PersonId == uid && m.EndDate == null)) ||
+                cp.Product.Assignments.Any(a => a.PersonId == uid && a.IsActive)));
 
         if (!includeArchived)
             query = query.Where(c => !c.IsArchived);

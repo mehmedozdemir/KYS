@@ -80,7 +80,7 @@ public sealed class SystemRoleConfiguration : IEntityTypeConfiguration<SystemRol
                 Name = "CTO",
                 Code = SystemRole.Codes.CTO,
                 Description = "Gözlemci — tüm sistemi salt okur",
-                Permissions = ["customer:read", "product:read", "team:read", "person:read", "environment:read", "kb:read", "admin:audit"],
+                Permissions = ["scope:global", "customer:read", "product:read", "team:read", "person:read", "environment:read", "kb:read", "admin:audit"],
                 IsSystem = true
             }
         );

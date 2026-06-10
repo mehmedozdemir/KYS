@@ -38,4 +38,7 @@ public static class Capabilities
     public const string AdminConfig = "admin:config";
     public const string AdminUsers = "admin:users";
     public const string AdminAudit = "admin:audit";
+
+    /// <summary>Global okuma kapsamı — taşıyan rol tüm kayıtları görür (Admin/Director "*" ile, CTO açık).</summary>
+    public const string ScopeGlobal = "scope:global";
 }

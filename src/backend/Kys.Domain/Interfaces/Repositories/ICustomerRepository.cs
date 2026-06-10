@@ -7,7 +7,7 @@ public interface ICustomerRepository
 {
     Task<(IReadOnlyList<Customer> Items, int TotalCount)> GetAllAsync(
         string? search, CustomerStatus? status, bool includeArchived,
-        int page, int pageSize, CancellationToken ct = default);
+        int page, int pageSize, Guid? scopeUserId = null, CancellationToken ct = default);
 
     Task<Customer?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<bool> ExistsByCodeAsync(string code, CancellationToken ct = default);

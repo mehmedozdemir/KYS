@@ -16,6 +16,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.27.0] — 2026-06-10 (Sprint 30 — Yetkilendirme Faz 3: Okuma Kapsamı)
+
+### Eklendi / Güvenlik
+- **Kayıt düzeyi okuma kapsamı (ürün + müşteri)**: scoped roller (PO/TeamLead/Developer/ReadOnly) ürün ve müşteri **listelerinde** yalnızca kendi kapsamındaki kayıtları görür; başka kaydın **detayına** id ile erişim 403
+- **`scope:global` yeteneği**: global okuma rolleri (Admin/Director `*` ile, **CTO** açık) tüm kayıtları görür. CTO seed'ine eklendi (migration `Sprint29_ScopeGlobalCto`)
+- `IScopeService` genişletildi: `CanReadAsync`, `HasGlobalReadAccess`, `CurrentUserId`; ürün okuma kapsamı = PO VEYA aktif ekip üyeliği VEYA aktif atama; müşteri = kapsamdaki ürünü kullanan
+- Repo `GetAllAsync` artık opsiyonel `scopeUserId` filtresi alır
+
+### Notlar
+- **Kalan (Faz 3b):** ortam/ekip/kişi liste filtreleme. Açık `Grant` Faz 4.
+
+---
+
 ## [0.26.0] — 2026-06-10 (Sprint 29 — Yetkilendirme Faz 2: Yazma Kapsamı)
 
 ### Eklendi / Güvenlik

@@ -9,13 +9,20 @@ public sealed class ProductRepository(AppDbContext dbContext) : IProductReposito
 {
     public async Task<(IReadOnlyList<Product> Items, int TotalCount)> GetAllAsync(
         string? search, ProductType? type, ProductStatus? status,
-        int page, int pageSize, CancellationToken ct = default)
+        int page, int pageSize, Guid? scopeUserId = null, CancellationToken ct = default)
     {
         var query = dbContext.Products
             .Include(p => p.PoPerson)
             .Include(p => p.Teams).ThenInclude(pt => pt.Team)
             .Include(p => p.Assignments)
             .AsNoTracking();
+
+        // Katman B okuma kapsamı: scopeUserId verildiyse yalnızca PO/aktif ekip üyeliği/aktif atama
+        if (scopeUserId is { } uid)
+            query = query.Where(p =>
+                p.PoPersonId == uid ||
+                p.Teams.Any(pt => pt.Team.Memberships.Any(m => m.PersonId == uid && m.EndDate == null)) ||
+                p.Assignments.Any(a => a.PersonId == uid && a.IsActive));
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(p => p.Name.Contains(search) || p.Code.Contains(search));

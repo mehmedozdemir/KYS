@@ -367,6 +367,19 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 30 — Yetkilendirme Faz 3 (Okuma Kapsamı) ✅ (2026-06-10)
+
+Bkz. `docs/AUTHORIZATION.md` §10. **Katman B (kayıt düzeyi okuma) — ürün + müşteri**.
+
+- [x] `scope:global` yeteneği + CTO seed (migration `Sprint29_ScopeGlobalCto`)
+- [x] `IScopeService`: `CanReadAsync` + `HasGlobalReadAccess` + `CurrentUserId`; `ScopeKind.Customer`
+- [x] Ürün/müşteri repo `GetAllAsync(scopeUserId)` filtresi
+- [x] Liste handler'ları kapsam geçirir; detay handler'ları kapsam dışıysa 403
+- [ ] **Faz 3b:** ortam/ekip/kişi liste filtreleme
+- [ ] **Faz 4:** açık `Grant` tablosu + ekran
+
+---
+
 ## Sprint 29 — Yetkilendirme Faz 2 (Yazma Kapsamı) ✅ (2026-06-10)
 
 Bkz. `docs/AUTHORIZATION.md` §10. **Katman B (kayıt düzeyi yazma)**.

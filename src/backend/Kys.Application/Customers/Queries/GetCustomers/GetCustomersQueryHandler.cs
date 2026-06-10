@@ -1,16 +1,20 @@
+using Kys.Domain.Authorization;
 using Kys.Domain.Interfaces.Repositories;
 using MediatR;
 
 namespace Kys.Application.Customers.Queries.GetCustomers;
 
-public sealed class GetCustomersQueryHandler(ICustomerRepository customerRepository)
+public sealed class GetCustomersQueryHandler(ICustomerRepository customerRepository, IScopeService scope)
     : IRequestHandler<GetCustomersQuery, GetCustomersResult>
 {
     public async Task<GetCustomersResult> Handle(GetCustomersQuery request, CancellationToken cancellationToken)
     {
+        // Global okuma yetkisi yoksa kullanıcının kapsamına filtrele
+        var scopeUserId = scope.HasGlobalReadAccess() ? (Guid?)null : scope.CurrentUserId;
+
         var (items, total) = await customerRepository.GetAllAsync(
             request.Search, request.Status, request.IncludeArchived,
-            request.Page, request.PageSize, cancellationToken);
+            request.Page, request.PageSize, scopeUserId, cancellationToken);
 
         var dtos = items.Select(c => new CustomerListDto(
             c.Id, c.Name, c.Code, c.ShortName,

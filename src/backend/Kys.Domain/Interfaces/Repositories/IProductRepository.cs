@@ -7,7 +7,7 @@ public interface IProductRepository
 {
     Task<(IReadOnlyList<Product> Items, int TotalCount)> GetAllAsync(
         string? search, ProductType? type, ProductStatus? status,
-        int page, int pageSize, CancellationToken ct = default);
+        int page, int pageSize, Guid? scopeUserId = null, CancellationToken ct = default);
 
     Task<Product?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
