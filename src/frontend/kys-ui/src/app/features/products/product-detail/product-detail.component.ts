@@ -234,10 +234,15 @@ interface ProductDetail {
                 @for (t of product()!.teams; track t.teamId) {
                   <div class="team-card">
                     <div class="team-avatar">{{ t.teamName[0] }}</div>
-                    <div>
+                    <div class="team-card-info">
                       <a [routerLink]="['/teams', t.teamId]" class="link">{{ t.teamName }}</a>
                       <p class="muted-sm">{{ t.role ?? 'Rol belirtilmemiş' }} @if (t.since) { · {{ t.since | date:'dd.MM.yyyy' }}'den beri }</p>
                     </div>
+                    <button type="button" class="btn-icon-danger" title="Ekibi kaldır"
+                      [disabled]="removingTeamId() === t.teamId" (click)="removeTeam(t.teamId, t.teamName)">
+                      @if (removingTeamId() === t.teamId) { <i class="pi pi-spin pi-spinner"></i> }
+                      @else { <i class="pi pi-trash"></i> }
+                    </button>
                   </div>
                 }
               </div>
@@ -264,6 +269,7 @@ interface ProductDetail {
                     <th>Sorumluluk</th>
                     <th>Başlangıç</th>
                     <th>Durum</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -278,6 +284,13 @@ interface ProductDetail {
                         <span class="badge" [class]="a.isActive ? 'badge--active' : 'badge--archived'">
                           {{ a.isActive ? 'Aktif' : 'Pasif' }}
                         </span>
+                      </td>
+                      <td class="actions-cell">
+                        <button type="button" class="btn-icon-danger" title="Atamayı kaldır"
+                          [disabled]="removingPersonId() === a.personId" (click)="removePerson(a.personId, a.fullName)">
+                          @if (removingPersonId() === a.personId) { <i class="pi pi-spin pi-spinner"></i> }
+                          @else { <i class="pi pi-trash"></i> }
+                        </button>
                       </td>
                     </tr>
                   }
@@ -731,6 +744,8 @@ interface ProductDetail {
 
     .team-list { display: flex; flex-direction: column; gap: 0.5rem; }
     .team-card { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 0.5rem; }
+    .team-card-info { flex: 1; min-width: 0; }
+    .actions-cell { text-align: right; width: 1%; white-space: nowrap; }
     .team-avatar { width: 2rem; height: 2rem; border-radius: 0.375rem; background: var(--indigo-soft-bg); color: var(--indigo-strong); display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; flex-shrink: 0; }
     .muted-sm { font-size: 0.75rem; color: var(--text-subtle); margin-top: 0.125rem; }
 
@@ -1035,6 +1050,17 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
+  removingTeamId = signal<string | null>(null);
+  removeTeam(teamId: string, teamName: string) {
+    if (!confirm(`"${teamName}" ekibini bu üründen kaldırmak istediğinize emin misiniz?`)) return;
+    this.removingTeamId.set(teamId);
+    const id = this.route.snapshot.paramMap.get('id');
+    this.http.delete(`${environment.apiUrl}/products/${id}/teams/${teamId}`).subscribe({
+      next: () => { this.removingTeamId.set(null); this.reload(); },
+      error: () => { this.removingTeamId.set(null); }
+    });
+  }
+
   // --- Person assignment ---
   showPersonModal = signal(false);
   personSaving = signal(false);
@@ -1085,6 +1111,17 @@ export class ProductDetailComponent implements OnInit {
     }).subscribe({
       next: () => { this.personSaving.set(false); this.showPersonModal.set(false); this.reload(); },
       error: err => { this.personSaving.set(false); this.personAssignError.set(err.error?.detail ?? 'Kişi atanamadı'); }
+    });
+  }
+
+  removingPersonId = signal<string | null>(null);
+  removePerson(personId: string, fullName: string) {
+    if (!confirm(`"${fullName}" kişisinin bu ürüne atamasını kaldırmak istediğinize emin misiniz?`)) return;
+    this.removingPersonId.set(personId);
+    const id = this.route.snapshot.paramMap.get('id');
+    this.http.delete(`${environment.apiUrl}/products/${id}/assignments/${personId}`).subscribe({
+      next: () => { this.removingPersonId.set(null); this.reload(); },
+      error: () => { this.removingPersonId.set(null); }
     });
   }
 

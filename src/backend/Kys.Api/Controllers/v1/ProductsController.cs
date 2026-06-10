@@ -1,6 +1,8 @@
 using Asp.Versioning;
 using Kys.Application.Products.Commands.AssignPersonToProduct;
 using Kys.Application.Products.Commands.AssignTeamToProduct;
+using Kys.Application.Products.Commands.RemoveTeamFromProduct;
+using Kys.Application.Products.Commands.RemovePersonFromProduct;
 using Kys.Application.Products.Commands.CreateProduct;
 using Kys.Application.Products.Commands.CreateProductEndpoint;
 using Kys.Application.Products.Commands.CreateProductResourceTemplate;
@@ -83,6 +85,15 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("{productId:guid}/teams/{teamId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveTeam(Guid productId, Guid teamId, CancellationToken ct)
+    {
+        await mediator.Send(new RemoveTeamFromProductCommand(productId, teamId), ct);
+        return NoContent();
+    }
+
     // --- Assignments ---
 
     [HttpPost("{productId:guid}/assignments")]
@@ -92,6 +103,15 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     {
         var id = await mediator.Send(new AssignPersonToProductCommand(productId, request.PersonId, request.Responsibility, request.StartedAt), ct);
         return Created(string.Empty, new { id });
+    }
+
+    [HttpDelete("{productId:guid}/assignments/{personId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemovePerson(Guid productId, Guid personId, CancellationToken ct)
+    {
+        await mediator.Send(new RemovePersonFromProductCommand(productId, personId), ct);
+        return NoContent();
     }
 
     // --- Endpoints ---

@@ -24,12 +24,14 @@ public interface IProductRepository
     // Teams
     Task<ProductTeam?> GetTeamAssignmentAsync(Guid productId, Guid teamId, CancellationToken ct = default);
     Task AddTeamAssignmentAsync(ProductTeam assignment, CancellationToken ct = default);
+    void RemoveTeamAssignment(ProductTeam assignment);
 
     // Person assignments
     Task<IReadOnlyList<ProductAssignment>> GetAssignmentsAsync(Guid productId, CancellationToken ct = default);
     Task<ProductAssignment?> GetPersonAssignmentAsync(Guid productId, Guid personId, CancellationToken ct = default);
     Task AddPersonAssignmentAsync(ProductAssignment assignment, CancellationToken ct = default);
     void UpdatePersonAssignment(ProductAssignment assignment);
+    void RemovePersonAssignment(ProductAssignment assignment);
 
     // Resource templates
     Task<IReadOnlyList<ProductResourceTemplate>> GetResourceTemplatesAsync(Guid productId, CancellationToken ct = default);

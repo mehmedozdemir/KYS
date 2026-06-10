@@ -361,6 +361,13 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 26 — Ürün Ekip/Çalışan Kaldırma ✅ (2026-06-10)
+
+- [x] Ürün detayı Ekipler + Çalışanlar sekmelerine kaldır (çöp kutusu) butonu
+- [x] `RemoveTeamFromProduct` / `RemovePersonFromProduct` command + repo remove metodları + `DELETE` endpoint'leri
+
+---
+
 ## Sprint 25 — Dashboard Sadeleştirme ✅ (2026-06-10)
 
 - [x] Dashboard "Son Aktiviteler" paneli kaldırıldı (orphan frontend kod + CSS temizlendi); `GET /dashboard/recent-activities` endpoint'i ileride yeniden kullanım için korundu
