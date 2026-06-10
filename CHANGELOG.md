@@ -16,6 +16,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.31.1] — 2026-06-10 (Kritik Düzeltme — Pipeline Behavior void komutlarda çalışmıyordu)
+
+### Düzeltildi / Güvenlik
+- **MediatR pipeline behavior'ları void (`IRequest`) komutlarda sessizce atlanıyordu**: `ScopeAuthorizationBehavior` ve `CustomFieldBehavior` `where TRequest : IRequest<TResponse>` kısıtı taşıyordu; bu MediatR sürümünde `IRequest` (void) `IRequest<Unit>`'e atanamadığı için kapalı behavior tipi oluşturulamıyor ve **Update/Delete/Assign gibi void komutlar için yazma kapsamı kontrolü hiç çalışmıyordu** (yalnızca `IRequest<T>` dönen create'lerde çalışıyordu). Kısıt `notnull` yapıldı → void komutlarda da kapsam + custom field validation devrede
+- Gerçek-rol uçtan uca testiyle yakalandı (TeamLead kapsam dışı bir ürünü düzenleyebiliyordu)
+- Behavior kaydı `AddOpenBehavior` ile düzeltildi (açık generic için doğru MediatR API'si)
+
+---
+
 ## [0.31.0] — 2026-06-10 (Sprint 34 — Yetkilendirme Faz 5: Frontend Cila)
 
 ### Eklendi

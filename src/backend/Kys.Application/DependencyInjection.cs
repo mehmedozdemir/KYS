@@ -17,10 +17,10 @@ public static class DependencyInjection
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ScopeAuthorizationBehavior<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(CustomFieldBehavior<,>));
+            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            cfg.AddOpenBehavior(typeof(ScopeAuthorizationBehavior<,>));
+            cfg.AddOpenBehavior(typeof(CustomFieldBehavior<,>));
         });
 
         services.AddScoped<ICustomFieldValidatorService, CustomFieldValidatorService>();

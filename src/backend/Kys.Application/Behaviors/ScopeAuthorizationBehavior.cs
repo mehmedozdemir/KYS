@@ -11,7 +11,7 @@ namespace Kys.Application.Behaviors;
 /// </summary>
 public sealed class ScopeAuthorizationBehavior<TRequest, TResponse>(IScopeService scopeService)
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull
 {
     public async Task<TResponse> Handle(
         TRequest request,
