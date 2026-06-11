@@ -28,7 +28,8 @@
     "goBack": "← Geri dön",
     "copy": "Kopyala",
     "update": "Güncelle",
-    "assign": "Ata"
+    "assign": "Ata",
+    "adding": "Ekleniyor..."
   },
   "status": {
     "customer": {
@@ -66,7 +67,60 @@
       "2": "gRPC",
       "3": "SOAP",
       "4": "GraphQL"
+    },
+    "team": {
+      "Project": "Project — Proje bazlı ekip",
+      "Domain": "Domain — Etki alanı ekibi",
+      "Platform": "Platform — Altyapı/platform ekibi"
     }
+  },
+  "teams": {
+    "title": "Ekipler",
+    "count": "{{count}} ekip",
+    "new": "Yeni Ekip",
+    "searchPlaceholder": "Ekip ara...",
+    "notFound": "Ekip bulunamadı.",
+    "colName": "Ekip Adı",
+    "colDescription": "Açıklama",
+    "colMemberCount": "Üye Sayısı",
+    "colStatus": "Durum",
+    "deleteTitle": "Ekibi Sil",
+    "deleteConfirm": "<strong>{{name}}</strong> ekibini silmek istediğinize emin misiniz?",
+    "name": "Ekip Adı",
+    "namePlaceholder": "ör. Backend Ekibi",
+    "nameRequired": "Ad zorunludur",
+    "code": "Kısa Kod",
+    "codePlaceholder": "ör. BE",
+    "teamType": "Ekip Tipi",
+    "description": "Açıklama",
+    "descriptionPlaceholder": "Kısa açıklama",
+    "createError": "Ekip oluşturulamadı"
+  },
+  "teamDetail": {
+    "notFound": "Ekip bulunamadı.",
+    "members": "Üyeler",
+    "addMember": "Üye Ekle",
+    "noMembers": "Henüz üye eklenmemiş.",
+    "colPerson": "Kişi",
+    "colOrgRole": "Organizasyon Rolü",
+    "colStart": "Başlangıç",
+    "colEnd": "Bitiş",
+    "ongoing": "Devam ediyor",
+    "end": "Bitir",
+    "endMembershipTitle": "Üyeliği Bitir",
+    "endConfirm": "<strong>{{name}}</strong> adlı kişinin ekip üyeliği bitirilecek.",
+    "endDate": "Bitiş Tarihi",
+    "endDateRequired": "Bitiş tarihi zorunludur",
+    "person": "Kişi",
+    "personSearchPlaceholder": "İsim veya e-posta ara...",
+    "personRequired": "Kişi seçimi zorunludur",
+    "orgRole": "Organizasyon Rolü",
+    "selectRole": "Rol seçin",
+    "roleRequired": "Rol seçimi zorunludur",
+    "startDate": "Başlangıç Tarihi",
+    "startDateRequired": "Başlangıç tarihi zorunludur",
+    "endErr": "Üyelik sonlandırılamadı",
+    "addErr": "Üye eklenemedi"
   },
   "productDetail": {
     "notFound": "Ürün bulunamadı.",

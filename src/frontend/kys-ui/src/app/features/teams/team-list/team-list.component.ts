@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { PermissionService } from '../../../core/services/permission.service';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 
 interface TeamSummary {
   id: string;
@@ -32,18 +33,18 @@ interface CreateTeamRequest {
 @Component({
   selector: 'app-team-list',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <!-- Header -->
       <div class="page-header">
         <div>
-          <h1 class="page-title">Ekipler</h1>
-          <p class="page-subtitle">{{ totalCount() }} ekip</p>
+          <h1 class="page-title">{{ 'teams.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'teams.count' | transloco:{ count: totalCount() } }}</p>
         </div>
         @if (perms.has('team:create')) {
           <button class="btn btn-primary" (click)="showModal.set(true)">
-            <i class="pi pi-plus"></i> Yeni Ekip
+            <i class="pi pi-plus"></i> {{ 'teams.new' | transloco }}
           </button>
         }
       </div>
@@ -54,7 +55,7 @@ interface CreateTeamRequest {
           <i class="pi pi-search"></i>
           <input
             type="text"
-            placeholder="Ekip ara..."
+            [placeholder]="'teams.searchPlaceholder' | transloco"
             [(ngModel)]="searchInput"
             (ngModelChange)="onSearch($event)"
           />
@@ -64,17 +65,17 @@ interface CreateTeamRequest {
       <!-- Table -->
       <div class="table-wrapper">
         @if (loading()) {
-          <div class="loading-row">Yükleniyor...</div>
+          <div class="loading-row">{{ 'common.loading' | transloco }}</div>
         } @else if (!teams().length) {
-          <div class="loading-row">Ekip bulunamadı.</div>
+          <div class="loading-row">{{ 'teams.notFound' | transloco }}</div>
         } @else {
           <table class="data-table">
             <thead>
               <tr>
-                <th>Ekip Adı</th>
-                <th>Açıklama</th>
-                <th>Üye Sayısı</th>
-                <th>Durum</th>
+                <th>{{ 'teams.colName' | transloco }}</th>
+                <th>{{ 'teams.colDescription' | transloco }}</th>
+                <th>{{ 'teams.colMemberCount' | transloco }}</th>
+                <th>{{ 'teams.colStatus' | transloco }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -96,7 +97,7 @@ interface CreateTeamRequest {
                   </td>
                   <td>
                     <span class="badge" [class]="team.isActive ? 'badge--active' : 'badge--archived'">
-                      {{ team.isActive ? 'Aktif' : 'Pasif' }}
+                      {{ (team.isActive ? 'status.customer.Active' : 'status.customer.Inactive') | transloco }}
                     </span>
                   </td>
                   <td class="actions-cell" (click)="$event.stopPropagation()">
@@ -105,7 +106,7 @@ interface CreateTeamRequest {
                       @if (openMenuId() === team.id) {
                         <div class="kebab-menu">
                           <button class="km-item km-danger" (click)="confirmDelete(team)">
-                            <i class="pi pi-trash"></i> Sil
+                            <i class="pi pi-trash"></i> {{ 'common.delete' | transloco }}
                           </button>
                         </div>
                       }
@@ -134,17 +135,17 @@ interface CreateTeamRequest {
       <div class="modal-backdrop" (click)="cancelDelete()">
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Ekibi Sil</h2>
+            <h2>{{ 'teams.deleteTitle' | transloco }}</h2>
             <button class="close-btn" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
-            <p style="margin:0;color:var(--text)"><strong>{{ deleteTarget()!.name }}</strong> ekibini silmek istediğinize emin misiniz?</p>
-            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:var(--text-muted)">Bu işlem geri alınamaz.</p>
+            <p style="margin:0;color:var(--text)" [innerHTML]="'teams.deleteConfirm' | transloco:{ name: deleteTarget()!.name }"></p>
+            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:var(--text-muted)">{{ 'common.irreversible' | transloco }}</p>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="cancelDelete()">İptal</button>
+            <button class="btn btn-secondary" (click)="cancelDelete()">{{ 'common.cancel' | transloco }}</button>
             <button class="btn btn-danger" [disabled]="deleting()" (click)="deleteTeam()">
-              {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+              {{ (deleting() ? 'common.deleting' : 'common.delete') | transloco }}
             </button>
           </div>
         </div>
@@ -155,7 +156,7 @@ interface CreateTeamRequest {
       <div class="modal-backdrop" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Yeni Ekip</h2>
+            <h2>{{ 'teams.new' | transloco }}</h2>
             <button class="close-btn" (click)="closeModal()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -164,34 +165,34 @@ interface CreateTeamRequest {
             }
             <div class="form-row">
               <div class="form-group">
-                <label>Ekip Adı <span class="required">*</span></label>
-                <input type="text" [(ngModel)]="form.name" placeholder="ör. Backend Ekibi" [class.input-error]="submitted() && !form.name.trim()" />
+                <label>{{ 'teams.name' | transloco }} <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="form.name" [placeholder]="'teams.namePlaceholder' | transloco" [class.input-error]="submitted() && !form.name.trim()" />
                 @if (submitted() && !form.name.trim()) {
-                  <span class="field-error">Ad zorunludur</span>
+                  <span class="field-error">{{ 'teams.nameRequired' | transloco }}</span>
                 }
               </div>
               <div class="form-group">
-                <label>Kısa Kod</label>
-                <input type="text" [(ngModel)]="form.code" placeholder="ör. BE" maxlength="20" (input)="form.code = form.code.toUpperCase()" />
+                <label>{{ 'teams.code' | transloco }}</label>
+                <input type="text" [(ngModel)]="form.code" [placeholder]="'teams.codePlaceholder' | transloco" maxlength="20" (input)="form.code = form.code.toUpperCase()" />
               </div>
             </div>
             <div class="form-group">
-              <label>Ekip Tipi <span class="required">*</span></label>
+              <label>{{ 'teams.teamType' | transloco }} <span class="required">*</span></label>
               <select [(ngModel)]="form.teamType" [class.input-error]="submitted() && !form.teamType">
-                <option value="Project">Project — Proje bazlı ekip</option>
-                <option value="Domain">Domain — Etki alanı ekibi</option>
-                <option value="Platform">Platform — Altyapı/platform ekibi</option>
+                <option value="Project">{{ 'type.team.Project' | transloco }}</option>
+                <option value="Domain">{{ 'type.team.Domain' | transloco }}</option>
+                <option value="Platform">{{ 'type.team.Platform' | transloco }}</option>
               </select>
             </div>
             <div class="form-group">
-              <label>Açıklama</label>
-              <textarea [(ngModel)]="form.description" placeholder="Kısa açıklama" rows="2"></textarea>
+              <label>{{ 'teams.description' | transloco }}</label>
+              <textarea [(ngModel)]="form.description" [placeholder]="'teams.descriptionPlaceholder' | transloco" rows="2"></textarea>
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="closeModal()">İptal</button>
+            <button class="btn btn-secondary" (click)="closeModal()">{{ 'common.cancel' | transloco }}</button>
             <button class="btn btn-primary" [disabled]="saving()" (click)="createTeam()">
-              {{ saving() ? 'Kaydediliyor...' : 'Kaydet' }}
+              {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
             </button>
           </div>
         </div>
@@ -262,6 +263,7 @@ interface CreateTeamRequest {
 })
 export class TeamListComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
   protected perms = inject(PermissionService);
 
   teams = signal<TeamSummary[]>([]);
@@ -356,7 +358,7 @@ export class TeamListComponent implements OnInit {
       },
       error: err => {
         this.saving.set(false);
-        this.createError.set(err.error?.detail ?? 'Ekip oluşturulamadı');
+        this.createError.set(err.error?.detail ?? this.transloco.translate('teams.createError'));
       }
     });
   }

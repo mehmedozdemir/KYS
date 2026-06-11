@@ -28,7 +28,8 @@
     "goBack": "← Go back",
     "copy": "Copy",
     "update": "Update",
-    "assign": "Assign"
+    "assign": "Assign",
+    "adding": "Adding..."
   },
   "status": {
     "customer": {
@@ -66,7 +67,60 @@
       "2": "gRPC",
       "3": "SOAP",
       "4": "GraphQL"
+    },
+    "team": {
+      "Project": "Project — Project-based team",
+      "Domain": "Domain — Domain team",
+      "Platform": "Platform — Infrastructure/platform team"
     }
+  },
+  "teams": {
+    "title": "Teams",
+    "count": "{{count}} teams",
+    "new": "New Team",
+    "searchPlaceholder": "Search teams...",
+    "notFound": "No teams found.",
+    "colName": "Team Name",
+    "colDescription": "Description",
+    "colMemberCount": "Members",
+    "colStatus": "Status",
+    "deleteTitle": "Delete Team",
+    "deleteConfirm": "Are you sure you want to delete <strong>{{name}}</strong>?",
+    "name": "Team Name",
+    "namePlaceholder": "e.g. Backend Team",
+    "nameRequired": "Name is required",
+    "code": "Short Code",
+    "codePlaceholder": "e.g. BE",
+    "teamType": "Team Type",
+    "description": "Description",
+    "descriptionPlaceholder": "Short description",
+    "createError": "Could not create team"
+  },
+  "teamDetail": {
+    "notFound": "Team not found.",
+    "members": "Members",
+    "addMember": "Add Member",
+    "noMembers": "No members added yet.",
+    "colPerson": "Person",
+    "colOrgRole": "Organization Role",
+    "colStart": "Start",
+    "colEnd": "End",
+    "ongoing": "Ongoing",
+    "end": "End",
+    "endMembershipTitle": "End Membership",
+    "endConfirm": "<strong>{{name}}</strong>'s team membership will be ended.",
+    "endDate": "End Date",
+    "endDateRequired": "End date is required",
+    "person": "Person",
+    "personSearchPlaceholder": "Search name or email...",
+    "personRequired": "Person selection is required",
+    "orgRole": "Organization Role",
+    "selectRole": "Select role",
+    "roleRequired": "Role selection is required",
+    "startDate": "Start Date",
+    "startDateRequired": "Start date is required",
+    "endErr": "Could not end membership",
+    "addErr": "Could not add member"
   },
   "productDetail": {
     "notFound": "Product not found.",
