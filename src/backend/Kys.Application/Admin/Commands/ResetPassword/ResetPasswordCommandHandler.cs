@@ -30,9 +30,9 @@ public sealed class ResetPasswordCommandHandler(
         personRepository.Update(person);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Yeni şifreyi kullanıcıya e-posta ile bildir (best-effort, kuyruğa atılır)
+        // Yeni şifreyi kullanıcıya e-posta ile bildir (giriş e-posta ile yapılır → kullanıcı adı = e-posta)
         await accountEmail.SendPasswordResetAsync(
             person.Email, $"{person.FirstName} {person.LastName}",
-            person.Username ?? person.Email, request.NewPassword, cancellationToken);
+            person.Email, request.NewPassword, cancellationToken);
     }
 }
