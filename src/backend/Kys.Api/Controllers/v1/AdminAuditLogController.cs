@@ -1,7 +1,8 @@
 using Asp.Versioning;
 using Kys.Application.AuditLogs.Queries.GetAuditLogs;
+using Kys.Api.Authorization;
+using Kys.Domain.Authorization;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kys.Api.Controllers.v1;
@@ -9,7 +10,7 @@ namespace Kys.Api.Controllers.v1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/admin/audit-logs")]
-[Authorize]
+[RequirePermission(Capabilities.AdminAudit)]
 public sealed class AdminAuditLogController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
