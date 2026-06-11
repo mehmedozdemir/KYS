@@ -19,8 +19,8 @@ import { BrandingService } from '../../../core/services/branding.service';
           } @else {
             <div class="login-card__logo">{{ branding.branding()?.shortName || 'KYS' }}</div>
           }
-          <h1>{{ branding.companyName() }}</h1>
-          <p>{{ branding.slogan() || 'Hesabınıza giriş yapın' }}</p>
+          <h1>{{ branding.branding()?.shortName || branding.companyName() }}</h1>
+          <p>Kurumsal Yazılım Sistemi</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-card__form">

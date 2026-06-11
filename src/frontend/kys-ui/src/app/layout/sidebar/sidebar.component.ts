@@ -26,9 +26,12 @@ interface NavGroup {
         @if (branding.logoUrl(); as logo) {
           <img [src]="logo" alt="logo" class="sidebar__logo-img" />
         } @else {
-          <span class="sidebar__logo">{{ branding.branding()?.shortName || 'KYS' }}</span>
+          <span class="sidebar__logo">KYS</span>
         }
-        <span class="sidebar__name">{{ branding.companyName() }}</span>
+        <div class="sidebar__brand-text">
+          <span class="sidebar__name">KYS</span>
+          <span class="sidebar__subtitle">KURUMSAL YAZILIM SİSTEMİ</span>
+        </div>
       </div>
 
       <nav class="sidebar__nav">
@@ -75,10 +78,17 @@ interface NavGroup {
       border-radius: 0.375rem;
     }
     .sidebar__logo-img { max-height: 36px; max-width: 130px; object-fit: contain; }
+    .sidebar__brand-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
     .sidebar__name {
       color: var(--sidebar-brand);
-      font-weight: 600;
+      font-weight: 700;
       font-size: 1rem;
+    }
+    .sidebar__subtitle {
+      color: var(--sidebar-header);
+      font-size: 0.5625rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
     }
     .sidebar__nav {
       padding: 1rem 0.75rem;
