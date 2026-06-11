@@ -5,6 +5,7 @@ using Kys.Application.Admin.Commands.AssignSystemRole;
 using Kys.Application.Admin.Commands.RemoveSystemRole;
 using Kys.Application.Admin.Commands.ResetPassword;
 using Kys.Application.Admin.Commands.UnlockAccount;
+using Kys.Application.People.Commands.MakePlatformUser;
 using Kys.Application.Admin.Queries.GetPersonSystemRoles;
 using Kys.Domain.Entities;
 using MediatR;
@@ -46,6 +47,16 @@ public sealed class UserRolesController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("/api/v{version:apiVersion}/admin/users/{personId:guid}/make-platform-user")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> MakePlatformUser(Guid personId, [FromBody] MakePlatformUserRequest request, CancellationToken ct)
+    {
+        await mediator.Send(new MakePlatformUserCommand(personId, request.Password), ct);
+        return NoContent();
+    }
+
     [HttpPost("/api/v{version:apiVersion}/admin/users/{personId:guid}/reset-password")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -67,3 +78,4 @@ public sealed class UserRolesController(IMediator mediator) : ControllerBase
 
 public sealed record AssignRoleRequest(Guid SystemRoleId);
 public sealed record ResetPasswordRequest(string NewPassword);
+public sealed record MakePlatformUserRequest(string Password);
