@@ -198,8 +198,8 @@ export class AccessGrantsComponent implements OnInit {
 
   ngOnInit() {
     this.load();
-    this.http.get<{ items: { id: string; fullName: string }[] }>(`${this.base}/people?pageSize=200`)
-      .subscribe(r => this.people.set((r.items ?? []).map(p => ({ id: p.id, label: p.fullName }))));
+    this.http.get<{ items: { id: string; firstName: string; lastName: string; email: string }[] }>(`${this.base}/people?pageSize=200`)
+      .subscribe(r => this.people.set((r.items ?? []).map(p => ({ id: p.id, label: `${p.firstName} ${p.lastName}` }))));
     this.http.get<{ items: { id: string; name: string; code: string }[] }>(`${this.base}/products?pageSize=200`)
       .subscribe(r => this.products.set((r.items ?? []).map(p => ({ id: p.id, label: `${p.name} (${p.code})` }))));
     this.http.get<{ items: { id: string; name: string; code: string }[] }>(`${this.base}/customers?pageSize=200`)
