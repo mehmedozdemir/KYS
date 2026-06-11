@@ -155,6 +155,10 @@ interface AuditLogList {
                 <i class="pi pi-database"></i>
                 <span>Kaynak Tipleri</span>
               </a>
+              <a routerLink="/admin/organization" class="link-card">
+                <i class="pi pi-building"></i>
+                <span>Kurum Profili</span>
+              </a>
               <a routerLink="/admin/access-grants" class="link-card">
                 <i class="pi pi-key"></i>
                 <span>Erişim Yetkileri</span>

@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { PermissionService } from '../../core/services/permission.service';
+import { BrandingService } from '../../core/services/branding.service';
 
 interface NavItem {
   label: string;
@@ -22,8 +23,14 @@ interface NavGroup {
   template: `
     <aside class="sidebar">
       <div class="sidebar__brand">
-        <span class="sidebar__logo">KYS</span>
-        <span class="sidebar__name">Platform</span>
+        @if (branding.logoUrl(); as logo) {
+          <img [src]="logo" alt="logo" class="sidebar__logo-img" />
+        } @else {
+          <span class="sidebar__logo"><i class="pi pi-th-large"></i></span>
+        }
+        <div class="sidebar__brand-text">
+          <span class="sidebar__subtitle">KURUMSAL YAZILIM SİSTEMİ</span>
+        </div>
       </div>
 
       <nav class="sidebar__nav">
@@ -69,10 +76,18 @@ interface NavGroup {
       padding: 0.25rem 0.5rem;
       border-radius: 0.375rem;
     }
+    .sidebar__logo-img { max-height: 36px; max-width: 130px; object-fit: contain; }
+    .sidebar__brand-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
     .sidebar__name {
       color: var(--sidebar-brand);
-      font-weight: 600;
+      font-weight: 700;
       font-size: 1rem;
+    }
+    .sidebar__subtitle {
+      color: var(--sidebar-header);
+      font-size: 0.5625rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
     }
     .sidebar__nav {
       padding: 1rem 0.75rem;
@@ -119,6 +134,7 @@ interface NavGroup {
 })
 export class SidebarComponent {
   private permissions = inject(PermissionService);
+  protected branding = inject(BrandingService);
 
   readonly exactMatch = { exact: true };
   readonly prefixMatch = { exact: false };
@@ -155,6 +171,7 @@ export class SidebarComponent {
       items: [
         { label: 'Genel Bakış', icon: 'pi-chart-bar', route: '/admin', exact: true },
         { label: 'Platform Kullanıcıları', icon: 'pi-shield', route: '/admin/platform-users' },
+        { label: 'Kurum Profili', icon: 'pi-building', route: '/admin/organization' },
         { label: 'Erişim Yetkileri', icon: 'pi-key', route: '/admin/access-grants' },
         { label: 'Mail Ayarları', icon: 'pi-envelope', route: '/admin/email-accounts' },
         { label: 'Özel Alanlar', icon: 'pi-sliders-h', route: '/admin/custom-fields' },

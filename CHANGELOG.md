@@ -28,6 +28,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.36.0] — 2026-06-11 (Sprint 37 — Kurum Profili & Markalama)
+
+### Eklendi
+- **Kurum Profili** (tekil): şirket adı, kısa ad, web sitesi, slogan, iletişim, vergi no + **logo** (DB'de saklanır). Migration `Sprint37_OrganizationProfile`
+- **Public branding ucu** (anonim): `GET /branding` + `GET /branding/logo` — login ekranı auth'tan önce kullanır. Yazma `admin:config` (`PUT /branding`, `POST/DELETE /branding/logo`)
+- **Admin "Kurum Profili" ekranı**: bilgi formu + logo yükleme/önizleme/kaldırma
+- **Markalama entegrasyonu**: login ekranı (logo + şirket adı + slogan), sidebar (logo + şirket adı), sayfa başlığı + favicon
+- **Maillerde markalama** (Faz 2): tüm e-postalar merkezi olarak logo (inline/cid) + şirket adı başlık + footer (ad · web · iletişim) ile sarmalanır
+
+---
+
 ## [0.35.0] — 2026-06-11 (Platform Kullanıcı Yönetimi İyileştirmeleri)
 
 ### Eklendi

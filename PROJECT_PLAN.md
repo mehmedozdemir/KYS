@@ -376,6 +376,16 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 37 — Kurum Profili & Markalama ✅ (2026-06-11)
+
+- [x] `OrganizationProfile` (tekil) entity + logo (DB) + migration `Sprint37_OrganizationProfile`
+- [x] Public branding ucu (anonim okuma) + admin yazma/logo (`admin:config`)
+- [x] Admin "Kurum Profili" ekranı (form + logo yükle/kaldır)
+- [x] Login + sidebar + başlık/favicon markalama; `BrandingService`
+- [x] Maillerde merkezi markalama (logo inline + şirket adı + footer)
+
+---
+
 ## Sprint 36 — Platform Kullanıcı Sağlama + Karşılama Maili (Faz B) ✅ (2026-06-11)
 
 - [x] `MakePlatformUserCommand` + endpoint (`admin:users`); kullanıcı adı = e-posta
