@@ -5,8 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { NgClass, DatePipe } from '@angular/common';
 import { environment } from '../../../../environments/environment';
 import { PermissionService } from '../../../core/services/permission.service';
+import { TranslocoModule } from '@jsverse/transloco';
 
-const STATUS_LABEL: Record<string, string> = { Prospect: 'Potansiyel', Onboarding: 'Onboarding', Active: 'Aktif', Inactive: 'Pasif', Churned: 'Ayrıldı' };
 const STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
 
 interface CustomFieldDef {
@@ -42,34 +42,34 @@ interface Customer {
 @Component({
   selector: 'app-customer-list',
   standalone: true,
-  imports: [RouterLink, FormsModule, NgClass, DatePipe],
+  imports: [RouterLink, FormsModule, NgClass, DatePipe, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="flex-between" style="margin-bottom:1.5rem">
-        <h1 style="font-size:1.5rem;font-weight:700;color:var(--text-strong)">Müşteriler</h1>
+        <h1 style="font-size:1.5rem;font-weight:700;color:var(--text-strong)">{{ 'customers.title' | transloco }}</h1>
         @if (perms.has('customer:create')) {
           <button class="btn-primary-sm" (click)="openModal()">
-            <i class="pi pi-plus"></i> Yeni Müşteri
+            <i class="pi pi-plus"></i> {{ 'customers.new' | transloco }}
           </button>
         }
       </div>
 
       <div class="filter-bar">
         <input
-          type="text" placeholder="Müşteri ara..."
+          type="text" [placeholder]="'customers.searchPlaceholder' | transloco"
           [(ngModel)]="search" (ngModelChange)="onSearch()"
           class="search-input" />
         <select [(ngModel)]="statusFilter" (ngModelChange)="onSearch()" class="select-input">
-          <option value="">Tüm Durumlar</option>
-          <option value="Prospect">Potansiyel</option>
-          <option value="Onboarding">Onboarding</option>
-          <option value="Active">Aktif</option>
-          <option value="Inactive">Pasif</option>
-          <option value="Churned">Ayrıldı</option>
+          <option value="">{{ 'customers.allStatuses' | transloco }}</option>
+          <option value="Prospect">{{ 'status.customer.Prospect' | transloco }}</option>
+          <option value="Onboarding">{{ 'status.customer.Onboarding' | transloco }}</option>
+          <option value="Active">{{ 'status.customer.Active' | transloco }}</option>
+          <option value="Inactive">{{ 'status.customer.Inactive' | transloco }}</option>
+          <option value="Churned">{{ 'status.customer.Churned' | transloco }}</option>
         </select>
         <label class="checkbox-label">
           <input type="checkbox" [(ngModel)]="includeArchived" (ngModelChange)="onSearch()" />
-          Arşivlenenleri göster
+          {{ 'customers.showArchived' | transloco }}
         </label>
       </div>
 
@@ -77,10 +77,10 @@ interface Customer {
         <table>
           <thead>
             <tr>
-              <th>Müşteri</th>
-              <th>Durum</th>
-              <th>Go-Live</th>
-              <th>Ürünler</th>
+              <th>{{ 'customers.colCustomer' | transloco }}</th>
+              <th>{{ 'customers.colStatus' | transloco }}</th>
+              <th>{{ 'customers.colGoLive' | transloco }}</th>
+              <th>{{ 'customers.colProducts' | transloco }}</th>
               <th></th>
             </tr>
           </thead>
@@ -92,7 +92,7 @@ interface Customer {
                   <div style="font-size:0.75rem;color:var(--text-muted)">{{ c.code }}{{ c.shortName ? ' · ' + c.shortName : '' }}</div>
                 </td>
                 <td>
-                  <span class="badge" [ngClass]="statusCss(c.status)">{{ statusLabel(c.status) }}</span>
+                  <span class="badge" [ngClass]="statusCss(c.status)">{{ 'status.customer.' + c.status | transloco }}</span>
                 </td>
                 <td>{{ c.productionLiveAt ? (c.productionLiveAt | date:'dd.MM.yyyy') : '—' }}</td>
                 <td (click)="$event.stopPropagation()">
@@ -116,7 +116,7 @@ interface Customer {
                     @if (openMenuId === c.id) {
                       <div class="kebab-menu">
                         <button class="km-item km-danger" (click)="confirmDelete(c)">
-                          <i class="pi pi-trash"></i> Sil
+                          <i class="pi pi-trash"></i> {{ 'common.delete' | transloco }}
                         </button>
                       </div>
                     }
@@ -125,7 +125,7 @@ interface Customer {
               </tr>
             }
             @empty {
-              <tr><td colspan="5" style="text-align:center;color:var(--text-subtle);padding:2rem">Müşteri bulunamadı.</td></tr>
+              <tr><td colspan="5" style="text-align:center;color:var(--text-subtle);padding:2rem">{{ 'customers.notFound' | transloco }}</td></tr>
             }
           </tbody>
         </table>
@@ -136,17 +136,17 @@ interface Customer {
       <div class="modal-backdrop" (click)="cancelDelete()">
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Müşteriyi Sil</h2>
+            <h2>{{ 'customers.deleteTitle' | transloco }}</h2>
             <button type="button" class="modal-close" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
-            <p style="margin:0;color:var(--text)"><strong>{{ deleteTarget!.name }}</strong> müşterisini silmek istediğinize emin misiniz?</p>
-            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:var(--text-muted)">Bu işlem geri alınamaz.</p>
+            <p style="margin:0;color:var(--text)" [innerHTML]="'customers.deleteConfirm' | transloco:{ name: deleteTarget!.name }"></p>
+            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:var(--text-muted)">{{ 'common.irreversible' | transloco }}</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="cancelDelete()">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="cancelDelete()">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-danger" [disabled]="deleting()" (click)="deleteCustomer()">
-              {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+              {{ (deleting() ? 'common.deleting' : 'common.delete') | transloco }}
             </button>
           </div>
         </div>
@@ -158,69 +158,69 @@ interface Customer {
       <div class="modal-backdrop" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Yeni Müşteri</h2>
+            <h2>{{ 'customers.new' | transloco }}</h2>
             <button type="button" class="modal-close" (click)="closeModal()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <div class="form-row">
               <div class="form-group">
-                <label>Müşteri Adı <span class="required">*</span></label>
-                <input type="text" [(ngModel)]="form.name" placeholder="ör. Acme Yazılım A.Ş." [class.input-error]="submitted() && !form.name.trim()" />
+                <label>{{ 'customers.name' | transloco }} <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="form.name" [placeholder]="'customers.namePlaceholder' | transloco" [class.input-error]="submitted() && !form.name.trim()" />
                 @if (submitted() && !form.name.trim()) {
-                  <span class="error-msg">Ad zorunludur</span>
+                  <span class="error-msg">{{ 'customers.nameRequired' | transloco }}</span>
                 }
               </div>
               <div class="form-group">
-                <label>Kod <span class="required">*</span></label>
-                <input type="text" [(ngModel)]="form.code" placeholder="ör. ACME" (input)="form.code = form.code.toUpperCase()" [class.input-error]="submitted() && !form.code.trim()" />
+                <label>{{ 'customers.code' | transloco }} <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="form.code" [placeholder]="'customers.codePlaceholder' | transloco" (input)="form.code = form.code.toUpperCase()" [class.input-error]="submitted() && !form.code.trim()" />
                 @if (submitted() && !form.code.trim()) {
-                  <span class="error-msg">Kod zorunludur</span>
+                  <span class="error-msg">{{ 'customers.codeRequired' | transloco }}</span>
                 }
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Kısa Ad</label>
-                <input type="text" [(ngModel)]="form.shortName" placeholder="ör. Acme" />
+                <label>{{ 'customers.shortName' | transloco }}</label>
+                <input type="text" [(ngModel)]="form.shortName" [placeholder]="'customers.shortNamePlaceholder' | transloco" />
               </div>
               <div class="form-group">
-                <label>Sektör</label>
-                <input type="text" [(ngModel)]="form.sector" placeholder="ör. Fintech, Sağlık..." />
+                <label>{{ 'customers.sector' | transloco }}</label>
+                <input type="text" [(ngModel)]="form.sector" [placeholder]="'customers.sectorPlaceholder' | transloco" />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Ülke</label>
-                <input type="text" [(ngModel)]="form.country" placeholder="ör. Türkiye" />
+                <label>{{ 'customers.country' | transloco }}</label>
+                <input type="text" [(ngModel)]="form.country" [placeholder]="'customers.countryPlaceholder' | transloco" />
               </div>
               <div class="form-group">
-                <label>Şehir</label>
-                <input type="text" [(ngModel)]="form.city" placeholder="ör. İstanbul" />
+                <label>{{ 'customers.city' | transloco }}</label>
+                <input type="text" [(ngModel)]="form.city" [placeholder]="'customers.cityPlaceholder' | transloco" />
               </div>
             </div>
             <div class="form-group">
-              <label>Açıklama</label>
-              <textarea [(ngModel)]="form.description" rows="2" placeholder="Kısa açıklama..."></textarea>
+              <label>{{ 'customers.description' | transloco }}</label>
+              <textarea [(ngModel)]="form.description" rows="2" [placeholder]="'customers.descriptionPlaceholder' | transloco"></textarea>
             </div>
-            <div class="section-title">Birincil İletişim (isteğe bağlı)</div>
+            <div class="section-title">{{ 'customers.primaryContact' | transloco }}</div>
             <div class="form-row">
               <div class="form-group">
-                <label>Ad Soyad</label>
+                <label>{{ 'customers.contactName' | transloco }}</label>
                 <input type="text" [(ngModel)]="form.primaryContactName" />
               </div>
               <div class="form-group">
-                <label>E-posta</label>
+                <label>{{ 'common.email' | transloco }}</label>
                 <input type="email" [(ngModel)]="form.primaryContactEmail" />
               </div>
             </div>
             @if (customFieldDefs().length) {
-              <div class="section-title">Özel Alanlar</div>
+              <div class="section-title">{{ 'common.customFields' | transloco }}</div>
               @for (def of customFieldDefs(); track def.id) {
                 <div class="form-group">
                   <label>{{ def.displayName }} @if (def.isRequired) { <span class="required">*</span> }</label>
                   @if (def.fieldType === 'Select') {
                     <select [(ngModel)]="cfValues[def.fieldKey]">
-                      <option value="">Seçiniz...</option>
+                      <option value="">{{ 'common.select' | transloco }}</option>
                       @for (opt of def.selectOptions ?? []; track opt) {
                         <option [value]="opt">{{ opt }}</option>
                       }
@@ -228,7 +228,7 @@ interface Customer {
                   } @else if (def.fieldType === 'Boolean') {
                     <label class="checkbox-label" style="font-weight:400">
                       <input type="checkbox" [checked]="cfValues[def.fieldKey] === 'true'" (change)="cfValues[def.fieldKey] = $any($event.target).checked ? 'true' : 'false'" />
-                      Evet
+                      {{ 'common.yes' | transloco }}
                     </label>
                   } @else {
                     <input
@@ -237,7 +237,7 @@ interface Customer {
                       [placeholder]="def.defaultValue ?? ''" />
                   }
                   @if (submitted() && def.isRequired && !cfValues[def.fieldKey]) {
-                    <span class="error-msg">{{ def.displayName }} zorunludur</span>
+                    <span class="error-msg">{{ 'common.requiredField' | transloco:{ field: def.displayName } }}</span>
                   }
                 </div>
               }
@@ -247,9 +247,9 @@ interface Customer {
             }
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
-              {{ saving() ? 'Kaydediliyor...' : 'Oluştur' }}
+              {{ (saving() ? 'common.saving' : 'customers.create') | transloco }}
             </button>
           </div>
         </div>
@@ -528,7 +528,6 @@ export class CustomerListComponent implements OnInit {
     });
   }
 
-  statusLabel(s: string) { return STATUS_LABEL[s] ?? s; }
   statusCss(s: string) { return STATUS_CSS[s] ?? ''; }
 
   goToProduct(customerId: string, customerProductId: string) {
