@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { PermissionService } from '../../../core/services/permission.service';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 
 interface CustomFieldDef {
   id: string;
@@ -17,9 +18,7 @@ interface CustomFieldDef {
 }
 
 // 0=SaaS, 1=CustomerBased, 2=Hybrid | 0=Active, 1=Deprecated, 2=Discontinued
-const TYPE_LABELS: Record<number, string> = { 0: 'SaaS', 1: 'Müşteriye Özel', 2: 'Hibrit' };
 const TYPE_CSS: Record<number, string> = { 0: 'badge--saas', 1: 'badge--custom', 2: 'badge--hybrid' };
-const STATUS_LABELS: Record<string, string> = { Active: 'Aktif', Deprecated: 'Kullanımdan Kalkıyor', Discontinued: 'Kapatıldı' };
 const STATUS_CSS: Record<string, string> = { Active: 'badge--active', Deprecated: 'badge--deprecated', Discontinued: 'badge--archived' };
 
 interface TeamBadge {
@@ -57,17 +56,17 @@ interface CreateProductForm {
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <h1 class="page-title">Ürünler</h1>
-          <p class="page-subtitle">{{ totalCount() }} ürün</p>
+          <h1 class="page-title">{{ 'products.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'products.count' | transloco:{ count: totalCount() } }}</p>
         </div>
         @if (perms.has('product:create')) {
           <button class="btn btn-primary" (click)="openModal()">
-            <i class="pi pi-plus"></i> Yeni Ürün
+            <i class="pi pi-plus"></i> {{ 'products.new' | transloco }}
           </button>
         }
       </div>
@@ -76,37 +75,37 @@ interface CreateProductForm {
       <div class="toolbar">
         <div class="search-box">
           <i class="pi pi-search"></i>
-          <input type="text" placeholder="Ürün ara..." [(ngModel)]="searchInput" (ngModelChange)="onSearch($event)" />
+          <input type="text" [placeholder]="'products.searchPlaceholder' | transloco" [(ngModel)]="searchInput" (ngModelChange)="onSearch($event)" />
         </div>
         <select [(ngModel)]="filterType" (ngModelChange)="onFilterChange()">
-          <option value="">Tüm tipler</option>
-          <option value="0">SaaS</option>
-          <option value="1">Müşteriye Özel</option>
-          <option value="2">Hibrit</option>
+          <option value="">{{ 'products.allTypes' | transloco }}</option>
+          <option value="0">{{ 'type.product.0' | transloco }}</option>
+          <option value="1">{{ 'type.product.1' | transloco }}</option>
+          <option value="2">{{ 'type.product.2' | transloco }}</option>
         </select>
         <select [(ngModel)]="filterStatus" (ngModelChange)="onFilterChange()">
-          <option value="">Tüm durumlar</option>
-          <option value="0">Aktif</option>
-          <option value="1">Kullanımdan Kalkıyor</option>
-          <option value="2">Kapatıldı</option>
+          <option value="">{{ 'products.allStatuses' | transloco }}</option>
+          <option value="0">{{ 'status.product.Active' | transloco }}</option>
+          <option value="1">{{ 'status.product.Deprecated' | transloco }}</option>
+          <option value="2">{{ 'status.product.Discontinued' | transloco }}</option>
         </select>
       </div>
 
       <div class="table-wrapper">
         @if (loading()) {
-          <div class="loading-row">Yükleniyor...</div>
+          <div class="loading-row">{{ 'common.loading' | transloco }}</div>
         } @else if (!products().length) {
-          <div class="loading-row">Ürün bulunamadı.</div>
+          <div class="loading-row">{{ 'products.notFound' | transloco }}</div>
         } @else {
           <table class="data-table">
             <thead>
               <tr>
-                <th>Ürün</th>
-                <th>Kod</th>
-                <th>Tip</th>
-                <th>Durum</th>
-                <th>Ürün Sahibi</th>
-                <th>Ekip / Kişi</th>
+                <th>{{ 'products.colProduct' | transloco }}</th>
+                <th>{{ 'products.colCode' | transloco }}</th>
+                <th>{{ 'products.colType' | transloco }}</th>
+                <th>{{ 'products.colStatus' | transloco }}</th>
+                <th>{{ 'products.colOwner' | transloco }}</th>
+                <th>{{ 'products.colTeamPerson' | transloco }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -118,8 +117,8 @@ interface CreateProductForm {
                     <span class="product-name">{{ p.name }}</span>
                   </td>
                   <td><code class="code-badge">{{ p.code }}</code></td>
-                  <td><span class="badge" [class]="typeCss(p.productType)">{{ typeLabel(p.productType) }}</span></td>
-                  <td><span class="badge" [class]="statusCss(p.status)">{{ statusLabel(p.status) }}</span></td>
+                  <td><span class="badge" [class]="typeCss(p.productType)">{{ 'type.product.' + p.productType | transloco }}</span></td>
+                  <td><span class="badge" [class]="statusCss(p.status)">{{ 'status.product.' + p.status | transloco }}</span></td>
                   <td class="muted">{{ p.poName ?? '—' }}</td>
                   <td (click)="$event.stopPropagation()">
                     @if (!p.teams.length) {
@@ -142,7 +141,7 @@ interface CreateProductForm {
                       @if (openMenuId() === p.id) {
                         <div class="kebab-menu">
                           <button class="km-item km-danger" (click)="confirmDelete(p)">
-                            <i class="pi pi-trash"></i> Sil
+                            <i class="pi pi-trash"></i> {{ 'common.delete' | transloco }}
                           </button>
                         </div>
                       }
@@ -171,17 +170,17 @@ interface CreateProductForm {
       <div class="modal-backdrop" (click)="cancelDelete()">
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Ürünü Sil</h2>
+            <h2>{{ 'products.deleteTitle' | transloco }}</h2>
             <button class="close-btn" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
-            <p style="margin:0;color:var(--text)"><strong>{{ deleteTarget()!.name }}</strong> ürününü silmek istediğinize emin misiniz?</p>
-            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:var(--text-muted)">Bu işlem geri alınamaz.</p>
+            <p style="margin:0;color:var(--text)" [innerHTML]="'products.deleteConfirm' | transloco:{ name: deleteTarget()!.name }"></p>
+            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:var(--text-muted)">{{ 'common.irreversible' | transloco }}</p>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="cancelDelete()">İptal</button>
+            <button class="btn btn-secondary" (click)="cancelDelete()">{{ 'common.cancel' | transloco }}</button>
             <button class="btn btn-danger" [disabled]="deleting()" (click)="deleteProduct()">
-              {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+              {{ (deleting() ? 'common.deleting' : 'common.delete') | transloco }}
             </button>
           </div>
         </div>
@@ -192,7 +191,7 @@ interface CreateProductForm {
       <div class="modal-backdrop" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Yeni Ürün</h2>
+            <h2>{{ 'products.new' | transloco }}</h2>
             <button class="close-btn" (click)="closeModal()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -201,31 +200,31 @@ interface CreateProductForm {
             }
             <div class="form-row">
               <div class="form-group">
-                <label>Ürün Adı <span class="required">*</span></label>
-                <input type="text" [(ngModel)]="form.name" placeholder="Ödeme Sistemi" />
+                <label>{{ 'products.name' | transloco }} <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="form.name" [placeholder]="'products.namePlaceholder' | transloco" />
                 @if (submitted() && !form.name.trim()) {
-                  <span class="field-error">Zorunlu alan</span>
+                  <span class="field-error">{{ 'common.required' | transloco }}</span>
                 }
               </div>
               <div class="form-group">
-                <label>Kod <span class="required">*</span></label>
+                <label>{{ 'products.code' | transloco }} <span class="required">*</span></label>
                 <input type="text" [(ngModel)]="form.code" placeholder="PAY" maxlength="10" style="text-transform:uppercase" (input)="form.code = form.code.toUpperCase()" />
                 @if (submitted() && !form.code.trim()) {
-                  <span class="field-error">Zorunlu alan</span>
+                  <span class="field-error">{{ 'common.required' | transloco }}</span>
                 }
               </div>
             </div>
             <div class="form-group">
-              <label>Tip <span class="required">*</span></label>
+              <label>{{ 'products.type' | transloco }} <span class="required">*</span></label>
               <select [(ngModel)]="form.productType">
-                <option [value]="0">SaaS — Tüm müşteriler paylaşır</option>
-                <option [value]="1">Müşteriye Özel — Her müşteri için ayrı kurulum</option>
-                <option [value]="2">Hibrit — SaaS + özel ortam</option>
+                <option [value]="0">{{ 'products.typeSaasOpt' | transloco }}</option>
+                <option [value]="1">{{ 'products.typeDedicatedOpt' | transloco }}</option>
+                <option [value]="2">{{ 'products.typeHybridOpt' | transloco }}</option>
               </select>
             </div>
             <div class="form-group" style="position:relative">
-              <label>Ürün Sahibi</label>
-              <input type="text" placeholder="İsim veya e-posta ara..."
+              <label>{{ 'products.owner' | transloco }}</label>
+              <input type="text" [placeholder]="'products.ownerSearchPlaceholder' | transloco"
                 [(ngModel)]="poSearch" (ngModelChange)="searchPo($event)" [disabled]="!!poPersonId" />
               @if (poOptions().length) {
                 <div class="dropdown">
@@ -245,17 +244,17 @@ interface CreateProductForm {
               }
             </div>
             <div class="form-group">
-              <label>Açıklama</label>
-              <textarea [(ngModel)]="form.description" placeholder="Ürün hakkında kısa açıklama" rows="3"></textarea>
+              <label>{{ 'products.description' | transloco }}</label>
+              <textarea [(ngModel)]="form.description" [placeholder]="'products.descriptionPlaceholder' | transloco" rows="3"></textarea>
             </div>
             @if (customFieldDefs().length) {
-              <div class="section-title">Özel Alanlar</div>
+              <div class="section-title">{{ 'common.customFields' | transloco }}</div>
               @for (def of customFieldDefs(); track def.id) {
                 <div class="form-group">
                   <label>{{ def.displayName }} @if (def.isRequired) { <span class="required">*</span> }</label>
                   @if (def.fieldType === 'Select') {
                     <select [(ngModel)]="cfValues[def.fieldKey]">
-                      <option value="">Seçiniz...</option>
+                      <option value="">{{ 'common.select' | transloco }}</option>
                       @for (opt of def.selectOptions ?? []; track opt) {
                         <option [value]="opt">{{ opt }}</option>
                       }
@@ -263,22 +262,22 @@ interface CreateProductForm {
                   } @else if (def.fieldType === 'Boolean') {
                     <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer">
                       <input type="checkbox" [checked]="cfValues[def.fieldKey] === 'true'" (change)="cfValues[def.fieldKey] = $any($event.target).checked ? 'true' : 'false'" />
-                      Evet
+                      {{ 'common.yes' | transloco }}
                     </label>
                   } @else {
                     <input [type]="cfInputType(def.fieldType)" [(ngModel)]="cfValues[def.fieldKey]" [placeholder]="def.defaultValue ?? ''" />
                   }
                   @if (submitted() && def.isRequired && !cfValues[def.fieldKey]) {
-                    <span class="field-error">{{ def.displayName }} zorunludur</span>
+                    <span class="field-error">{{ 'common.requiredField' | transloco:{ field: def.displayName } }}</span>
                   }
                 </div>
               }
             }
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="closeModal()">İptal</button>
+            <button class="btn btn-secondary" (click)="closeModal()">{{ 'common.cancel' | transloco }}</button>
             <button class="btn btn-primary" [disabled]="saving()" (click)="create()">
-              {{ saving() ? 'Kaydediliyor...' : 'Kaydet' }}
+              {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
             </button>
           </div>
         </div>
@@ -363,6 +362,7 @@ export class ProductListComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
   protected perms = inject(PermissionService);
+  private transloco = inject(TranslocoService);
 
   products = signal<ProductListItem[]>([]);
   loading = signal(true);
@@ -476,9 +476,7 @@ export class ProductListComponent implements OnInit {
     return hasAny ? result : null;
   }
 
-  typeLabel(t: number) { return TYPE_LABELS[t] ?? t; }
   typeCss(t: number) { return TYPE_CSS[t] ?? ''; }
-  statusLabel(s: string) { return STATUS_LABELS[s] ?? s; }
   statusCss(s: string) { return STATUS_CSS[s] ?? ''; }
 
   goToTeam(teamId: string) { this.router.navigate(['/teams', teamId]); }
@@ -537,7 +535,7 @@ export class ProductListComponent implements OnInit {
     };
     this.http.post(`${environment.apiUrl}/products`, body).subscribe({
       next: () => { this.saving.set(false); this.closeModal(); this.page.set(1); this.load(); },
-      error: err => { this.saving.set(false); this.createError.set(err.error?.detail ?? 'Ürün oluşturulamadı'); }
+      error: err => { this.saving.set(false); this.createError.set(err.error?.detail ?? this.transloco.translate('products.createError')); }
     });
   }
 }

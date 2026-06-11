@@ -43,7 +43,48 @@
     "usageMode": {
       "SaaS": "SaaS",
       "Dedicated": "Dedicated"
+    },
+    "product": {
+      "Active": "Aktif",
+      "Deprecated": "Kullanımdan Kalkıyor",
+      "Discontinued": "Kapatıldı"
     }
+  },
+  "type": {
+    "product": {
+      "0": "SaaS",
+      "1": "Müşteriye Özel",
+      "2": "Hibrit"
+    }
+  },
+  "products": {
+    "title": "Ürünler",
+    "count": "{{count}} ürün",
+    "new": "Yeni Ürün",
+    "searchPlaceholder": "Ürün ara...",
+    "allTypes": "Tüm tipler",
+    "allStatuses": "Tüm durumlar",
+    "colProduct": "Ürün",
+    "colCode": "Kod",
+    "colType": "Tip",
+    "colStatus": "Durum",
+    "colOwner": "Ürün Sahibi",
+    "colTeamPerson": "Ekip / Kişi",
+    "notFound": "Ürün bulunamadı.",
+    "deleteTitle": "Ürünü Sil",
+    "deleteConfirm": "<strong>{{name}}</strong> ürününü silmek istediğinize emin misiniz?",
+    "name": "Ürün Adı",
+    "namePlaceholder": "Ödeme Sistemi",
+    "code": "Kod",
+    "type": "Tip",
+    "typeSaasOpt": "SaaS — Tüm müşteriler paylaşır",
+    "typeDedicatedOpt": "Müşteriye Özel — Her müşteri için ayrı kurulum",
+    "typeHybridOpt": "Hibrit — SaaS + özel ortam",
+    "owner": "Ürün Sahibi",
+    "ownerSearchPlaceholder": "İsim veya e-posta ara...",
+    "description": "Açıklama",
+    "descriptionPlaceholder": "Ürün hakkında kısa açıklama",
+    "createError": "Ürün oluşturulamadı"
   },
   "customerDetail": {
     "notFound": "Müşteri bulunamadı.",
