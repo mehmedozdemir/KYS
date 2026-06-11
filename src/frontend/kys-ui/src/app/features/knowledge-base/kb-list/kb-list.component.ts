@@ -3,11 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { TranslocoModule } from '@jsverse/transloco';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // KbVisibility: 0=Internal, 1=TeamOnly, 2=Public
-const VIS_LABEL: Record<string, string> = { Internal: 'Dahili', TeamOnly: 'Ekip', Public: 'Herkese Açık' };
 const VIS_CSS: Record<string, string> = { Internal: 'badge--internal', TeamOnly: 'badge--team', Public: 'badge--public' };
 
 interface ArticleSummary {
@@ -34,16 +34,16 @@ interface ArticleListResult {
 @Component({
   selector: 'app-kb-list',
   standalone: true,
-  imports: [RouterLink, FormsModule, DatePipe],
+  imports: [RouterLink, FormsModule, DatePipe, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <h1 class="page-title">Bilgi Bankası</h1>
-          <p class="page-subtitle">{{ totalCount() }} makale</p>
+          <h1 class="page-title">{{ 'kb.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'kb.count' | transloco:{ count: totalCount() } }}</p>
         </div>
         <a routerLink="/knowledge-base/new" class="btn btn-primary">
-          <i class="pi pi-plus"></i> Yeni Makale
+          <i class="pi pi-plus"></i> {{ 'kb.new' | transloco }}
         </a>
       </div>
 
@@ -51,19 +51,19 @@ interface ArticleListResult {
       <div class="toolbar">
         <div class="search-box">
           <i class="pi pi-search"></i>
-          <input type="text" placeholder="Makale ara..." [(ngModel)]="searchInput" (ngModelChange)="onSearch($event)" />
+          <input type="text" [placeholder]="'kb.searchPlaceholder' | transloco" [(ngModel)]="searchInput" (ngModelChange)="onSearch($event)" />
         </div>
         <select [(ngModel)]="filterTag" (ngModelChange)="onFilterChange()">
-          <option value="">Tüm etiketler</option>
+          <option value="">{{ 'kb.allTags' | transloco }}</option>
           @for (tag of tags(); track tag) {
             <option [value]="tag">{{ tag }}</option>
           }
         </select>
         <select [(ngModel)]="filterVis" (ngModelChange)="onFilterChange()">
-          <option value="">Tüm görünürlük</option>
-          <option value="Internal">Dahili</option>
-          <option value="TeamOnly">Ekip</option>
-          <option value="Public">Herkese Açık</option>
+          <option value="">{{ 'kb.allVisibility' | transloco }}</option>
+          <option value="Internal">{{ 'type.kbVisibility.Internal' | transloco }}</option>
+          <option value="TeamOnly">{{ 'type.kbVisibility.TeamOnly' | transloco }}</option>
+          <option value="Public">{{ 'type.kbVisibility.Public' | transloco }}</option>
         </select>
       </div>
 
@@ -78,11 +78,11 @@ interface ArticleListResult {
       }
 
       @if (loading()) {
-        <div class="loading-state">Yükleniyor...</div>
+        <div class="loading-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!articles().length) {
         <div class="empty-state">
           <i class="pi pi-book"></i>
-          <p>Makale bulunamadı.</p>
+          <p>{{ 'kb.notFound' | transloco }}</p>
         </div>
       } @else {
         <div class="article-list">
@@ -91,7 +91,7 @@ interface ArticleListResult {
               <div class="article-main">
                 <div class="article-header">
                   <h3 class="article-title">{{ a.title }}</h3>
-                  <span class="badge" [class]="visCss(a.visibility)">{{ visLabel(a.visibility) }}</span>
+                  <span class="badge" [class]="visCss(a.visibility)">{{ 'type.kbVisibility.' + a.visibility | transloco }}</span>
                 </div>
                 <div class="article-meta">
                   @if (a.productName) {
@@ -196,7 +196,6 @@ export class KbListComponent implements OnInit {
   filterVis = '';
   private searchSubject = new Subject<string>();
 
-  visLabel(v: string) { return VIS_LABEL[v] ?? v; }
   visCss(v: string) { return VIS_CSS[v] ?? ''; }
 
   ngOnInit() {

@@ -2,11 +2,11 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { marked } from 'marked';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { environment } from '../../../../environments/environment';
 
-const VIS_LABEL: Record<string, string> = { Internal: 'Dahili', TeamOnly: 'Ekip', Public: 'Herkese Açık' };
 const VIS_CSS: Record<string, string> = { Internal: 'badge--internal', TeamOnly: 'badge--team', Public: 'badge--public' };
 
 interface ArticleDetail {
@@ -28,17 +28,17 @@ interface ArticleDetail {
 @Component({
   selector: 'app-kb-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, TranslocoModule],
   template: `
     <div class="page-content">
       @if (loading()) {
-        <div class="loading-state">Yükleniyor...</div>
+        <div class="loading-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!article()) {
-        <div class="loading-state">Makale bulunamadı. <a routerLink="/knowledge-base">← Geri dön</a></div>
+        <div class="loading-state">{{ 'kb.notFound' | transloco }} <a routerLink="/knowledge-base">{{ 'common.goBack' | transloco }}</a></div>
       } @else {
         <!-- Breadcrumb -->
         <div class="breadcrumb">
-          <a routerLink="/knowledge-base">Bilgi Bankası</a>
+          <a routerLink="/knowledge-base">{{ 'kb.title' | transloco }}</a>
           <span>/</span>
           <span>{{ article()!.title }}</span>
         </div>
@@ -49,7 +49,7 @@ interface ArticleDetail {
             <div class="article-title-row">
               <h1>{{ article()!.title }}</h1>
               <a [routerLink]="['/knowledge-base', article()!.id, 'edit']" class="btn btn-secondary">
-                <i class="pi pi-pencil"></i> Düzenle
+                <i class="pi pi-pencil"></i> {{ 'common.edit' | transloco }}
               </a>
             </div>
 
@@ -59,13 +59,13 @@ interface ArticleDetail {
           <!-- Sidebar -->
           <aside class="sidebar">
             <div class="sidebar-section">
-              <h4>Görünürlük</h4>
-              <span class="badge" [class]="visCss(article()!.visibility)">{{ visLabel(article()!.visibility) }}</span>
+              <h4>{{ 'kb.visibility' | transloco }}</h4>
+              <span class="badge" [class]="visCss(article()!.visibility)">{{ 'type.kbVisibility.' + article()!.visibility | transloco }}</span>
             </div>
 
             @if (article()!.tags.length) {
               <div class="sidebar-section">
-                <h4>Etiketler</h4>
+                <h4>{{ 'kb.tags' | transloco }}</h4>
                 <div class="tag-list">
                   @for (tag of article()!.tags; track tag) {
                     <a [routerLink]="['/knowledge-base']" [queryParams]="{tag}" class="tag">{{ tag }}</a>
@@ -76,7 +76,7 @@ interface ArticleDetail {
 
             @if (article()!.productName) {
               <div class="sidebar-section">
-                <h4>Ürün</h4>
+                <h4>{{ 'kb.product' | transloco }}</h4>
                 <a [routerLink]="['/products', article()!.productId]" class="ctx-link">
                   <i class="pi pi-box"></i> {{ article()!.productName }}
                 </a>
@@ -85,7 +85,7 @@ interface ArticleDetail {
 
             @if (article()!.customerName) {
               <div class="sidebar-section">
-                <h4>Müşteri</h4>
+                <h4>{{ 'kb.customer' | transloco }}</h4>
                 <a [routerLink]="['/customers', article()!.customerId]" class="ctx-link">
                   <i class="pi pi-building"></i> {{ article()!.customerName }}
                 </a>
@@ -94,7 +94,7 @@ interface ArticleDetail {
 
             @if (article()!.teamName) {
               <div class="sidebar-section">
-                <h4>Ekip</h4>
+                <h4>{{ 'kb.team' | transloco }}</h4>
                 <a [routerLink]="['/teams', article()!.teamId]" class="ctx-link">
                   <i class="pi pi-users"></i> {{ article()!.teamName }}
                 </a>
@@ -103,18 +103,18 @@ interface ArticleDetail {
 
             <div class="sidebar-section meta-dates">
               <div>
-                <span class="meta-lbl">Oluşturuldu</span>
+                <span class="meta-lbl">{{ 'kb.createdAt' | transloco }}</span>
                 <span class="meta-val">{{ article()!.createdAt | date:'dd.MM.yyyy' }}</span>
               </div>
               <div>
-                <span class="meta-lbl">Güncellendi</span>
+                <span class="meta-lbl">{{ 'kb.updatedAt' | transloco }}</span>
                 <span class="meta-val">{{ article()!.updatedAt | date:'dd.MM.yyyy HH:mm' }}</span>
               </div>
             </div>
 
             <div class="sidebar-section">
               <button class="btn-danger-sm" (click)="confirmDelete()">
-                <i class="pi pi-trash"></i> Makaleyi Sil
+                <i class="pi pi-trash"></i> {{ 'kb.deleteArticle' | transloco }}
               </button>
             </div>
           </aside>
@@ -177,7 +177,7 @@ export class KbDetailComponent implements OnInit {
   loading = signal(true);
   renderedContent = signal<SafeHtml>('');
 
-  visLabel(v: string) { return VIS_LABEL[v] ?? v; }
+  private transloco = inject(TranslocoService);
   visCss(v: string) { return VIS_CSS[v] ?? ''; }
 
   ngOnInit() {
@@ -194,7 +194,7 @@ export class KbDetailComponent implements OnInit {
   }
 
   confirmDelete() {
-    if (!confirm('Bu makaleyi silmek istediğinize emin misiniz?')) return;
+    if (!confirm(this.transloco.translate('kb.deleteConfirm'))) return;
     const id = this.article()!.id;
     this.http.delete(`${environment.apiUrl}/knowledge-base/${id}`).subscribe({
       next: () => this.router.navigate(['/knowledge-base'])

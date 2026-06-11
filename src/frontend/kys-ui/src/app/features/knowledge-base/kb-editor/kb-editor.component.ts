@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { marked } from 'marked';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { environment } from '../../../../environments/environment';
@@ -20,24 +21,24 @@ interface ArticleDetail {
 @Component({
   selector: 'app-kb-editor',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="breadcrumb">
-        <a routerLink="/knowledge-base">Bilgi Bankası</a>
+        <a routerLink="/knowledge-base">{{ 'kb.title' | transloco }}</a>
         <span>/</span>
-        <span>{{ isEdit() ? 'Düzenle' : 'Yeni Makale' }}</span>
+        <span>{{ (isEdit() ? 'common.edit' : 'kb.new') | transloco }}</span>
       </div>
 
       <div class="editor-header">
         <input
           type="text"
           class="title-input"
-          placeholder="Makale başlığı..."
+          [placeholder]="'kb.titlePlaceholder' | transloco"
           [(ngModel)]="form.title"
         />
         @if (submitted() && !form.title.trim()) {
-          <span class="field-error">Başlık zorunludur</span>
+          <span class="field-error">{{ 'kb.titleRequired' | transloco }}</span>
         }
       </div>
 
@@ -45,17 +46,17 @@ interface ArticleDetail {
         <!-- Left: editor + metadata -->
         <div class="editor-col">
           <div class="toolbar-row">
-            <span class="mode-label">Markdown Editör</span>
+            <span class="mode-label">{{ 'kb.mdEditor' | transloco }}</span>
             <button class="preview-toggle" (click)="showPreview.set(!showPreview())">
               <i class="pi" [class]="showPreview() ? 'pi-eye-slash' : 'pi-eye'"></i>
-              {{ showPreview() ? 'Önizlemeyi Gizle' : 'Önizle' }}
+              {{ (showPreview() ? 'kb.hidePreview' : 'kb.preview') | transloco }}
             </button>
           </div>
 
           @if (!showPreview()) {
             <textarea
               class="content-editor"
-              placeholder="Markdown formatında yazın..."
+              [placeholder]="'kb.contentPlaceholder' | transloco"
               [(ngModel)]="form.content"
               (ngModelChange)="updatePreview()"
               rows="24"
@@ -68,18 +69,18 @@ interface ArticleDetail {
         <!-- Right: metadata panel -->
         <aside class="meta-panel">
           <div class="meta-section">
-            <label>Görünürlük</label>
+            <label>{{ 'kb.visibility' | transloco }}</label>
             <select [(ngModel)]="form.visibility">
-              <option value="Internal">Dahili (sadece platform kullanıcıları)</option>
-              <option value="TeamOnly">Ekip (ilgili ekip)</option>
-              <option value="Public">Herkese Açık</option>
+              <option value="Internal">{{ 'kb.visInternalOpt' | transloco }}</option>
+              <option value="TeamOnly">{{ 'kb.visTeamOnlyOpt' | transloco }}</option>
+              <option value="Public">{{ 'kb.visPublicOpt' | transloco }}</option>
             </select>
           </div>
 
           <div class="meta-section">
-            <label>Etiketler</label>
+            <label>{{ 'kb.tags' | transloco }}</label>
             <div class="tag-input-row">
-              <input type="text" [(ngModel)]="tagInput" placeholder="Etiket ekle..." (keydown.enter)="addTag(); $event.preventDefault()" />
+              <input type="text" [(ngModel)]="tagInput" [placeholder]="'kb.tagPlaceholder' | transloco" (keydown.enter)="addTag(); $event.preventDefault()" />
               <button class="btn-add-tag" (click)="addTag()"><i class="pi pi-plus"></i></button>
             </div>
             @if (form.tags.length) {
@@ -95,7 +96,7 @@ interface ArticleDetail {
           </div>
 
           <div class="meta-section meta-note">
-            <p><i class="pi pi-info-circle"></i> İsteğe bağlı: makaleyi bir ürün, müşteri veya ekiple ilişkilendirebilirsiniz.</p>
+            <p><i class="pi pi-info-circle"></i> {{ 'kb.metaNote' | transloco }}</p>
           </div>
 
           @if (saveError()) {
@@ -103,9 +104,9 @@ interface ArticleDetail {
           }
 
           <div class="action-buttons">
-            <a routerLink="/knowledge-base" class="btn btn-secondary">İptal</a>
+            <a routerLink="/knowledge-base" class="btn btn-secondary">{{ 'common.cancel' | transloco }}</a>
             <button class="btn btn-primary" [disabled]="saving()" (click)="save()">
-              {{ saving() ? 'Kaydediliyor...' : (isEdit() ? 'Güncelle' : 'Yayınla') }}
+              {{ (saving() ? 'common.saving' : (isEdit() ? 'common.update' : 'kb.publish')) | transloco }}
             </button>
           </div>
         </aside>
@@ -158,6 +159,7 @@ interface ArticleDetail {
 })
 export class KbEditorComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
@@ -247,7 +249,7 @@ export class KbEditorComponent implements OnInit {
       },
       error: err => {
         this.saving.set(false);
-        this.saveError.set(err.error?.detail ?? 'Makale kaydedilemedi');
+        this.saveError.set(err.error?.detail ?? this.transloco.translate('kb.saveError'));
       }
     });
   }

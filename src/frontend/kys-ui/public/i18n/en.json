@@ -78,7 +78,43 @@
       "Project": "Project — Project-based team",
       "Domain": "Domain — Domain team",
       "Platform": "Platform — Infrastructure/platform team"
+    },
+    "kbVisibility": {
+      "Internal": "Internal",
+      "TeamOnly": "Team",
+      "Public": "Public"
     }
+  },
+  "kb": {
+    "title": "Knowledge Base",
+    "count": "{{count}} articles",
+    "new": "New Article",
+    "searchPlaceholder": "Search articles...",
+    "allTags": "All tags",
+    "allVisibility": "All visibility",
+    "notFound": "No articles found.",
+    "visibility": "Visibility",
+    "tags": "Tags",
+    "product": "Product",
+    "customer": "Customer",
+    "team": "Team",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "deleteArticle": "Delete Article",
+    "deleteConfirm": "Are you sure you want to delete this article?",
+    "titlePlaceholder": "Article title...",
+    "titleRequired": "Title is required",
+    "mdEditor": "Markdown Editor",
+    "hidePreview": "Hide Preview",
+    "preview": "Preview",
+    "contentPlaceholder": "Write in Markdown format...",
+    "visInternalOpt": "Internal (platform users only)",
+    "visTeamOnlyOpt": "Team (related team)",
+    "visPublicOpt": "Public",
+    "tagPlaceholder": "Add tag...",
+    "metaNote": "Optional: you can associate the article with a product, customer or team.",
+    "publish": "Publish",
+    "saveError": "Could not save article"
   },
   "people": {
     "title": "People",
