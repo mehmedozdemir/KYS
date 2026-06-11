@@ -194,6 +194,9 @@ Her geliştirme görevi için aşağıdaki adımlar **tartışmasız** uygulanı
 <PackageReference Include="EFCore.NamingConventions" Version="8.*" />
 <PackageReference Include="Dapper" Version="2.*" />
 
+<!-- E-posta (SMTP) -->
+<PackageReference Include="MailKit" Version="4.*" />
+
 <!-- Auth -->
 <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.*" />
 <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.*" />

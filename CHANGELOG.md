@@ -16,6 +16,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.32.0] — 2026-06-11 (Sprint 35 — Mail Altyapısı (Faz A))
+
+### Eklendi
+- **`EmailAccount`**: giden e-posta (SMTP) hesabı — birden fazla tanımlanabilir, biri aktif; parola AES ile şifreli (`IEncryptionService`). Migration `Sprint35_EmailAccount`
+- **`IEmailSender` / `SmtpEmailSender`** (MailKit): aktif hesapla HTML e-posta gönderimi; STARTTLS/SSL desteği
+- **Admin API** `/admin/email-accounts` (`admin:config`): CRUD + aktif seç + test maili gönder
+- **Mail Ayarları** admin ekranı: hesap ekle/düzenle/sil, sağlayıcı preset'leri (Exchange `smtp.office365.com:587 STARTTLS` öntanımlı, Gmail, Özel), aktif işaretleme, test gönderimi. Menü + admin paneli kartı
+- MailKit onaylı paket listesine eklendi (CLAUDE.md)
+
+### Sonraki (Faz B)
+- Mevcut kişiyi platforma alma + welcome e-postası (kullanıcı adı/şifre) + frontend otomatik şifre üretme
+
+---
+
 ## [0.31.2] — 2026-06-11 (Düzeltme — Audit Log 500 / çift controller)
 
 ### Düzeltildi

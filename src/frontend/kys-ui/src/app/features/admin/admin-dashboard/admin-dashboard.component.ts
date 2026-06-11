@@ -159,6 +159,10 @@ interface AuditLogList {
                 <i class="pi pi-key"></i>
                 <span>Erişim Yetkileri</span>
               </a>
+              <a routerLink="/admin/email-accounts" class="link-card">
+                <i class="pi pi-envelope"></i>
+                <span>Mail Ayarları</span>
+              </a>
               <a routerLink="/admin/audit-log" class="link-card">
                 <i class="pi pi-history"></i>
                 <span>Audit Log</span>

@@ -36,6 +36,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<KbTag> KbTags => Set<KbTag>();
     public DbSet<KbArticleTag> KbArticleTags => Set<KbArticleTag>();
     public DbSet<AccessGrant> AccessGrants => Set<AccessGrant>();
+    public DbSet<EmailAccount> EmailAccounts => Set<EmailAccount>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

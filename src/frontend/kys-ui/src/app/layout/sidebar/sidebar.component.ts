@@ -156,6 +156,7 @@ export class SidebarComponent {
         { label: 'Genel Bakış', icon: 'pi-chart-bar', route: '/admin', exact: true },
         { label: 'Platform Kullanıcıları', icon: 'pi-shield', route: '/admin/platform-users' },
         { label: 'Erişim Yetkileri', icon: 'pi-key', route: '/admin/access-grants' },
+        { label: 'Mail Ayarları', icon: 'pi-envelope', route: '/admin/email-accounts' },
         { label: 'Özel Alanlar', icon: 'pi-sliders-h', route: '/admin/custom-fields' },
         { label: 'Audit Log', icon: 'pi-history', route: '/admin/audit-log' }
       ]
