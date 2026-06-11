@@ -13,4 +13,5 @@ public sealed record UpdateEmailAccountCommand(
     string Username,
     string? Password, // null = mevcut parolayı koru
     string FromAddress,
-    string? FromName) : IRequest;
+    string? FromName,
+    bool AcceptAllCertificates) : IRequest;

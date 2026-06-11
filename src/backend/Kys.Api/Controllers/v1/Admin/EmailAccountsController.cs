@@ -5,6 +5,7 @@ using Kys.Application.Email.Commands.DeleteEmailAccount;
 using Kys.Application.Email.Commands.SendTestEmail;
 using Kys.Application.Email.Commands.SetActiveEmailAccount;
 using Kys.Application.Email.Commands.UpdateEmailAccount;
+using Kys.Application.Email.Queries.DiscoverEmailSettings;
 using Kys.Application.Email.Queries.GetEmailAccounts;
 using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
@@ -23,12 +24,16 @@ public sealed class EmailAccountsController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> GetAll(CancellationToken ct)
         => Ok(await mediator.Send(new GetEmailAccountsQuery(), ct));
 
+    [HttpGet("discover")]
+    public async Task<IActionResult> Discover([FromQuery] string email, CancellationToken ct)
+        => Ok(await mediator.Send(new DiscoverEmailSettingsQuery(email), ct));
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateEmailAccountRequest r, CancellationToken ct)
     {
         var id = await mediator.Send(new CreateEmailAccountCommand(
             r.Name, r.Provider, r.Host, r.Port, r.Security, r.Username, r.Password,
-            r.FromAddress, r.FromName, r.MakeActive), ct);
+            r.FromAddress, r.FromName, r.AcceptAllCertificates, r.MakeActive), ct);
         return Created(string.Empty, new { id });
     }
 
@@ -37,7 +42,7 @@ public sealed class EmailAccountsController(IMediator mediator) : ControllerBase
     {
         await mediator.Send(new UpdateEmailAccountCommand(
             id, r.Name, r.Provider, r.Host, r.Port, r.Security, r.Username, r.Password,
-            r.FromAddress, r.FromName), ct);
+            r.FromAddress, r.FromName, r.AcceptAllCertificates), ct);
         return NoContent();
     }
 
@@ -65,10 +70,10 @@ public sealed class EmailAccountsController(IMediator mediator) : ControllerBase
 
 public sealed record CreateEmailAccountRequest(
     string Name, EmailProvider Provider, string Host, int Port, EmailSecurity Security,
-    string Username, string Password, string FromAddress, string? FromName, bool MakeActive);
+    string Username, string Password, string FromAddress, string? FromName, bool AcceptAllCertificates, bool MakeActive);
 
 public sealed record UpdateEmailAccountRequest(
     string Name, EmailProvider Provider, string Host, int Port, EmailSecurity Security,
-    string Username, string? Password, string FromAddress, string? FromName);
+    string Username, string? Password, string FromAddress, string? FromName, bool AcceptAllCertificates);
 
 public sealed record SendTestRequest(string ToEmail);

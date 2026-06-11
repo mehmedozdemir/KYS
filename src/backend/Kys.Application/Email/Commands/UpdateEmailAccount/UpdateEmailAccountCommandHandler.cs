@@ -24,6 +24,7 @@ public sealed class UpdateEmailAccountCommandHandler(
         account.Username = request.Username;
         account.FromAddress = request.FromAddress;
         account.FromName = request.FromName;
+        account.AcceptAllCertificates = request.AcceptAllCertificates;
 
         if (!string.IsNullOrWhiteSpace(request.Password))
             account.EncryptedPassword = encryption.Encrypt(request.Password);

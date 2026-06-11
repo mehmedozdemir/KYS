@@ -23,6 +23,7 @@ public sealed class CreateEmailAccountCommandHandler(
             EncryptedPassword = encryption.Encrypt(request.Password),
             FromAddress = request.FromAddress,
             FromName = request.FromName,
+            AcceptAllCertificates = request.AcceptAllCertificates,
             IsActive = request.MakeActive
         };
 

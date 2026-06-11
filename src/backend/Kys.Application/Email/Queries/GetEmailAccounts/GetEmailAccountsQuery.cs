@@ -16,4 +16,5 @@ public sealed record EmailAccountDto(
     string Username,
     string FromAddress,
     string? FromName,
+    bool AcceptAllCertificates,
     bool IsActive);

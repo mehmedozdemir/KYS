@@ -22,5 +22,8 @@ public sealed class EmailAccount : BaseEntity
     public string FromAddress { get; set; } = string.Empty;
     public string? FromName { get; set; }
 
+    /// <summary>Sunucu TLS sertifikasını doğrulama (self-signed / iç sunucular için).</summary>
+    public bool AcceptAllCertificates { get; set; }
+
     public bool IsActive { get; set; }
 }

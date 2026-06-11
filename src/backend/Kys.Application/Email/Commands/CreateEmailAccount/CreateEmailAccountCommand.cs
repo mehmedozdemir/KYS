@@ -13,4 +13,5 @@ public sealed record CreateEmailAccountCommand(
     string Password,
     string FromAddress,
     string? FromName,
+    bool AcceptAllCertificates,
     bool MakeActive) : IRequest<Guid>;
