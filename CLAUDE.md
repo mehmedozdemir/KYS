@@ -196,6 +196,7 @@ Her geliştirme görevi için aşağıdaki adımlar **tartışmasız** uygulanı
 
 <!-- E-posta (SMTP) -->
 <PackageReference Include="MailKit" Version="4.*" />
+<PackageReference Include="DnsClient" Version="1.*" /> <!-- MX/SRV ile mail otomatik keşif -->
 
 <!-- Auth -->
 <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.*" />

@@ -28,6 +28,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.34.0] — 2026-06-11 (Mail Otomatik Keşif — Outlook benzeri)
+
+### Eklendi
+- **SMTP ayarlarını e-postadan otomatik bulma** (Mail Ayarları → "Ayarları bul"): alan adına göre sırayla bilinen sağlayıcılar (Gmail/Outlook), **DNS SRV `_submission._tcp`**, **MX kaydı** (Office 365 / Google Workspace tespiti) ve son çare tahmin (`smtp.<alan>`). Bulunan sunucu/port/güvenlik forma doldurulur, kaynağı kullanıcıya gösterilir
+- `GET /admin/email-accounts/discover?email=` (`admin:config`); `IEmailDiscoveryService` (DnsClient). DnsClient onaylı paketlere eklendi
+- **Not:** iç/on-prem (public MX'i olmayan) alanlarda tahmine düşer; kullanıcı düzeltip "Test" ile doğrular
+
+---
+
 ## [0.32.0] — 2026-06-11 (Sprint 35 — Mail Altyapısı (Faz A))
 
 ### Eklendi

@@ -5,6 +5,7 @@ using Kys.Application.Email.Commands.DeleteEmailAccount;
 using Kys.Application.Email.Commands.SendTestEmail;
 using Kys.Application.Email.Commands.SetActiveEmailAccount;
 using Kys.Application.Email.Commands.UpdateEmailAccount;
+using Kys.Application.Email.Queries.DiscoverEmailSettings;
 using Kys.Application.Email.Queries.GetEmailAccounts;
 using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
@@ -22,6 +23,10 @@ public sealed class EmailAccountsController(IMediator mediator) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct)
         => Ok(await mediator.Send(new GetEmailAccountsQuery(), ct));
+
+    [HttpGet("discover")]
+    public async Task<IActionResult> Discover([FromQuery] string email, CancellationToken ct)
+        => Ok(await mediator.Send(new DiscoverEmailSettingsQuery(email), ct));
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateEmailAccountRequest r, CancellationToken ct)
