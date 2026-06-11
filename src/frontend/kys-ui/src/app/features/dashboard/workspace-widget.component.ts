@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule } from '@jsverse/transloco';
 import { environment } from '../../../environments/environment';
 
 interface WorkspaceCredential {
@@ -57,27 +58,27 @@ interface WorkspaceCustomer {
 @Component({
   selector: 'app-workspace-widget',
   standalone: true,
-  imports: [RouterLink, NgClass, FormsModule],
+  imports: [RouterLink, NgClass, FormsModule, TranslocoModule],
   template: `
     <div class="workspace-card">
       <div class="ws-header">
         <div class="ws-title">
           <i class="pi pi-th-large"></i>
-          <h2>Çalışma Alanım</h2>
+          <h2>{{ 'workspace.title' | transloco }}</h2>
         </div>
         <div class="ws-controls">
           <div class="scope-toggle">
             <button type="button" [class.active]="!allCustomers()" (click)="setScope(false)">
-              Benim Müşterilerim
+              {{ 'workspace.myCustomers' | transloco }}
             </button>
             <button type="button" [class.active]="allCustomers()" (click)="setScope(true)">
-              Tüm Müşteriler
+              {{ 'workspace.allCustomers' | transloco }}
             </button>
           </div>
           <div class="ws-filter">
             <i class="pi pi-search"></i>
             <input type="text" [ngModel]="filter()" (ngModelChange)="filter.set($event)"
-              placeholder="Müşteri, ortam, endpoint, URL ara..." />
+              [placeholder]="'workspace.searchPlaceholder' | transloco" />
             @if (filter()) {
               <button type="button" class="ws-filter-clear" (click)="filter.set('')">
                 <i class="pi pi-times"></i>
@@ -91,7 +92,7 @@ interface WorkspaceCustomer {
         <div class="ws-typefilters">
           @if (availableResourceTypes().length) {
             <div class="ws-tf-group">
-              <span class="ws-tf-label"><i class="pi pi-database"></i> Kaynak Tipi</span>
+              <span class="ws-tf-label"><i class="pi pi-database"></i> {{ 'workspace.resourceType' | transloco }}</span>
               @for (t of availableResourceTypes(); track t) {
                 <button type="button" class="ws-tf-chip"
                   [class.active]="selectedResourceTypes().has(t)"
@@ -101,7 +102,7 @@ interface WorkspaceCustomer {
           }
           @if (availableEndpointTypes().length) {
             <div class="ws-tf-group">
-              <span class="ws-tf-label"><i class="pi pi-link"></i> Endpoint Türü</span>
+              <span class="ws-tf-label"><i class="pi pi-link"></i> {{ 'workspace.endpointType' | transloco }}</span>
               @for (t of availableEndpointTypes(); track t) {
                 <button type="button" class="ws-tf-chip ws-tf-chip--ep"
                   [class.active]="selectedEndpointTypes().has(t)"
@@ -111,32 +112,32 @@ interface WorkspaceCustomer {
           }
           @if (hasActiveTypeFilter()) {
             <button type="button" class="ws-tf-clear" (click)="clearTypeFilters()">
-              <i class="pi pi-times"></i> Temizle
+              <i class="pi pi-times"></i> {{ 'workspace.clear' | transloco }}
             </button>
           }
         </div>
       }
 
       @if (loading()) {
-        <div class="ws-state">Yükleniyor...</div>
+        <div class="ws-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!customers().length) {
         <div class="ws-state">
           <i class="pi pi-inbox"></i>
           @if (allCustomers()) {
-            <p>Görüntülenecek müşteri/ortam bulunamadı.</p>
+            <p>{{ 'workspace.emptyAll' | transloco }}</p>
           } @else {
-            <p>Size atanmış bir ürün/müşteri bulunamadı. "Tüm Müşteriler" ile tümüne bakabilirsiniz.</p>
+            <p>{{ 'workspace.emptyMine' | transloco }}</p>
           }
         </div>
       } @else if (!filteredCustomers().length) {
         <div class="ws-state">
           <i class="pi pi-filter-slash"></i>
           @if (filter() && hasActiveTypeFilter()) {
-            <p>Arama ve seçili tip filtreleriyle eşleşen kayıt yok.</p>
+            <p>{{ 'workspace.noMatchSearchType' | transloco }}</p>
           } @else if (hasActiveTypeFilter()) {
-            <p>Seçili tip filtreleriyle eşleşen kayıt yok.</p>
+            <p>{{ 'workspace.noMatchType' | transloco }}</p>
           } @else {
-            <p>"{{ filter() }}" ile eşleşen kayıt yok.</p>
+            <p>{{ 'workspace.noMatchSearch' | transloco:{ term: filter() } }}</p>
           }
         </div>
       } @else {
@@ -152,7 +153,7 @@ interface WorkspaceCustomer {
                     <span class="ws-chip">{{ p }}</span>
                   }
                 </span>
-                <span class="ws-customer-meta">{{ c.environments.length }} ortam</span>
+                <span class="ws-customer-meta">{{ 'workspace.envCount' | transloco:{ count: c.environments.length } }}</span>
               </button>
 
               @if (isExpanded(c.customerId)) {
@@ -178,17 +179,17 @@ interface WorkspaceCustomer {
                               <span class="ws-plat-badge"
                                 [style.background]="hexAlpha(e.hostingPlatformColor, 0.15)"
                                 [style.color]="e.hostingPlatformColor ?? '#6B7280'"
-                                [title]="'Barındırma: ' + e.hostingPlatformName">
+                                [title]="('workspace.hosting' | transloco) + ': ' + e.hostingPlatformName">
                                 <i class="pi" [ngClass]="e.hostingPlatformIcon ?? 'pi-server'"></i> {{ e.hostingPlatformName }}
                               </span>
                             }
-                            <a class="ws-env-link" [routerLink]="['/environments', e.environmentId]" title="Ortam detayı">
-                              Detay <i class="pi pi-arrow-right"></i>
+                            <a class="ws-env-link" [routerLink]="['/environments', e.environmentId]" [title]="'workspace.detail' | transloco">
+                              {{ 'workspace.detail' | transloco }} <i class="pi pi-arrow-right"></i>
                             </a>
                           </div>
 
                           @if (!e.endpoints.length && !e.resources.length) {
-                            <div class="ws-empty-env">Bu ortamda tanımlı endpoint/kaynak yok.</div>
+                            <div class="ws-empty-env">{{ 'workspace.noEnvItems' | transloco }}</div>
                           }
 
                           @for (ep of e.endpoints; track ep.name) {
@@ -199,12 +200,12 @@ interface WorkspaceCustomer {
                                 <a [href]="ep.baseUrl" target="_blank" class="ws-row-name ws-row-name--link" [title]="ep.baseUrl">
                                   {{ ep.name }}<i class="pi pi-external-link"></i>
                                 </a>
-                                <button type="button" class="ws-copy" (click)="copy(ep.baseUrl)" title="URL kopyala">
+                                <button type="button" class="ws-copy" (click)="copy(ep.baseUrl)" [title]="'workspace.copyUrl' | transloco">
                                   <i class="pi pi-copy"></i>
                                 </button>
                               } @else {
                                 <span class="ws-row-name">{{ ep.name }}</span>
-                                <span class="ws-no-url">URL yok</span>
+                                <span class="ws-no-url">{{ 'workspace.noUrl' | transloco }}</span>
                               }
                               @if (ep.swaggerUrl) {
                                 <a [href]="ep.swaggerUrl" target="_blank" class="ws-mini-link" title="Swagger">
@@ -221,7 +222,7 @@ interface WorkspaceCustomer {
                               }
                               @if (ep.credentialCount) {
                                 <button type="button" class="ws-cred" [class.active]="isPanelOpen(epKey)"
-                                  (click)="togglePanel(epKey, ep.credentials)" title="Credential'ları göster">
+                                  (click)="togglePanel(epKey, ep.credentials)" [title]="'workspace.showCredentials' | transloco">
                                   <i class="pi pi-key"></i> {{ ep.credentialCount }}
                                   <i class="pi" [ngClass]="isPanelOpen(epKey) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                                 </button>
@@ -237,7 +238,7 @@ interface WorkspaceCustomer {
                                         {{ visibleValues()[cr.id] ? (revealedValues()[cr.id] ?? '••••••') : '••••••' }}
                                       </span>
                                       <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
-                                        (click)="toggleReveal(cr.id)" [title]="visibleValues()[cr.id] ? 'Gizle' : 'Göster'">
+                                        (click)="toggleReveal(cr.id)" [title]="(visibleValues()[cr.id] ? 'workspace.hide' : 'workspace.show') | transloco">
                                         @if (revealingIds()[cr.id]) { <i class="pi pi-spin pi-spinner"></i> }
                                         @else { <i class="pi" [ngClass]="visibleValues()[cr.id] ? 'pi-eye-slash' : 'pi-eye'"></i> }
                                       </button>
@@ -247,7 +248,7 @@ interface WorkspaceCustomer {
                                       </span>
                                     }
                                     <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
-                                      (click)="copyCredential(cr.id)" [title]="copiedIds()[cr.id] ? 'Kopyalandı' : 'Kopyala'">
+                                      (click)="copyCredential(cr.id)" [title]="(copiedIds()[cr.id] ? 'workspace.copied' : 'workspace.copy') | transloco">
                                       <i class="pi" [ngClass]="copiedIds()[cr.id] ? 'pi-check' : 'pi-copy'"></i>
                                     </button>
                                   </div>
@@ -263,11 +264,11 @@ interface WorkspaceCustomer {
                               <span class="ws-row-name">{{ r.templateName }}</span>
                               <span class="ws-res-type">{{ r.resourceTypeName }}</span>
                               @if (r.isShared) {
-                                <span class="ws-shared"><i class="pi pi-share-alt"></i> {{ r.sharedResourceName ?? 'Paylaşımlı' }}</span>
+                                <span class="ws-shared"><i class="pi pi-share-alt"></i> {{ r.sharedResourceName ?? ('workspace.shared' | transloco) }}</span>
                               }
                               @if (r.credentialCount) {
                                 <button type="button" class="ws-cred" [class.active]="isPanelOpen(rKey)"
-                                  (click)="togglePanel(rKey, r.credentials)" title="Bağlantı bilgilerini göster">
+                                  (click)="togglePanel(rKey, r.credentials)" [title]="'workspace.showConnInfo' | transloco">
                                   <i class="pi pi-key"></i> {{ r.credentialCount }}
                                   <i class="pi" [ngClass]="isPanelOpen(rKey) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                                 </button>
@@ -283,7 +284,7 @@ interface WorkspaceCustomer {
                                         {{ visibleValues()[cr.id] ? (revealedValues()[cr.id] ?? '••••••') : '••••••' }}
                                       </span>
                                       <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
-                                        (click)="toggleReveal(cr.id)" [title]="visibleValues()[cr.id] ? 'Gizle' : 'Göster'">
+                                        (click)="toggleReveal(cr.id)" [title]="(visibleValues()[cr.id] ? 'workspace.hide' : 'workspace.show') | transloco">
                                         @if (revealingIds()[cr.id]) { <i class="pi pi-spin pi-spinner"></i> }
                                         @else { <i class="pi" [ngClass]="visibleValues()[cr.id] ? 'pi-eye-slash' : 'pi-eye'"></i> }
                                       </button>
@@ -293,7 +294,7 @@ interface WorkspaceCustomer {
                                       </span>
                                     }
                                     <button type="button" class="ws-cred-btn" [disabled]="revealingIds()[cr.id]"
-                                      (click)="copyCredential(cr.id)" [title]="copiedIds()[cr.id] ? 'Kopyalandı' : 'Kopyala'">
+                                      (click)="copyCredential(cr.id)" [title]="(copiedIds()[cr.id] ? 'workspace.copied' : 'workspace.copy') | transloco">
                                       <i class="pi" [ngClass]="copiedIds()[cr.id] ? 'pi-check' : 'pi-copy'"></i>
                                     </button>
                                   </div>
