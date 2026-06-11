@@ -44,13 +44,24 @@ public sealed class SmtpEmailSender(
 
         var password = encryption.Decrypt(account.EncryptedPassword);
 
-        using var client = new SmtpClient();
+        // 20 sn'de bir yanıt gelmezse hızlı başarısız ol (120 sn askıda kalmasın)
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(20));
+        var token = timeoutCts.Token;
+
+        using var client = new SmtpClient { Timeout = 20000 };
         try
         {
-            await client.ConnectAsync(account.Host, account.Port, secure, ct);
-            await client.AuthenticateAsync(account.Username, password, ct);
-            await client.SendAsync(message, ct);
-            await client.DisconnectAsync(true, ct);
+            await client.ConnectAsync(account.Host, account.Port, secure, token);
+            await client.AuthenticateAsync(account.Username, password, token);
+            await client.SendAsync(message, token);
+            await client.DisconnectAsync(true, token);
+        }
+        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested)
+        {
+            throw new DomainException(
+                $"SMTP bağlantısı zaman aşımına uğradı ({account.Host}:{account.Port}). " +
+                "Sunucu/port yanlış olabilir (SMTP için genelde 587/STARTTLS ya da 465/SSL — 443 SMTP değildir) veya erişim engelli.");
         }
         catch (System.Net.Sockets.SocketException ex)
         {
@@ -62,11 +73,11 @@ public sealed class SmtpEmailSender(
         {
             throw new DomainException(
                 $"TLS/SSL el sıkışma hatası ({account.Host}:{account.Port}). " +
-                "Güvenlik ayarını (STARTTLS/SSL) ve portu kontrol edin (genelde STARTTLS→587, SSL→465).");
+                "Güvenlik ayarını ve portu kontrol edin (STARTTLS→587, SSL→465).");
         }
         catch (MailKit.Security.AuthenticationException)
         {
-            throw new DomainException("Kimlik doğrulama başarısız: kullanıcı adı veya parola hatalı.");
+            throw new DomainException("Kimlik doğrulama başarısız: kullanıcı adı veya parola hatalı (O365'te SMTP AUTH kapalı olabilir / MFA varsa uygulama şifresi gerekir).");
         }
         catch (MailKit.Net.Smtp.SmtpCommandException ex)
         {
@@ -74,11 +85,11 @@ public sealed class SmtpEmailSender(
         }
         catch (MailKit.Net.Smtp.SmtpProtocolException ex)
         {
-            throw new DomainException($"SMTP protokol hatası: {ex.Message}");
+            throw new DomainException($"SMTP protokol hatası: {ex.Message} (yanlış porta bağlanıyor olabilirsiniz).");
         }
-        catch (OperationCanceledException)
+        catch (Exception ex)
         {
-            throw new DomainException($"SMTP bağlantısı zaman aşımına uğradı ({account.Host}:{account.Port}).");
+            throw new DomainException($"E-posta gönderilemedi ({account.Host}:{account.Port}): {ex.Message}");
         }
     }
 }
