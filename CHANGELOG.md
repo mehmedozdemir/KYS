@@ -28,6 +28,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.37.0] — 2026-06-11 (Sidebar Yeniden Tasarım — Modern & Responsive)
+
+### Değişti
+- **Akordeon menü grupları**: "Tanımlar" ve "Yönetim" katlanabilir, varsayılan kapalı; aktif sayfanın grubu otomatik açılır → kalabalık azaldı
+- **Mini (ikon) mod**: topbar menü düğmesiyle sidebar ikon-only moda küçülür (tooltip'li, tercih `localStorage`'da kalıcı)
+- **Responsive drawer**: ≤1023px'de sidebar off-canvas; topbar'da hamburger ile açılır, arka plan karartma + sayfa değişince/karartmaya tıklayınca kapanır
+- **Görsel cila**: aktif öğede sol vurgu çizgisi, yumuşak hover/geçişler, ferah boşluk, akordeon chevron animasyonu
+- `LayoutService` (collapsed/mobileOpen/isMobile) eklendi
+
+---
+
 ## [0.36.0] — 2026-06-11 (Sprint 37 — Kurum Profili & Markalama)
 
 ### Eklendi

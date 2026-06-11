@@ -11,6 +11,7 @@ import { selectCurrentUser } from '../../core/store/auth/auth.selectors';
 import { logout } from '../../core/store/auth/auth.actions';
 import { environment } from '../../../environments/environment';
 import { ThemeService, THEMES, ThemeId } from '../../core/services/theme.service';
+import { LayoutService } from '../../core/services/layout.service';
 
 interface SearchItem { id: string; name: string; subTitle: string | null; category: string; status: string | null; }
 interface SearchResult { customers: SearchItem[]; products: SearchItem[]; people: SearchItem[]; teams: SearchItem[]; articles: SearchItem[]; }
@@ -31,6 +32,10 @@ const CATEGORY_ROUTE: Record<string, string> = {
   imports: [FormsModule, AsyncPipe, NgClass, RouterLink],
   template: `
     <header class="topbar">
+      <div class="topbar__left">
+      <button class="topbar__menu-btn" (click)="layout.primaryToggle()" title="Menü">
+        <i class="pi pi-bars"></i>
+      </button>
       <div class="topbar__search" [class.topbar__search--active]="showDropdown()">
         <i class="pi pi-search search-icon"></i>
         <input
@@ -87,6 +92,7 @@ const CATEGORY_ROUTE: Record<string, string> = {
           </div>
         }
       </div>
+      </div>
 
       <div class="topbar__right">
         <div class="theme-menu">
@@ -126,10 +132,17 @@ const CATEGORY_ROUTE: Record<string, string> = {
       padding: 0 1.5rem; flex-shrink: 0; position: relative; z-index: 100;
     }
 
+    .topbar__left { display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0; }
+    .topbar__menu-btn {
+      background: none; border: none; cursor: pointer; color: var(--text-muted);
+      font-size: 1.15rem; padding: 0.35rem; border-radius: 0.375rem; display: inline-flex;
+      flex-shrink: 0; transition: all 0.15s;
+      &:hover { color: var(--primary); background: var(--hover); }
+    }
     .topbar__search {
       position: relative; display: flex; align-items: center; gap: 0.5rem;
       background: var(--surface-3); border-radius: 0.5rem; padding: 0.5rem 1rem;
-      width: 420px; border: 1px solid transparent; transition: all 0.15s;
+      width: 420px; max-width: 100%; border: 1px solid transparent; transition: all 0.15s;
 
       &--active, &:focus-within {
         background: var(--surface); border-color: var(--primary);
@@ -241,6 +254,7 @@ export class TopbarComponent {
   private el = inject(ElementRef);
 
   readonly theme = inject(ThemeService);
+  readonly layout = inject(LayoutService);
   readonly themeGroups = [
     { group: 'Açık' as const, items: THEMES.filter(t => t.group === 'Açık') },
     { group: 'Koyu' as const, items: THEMES.filter(t => t.group === 'Koyu') }
