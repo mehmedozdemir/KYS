@@ -6,12 +6,10 @@ import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 import { PermissionService } from '../../../core/services/permission.service';
 import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 
-const PRODUCT_TYPE: Record<number, string> = { 0: 'SaaS', 1: 'Müşteriye Özel', 2: 'Hibrit' };
 const PRODUCT_TYPE_CSS: Record<number, string> = { 0: 'badge--saas', 1: 'badge--custom', 2: 'badge--hybrid' };
-const STATUS_LABEL: Record<string, string> = { Active: 'Aktif', Deprecated: 'Kullanımdan Kalkıyor', Discontinued: 'Kapatıldı' };
 const STATUS_CSS: Record<string, string> = { Active: 'badge--active', Deprecated: 'badge--deprecated', Discontinued: 'badge--archived' };
-const ENDPOINT_TYPE: Record<number, string> = { 0: 'Frontend', 1: 'REST API', 2: 'gRPC', 3: 'SOAP', 4: 'GraphQL' };
 const ENDPOINT_ICON: Record<number, string> = { 0: 'pi-desktop', 1: 'pi-server', 2: 'pi-server', 3: 'pi-server', 4: 'pi-code' };
 
 interface ProductDetail {
@@ -37,17 +35,17 @@ interface ProductDetail {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent, TranslocoModule],
   template: `
     <div class="page-content">
       @if (loading()) {
-        <div class="loading-state">Yükleniyor...</div>
+        <div class="loading-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!product()) {
-        <div class="loading-state">Ürün bulunamadı. <a routerLink="/products">← Geri dön</a></div>
+        <div class="loading-state">{{ 'productDetail.notFound' | transloco }} <a routerLink="/products">{{ 'common.goBack' | transloco }}</a></div>
       } @else {
         <!-- Breadcrumb -->
         <div class="breadcrumb">
-          <a routerLink="/products">Ürünler</a>
+          <a routerLink="/products">{{ 'products.title' | transloco }}</a>
           <span>/</span>
           <span>{{ product()!.name }}</span>
         </div>
@@ -61,18 +59,18 @@ interface ProductDetail {
                 <h1>{{ product()!.name }}</h1>
                 <code class="code-badge">{{ product()!.code }}</code>
               </div>
-              <p class="header-desc">{{ product()!.description ?? 'Açıklama eklenmemiş' }}</p>
+              <p class="header-desc">{{ product()!.description ?? ('productDetail.noDescription' | transloco) }}</p>
               @if (product()!.version) {
                 <span class="version-tag">v{{ product()!.version }}</span>
               }
             </div>
           </div>
           <div class="header-right">
-            <span class="badge" [ngClass]="typeCss(product()!.productType)">{{ typeLabel(product()!.productType) }}</span>
-            <span class="badge" [ngClass]="statusCss(product()!.status)">{{ statusLabel(product()!.status) }}</span>
+            <span class="badge" [ngClass]="typeCss(product()!.productType)">{{ 'type.product.' + product()!.productType | transloco }}</span>
+            <span class="badge" [ngClass]="statusCss(product()!.status)">{{ 'status.product.' + product()!.status | transloco }}</span>
             @if (perms.has('product:write')) {
               <button type="button" class="btn-edit" (click)="openEdit()">
-                <i class="pi pi-pencil"></i> Düzenle
+                <i class="pi pi-pencil"></i> {{ 'common.edit' | transloco }}
               </button>
             }
           </div>
@@ -82,22 +80,22 @@ interface ProductDetail {
         <div class="stats-bar">
           <div class="stat">
             <span class="stat-val">{{ product()!.poName ?? '—' }}</span>
-            <span class="stat-lbl">Ürün Sahibi</span>
+            <span class="stat-lbl">{{ 'products.owner' | transloco }}</span>
           </div>
           <div class="stat-sep"></div>
           <div class="stat">
             <span class="stat-val">{{ activeAssignments() }}</span>
-            <span class="stat-lbl">Aktif Çalışan</span>
+            <span class="stat-lbl">{{ 'productDetail.statActiveStaff' | transloco }}</span>
           </div>
           <div class="stat-sep"></div>
           <div class="stat">
             <span class="stat-val">{{ product()!.teams.length }}</span>
-            <span class="stat-lbl">Ekip</span>
+            <span class="stat-lbl">{{ 'productDetail.statTeam' | transloco }}</span>
           </div>
           <div class="stat-sep"></div>
           <div class="stat">
             <span class="stat-val">{{ product()!.endpoints.length }}</span>
-            <span class="stat-lbl">Endpoint</span>
+            <span class="stat-lbl">{{ 'productDetail.statEndpoint' | transloco }}</span>
           </div>
         </div>
 
@@ -105,7 +103,7 @@ interface ProductDetail {
         <div class="tabs">
           @for (tab of tabs; track tab.key) {
             <button class="tab-btn" [class.active]="activeTab() === tab.key" (click)="activeTab.set(tab.key)">
-              {{ tab.label }}
+              {{ tab.label | transloco }}
             </button>
           }
         </div>
@@ -115,19 +113,19 @@ interface ProductDetail {
           <div class="tab-content">
             <div class="info-grid">
               <div class="info-item">
-                <label>Ürün Tipi</label>
-                <span><span class="badge" [ngClass]="typeCss(product()!.productType)">{{ typeLabel(product()!.productType) }}</span></span>
+                <label>{{ 'productDetail.productType' | transloco }}</label>
+                <span><span class="badge" [ngClass]="typeCss(product()!.productType)">{{ 'type.product.' + product()!.productType | transloco }}</span></span>
               </div>
               <div class="info-item">
-                <label>Durum</label>
-                <span><span class="badge" [ngClass]="statusCss(product()!.status)">{{ statusLabel(product()!.status) }}</span></span>
+                <label>{{ 'productDetail.colStatus' | transloco }}</label>
+                <span><span class="badge" [ngClass]="statusCss(product()!.status)">{{ 'status.product.' + product()!.status | transloco }}</span></span>
               </div>
               <div class="info-item">
-                <label>Sürüm</label>
+                <label>{{ 'productDetail.version' | transloco }}</label>
                 <span>{{ product()!.version ?? '—' }}</span>
               </div>
               <div class="info-item">
-                <label>Ürün Sahibi</label>
+                <label>{{ 'products.owner' | transloco }}</label>
                 @if (product()!.poPersonId) {
                   <a [routerLink]="['/people', product()!.poPersonId]" class="link">{{ product()!.poName }}</a>
                 } @else {
@@ -135,20 +133,20 @@ interface ProductDetail {
                 }
               </div>
               <div class="info-item">
-                <label>Kaynak Kod</label>
+                <label>{{ 'productDetail.sourceCode' | transloco }}</label>
                 @if (product()!.repositoryUrl) {
                   <a [href]="product()!.repositoryUrl" target="_blank" class="link ext-link">
-                    <i class="pi pi-external-link"></i> Repo
+                    <i class="pi pi-external-link"></i> {{ 'productDetail.repoLink' | transloco }}
                   </a>
                 } @else {
                   <span>—</span>
                 }
               </div>
               <div class="info-item">
-                <label>Dokümantasyon</label>
+                <label>{{ 'productDetail.documentation' | transloco }}</label>
                 @if (product()!.documentationUrl) {
                   <a [href]="product()!.documentationUrl" target="_blank" class="link ext-link">
-                    <i class="pi pi-external-link"></i> Döküman
+                    <i class="pi pi-external-link"></i> {{ 'productDetail.docLink' | transloco }}
                   </a>
                 } @else {
                   <span>—</span>
@@ -157,7 +155,7 @@ interface ProductDetail {
             </div>
             @if (product()!.techStack.length) {
               <div class="tech-stack-section">
-                <label>Teknoloji Stack'i</label>
+                <label>{{ 'productDetail.techStack' | transloco }}</label>
                 <div class="tech-tags">
                   @for (tech of product()!.techStack; track tech) {
                     <span class="tech-tag">{{ tech }}</span>
@@ -176,13 +174,13 @@ interface ProductDetail {
         @if (activeTab() === 'endpoints') {
           <div class="tab-content">
             <div class="tab-actions-row">
-              <span class="tab-section-count">{{ product()!.endpoints.length }} endpoint</span>
+              <span class="tab-section-count">{{ 'productDetail.endpointCount' | transloco:{ count: product()!.endpoints.length } }}</span>
               <button type="button" class="btn btn-primary btn-sm" (click)="openAddEndpoint()">
-                <i class="pi pi-plus"></i> Yeni Endpoint
+                <i class="pi pi-plus"></i> {{ 'productDetail.addEndpoint' | transloco }}
               </button>
             </div>
             @if (!product()!.endpoints.length) {
-              <p class="empty-text">Endpoint tanımlanmamış.</p>
+              <p class="empty-text">{{ 'productDetail.noEndpoints' | transloco }}</p>
             } @else {
               <div class="endpoint-list">
                 @for (ep of sortedEndpoints(); track ep.id) {
@@ -193,9 +191,9 @@ interface ProductDetail {
                       </div>
                       <div class="ep-info">
                         <span class="ep-name">{{ ep.name }}</span>
-                        <span class="badge badge--ep">{{ endpointTypeLabel(ep.endpointType) }}</span>
+                        <span class="badge badge--ep">{{ 'type.endpoint.' + ep.endpointType | transloco }}</span>
                       </div>
-                      <button type="button" class="ep-delete-btn" (click)="deleteEndpoint(ep.id)" title="Sil">
+                      <button type="button" class="ep-delete-btn" (click)="deleteEndpoint(ep.id)" [title]="'common.delete' | transloco">
                         <i class="pi pi-trash"></i>
                       </button>
                     </div>
@@ -203,7 +201,7 @@ interface ProductDetail {
                       <div class="ep-url">
                         <i class="pi pi-link"></i>
                         <code>{{ ep.defaultBaseUrl }}</code>
-                        <button type="button" class="copy-btn" (click)="copy(ep.defaultBaseUrl!)" title="Kopyala">
+                        <button type="button" class="copy-btn" (click)="copy(ep.defaultBaseUrl!)" [title]="'common.copy' | transloco">
                           <i class="pi pi-copy"></i>
                         </button>
                       </div>
@@ -225,13 +223,13 @@ interface ProductDetail {
         @if (activeTab() === 'teams') {
           <div class="tab-content">
             <div class="tab-actions-row">
-              <span class="tab-section-count">{{ product()!.teams.length }} ekip</span>
+              <span class="tab-section-count">{{ 'productDetail.teamCount' | transloco:{ count: product()!.teams.length } }}</span>
               <button type="button" class="btn btn-primary btn-sm" (click)="openAssignTeam()">
-                <i class="pi pi-users"></i> Ekip Ata
+                <i class="pi pi-users"></i> {{ 'productDetail.assignTeam' | transloco }}
               </button>
             </div>
             @if (!product()!.teams.length) {
-              <p class="empty-text">Ekip atanmamış.</p>
+              <p class="empty-text">{{ 'productDetail.noTeams' | transloco }}</p>
             } @else {
               <div class="team-list">
                 @for (t of product()!.teams; track t.teamId) {
@@ -239,9 +237,9 @@ interface ProductDetail {
                     <div class="team-avatar">{{ t.teamName[0] }}</div>
                     <div class="team-card-info">
                       <a [routerLink]="['/teams', t.teamId]" class="link">{{ t.teamName }}</a>
-                      <p class="muted-sm">{{ t.role ?? 'Rol belirtilmemiş' }} @if (t.since) { · {{ t.since | date:'dd.MM.yyyy' }}'den beri }</p>
+                      <p class="muted-sm">{{ t.role ?? ('productDetail.roleNotSet' | transloco) }} @if (t.since) { · {{ 'productDetail.since' | transloco:{ date: (t.since | date:'dd.MM.yyyy') } }} }</p>
                     </div>
-                    <button type="button" class="btn-icon-danger" title="Ekibi kaldır"
+                    <button type="button" class="btn-icon-danger" [title]="'productDetail.removeTeam' | transloco"
                       [disabled]="removingTeamId() === t.teamId" (click)="removeTeam(t.teamId, t.teamName)">
                       @if (removingTeamId() === t.teamId) { <i class="pi pi-spin pi-spinner"></i> }
                       @else { <i class="pi pi-trash"></i> }
@@ -257,21 +255,21 @@ interface ProductDetail {
         @if (activeTab() === 'assignments') {
           <div class="tab-content">
             <div class="tab-actions-row">
-              <span class="tab-section-count">{{ activeAssignments() }} aktif / {{ product()!.assignments.length }} toplam</span>
+              <span class="tab-section-count">{{ 'productDetail.assignSummary' | transloco:{ active: activeAssignments(), total: product()!.assignments.length } }}</span>
               <button type="button" class="btn btn-primary btn-sm" (click)="openAssignPerson()">
-                <i class="pi pi-user-plus"></i> Kişi Ata
+                <i class="pi pi-user-plus"></i> {{ 'productDetail.assignPerson' | transloco }}
               </button>
             </div>
             @if (!product()!.assignments.length) {
-              <p class="empty-text">Atama yapılmamış.</p>
+              <p class="empty-text">{{ 'productDetail.noAssignments' | transloco }}</p>
             } @else {
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Kişi</th>
-                    <th>Sorumluluk</th>
-                    <th>Başlangıç</th>
-                    <th>Durum</th>
+                    <th>{{ 'productDetail.colPerson' | transloco }}</th>
+                    <th>{{ 'productDetail.colResponsibility' | transloco }}</th>
+                    <th>{{ 'productDetail.colStart' | transloco }}</th>
+                    <th>{{ 'productDetail.colStatus' | transloco }}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -285,11 +283,11 @@ interface ProductDetail {
                       <td class="muted">{{ a.startedAt ? (a.startedAt | date:'dd.MM.yyyy') : '—' }}</td>
                       <td>
                         <span class="badge" [class]="a.isActive ? 'badge--active' : 'badge--archived'">
-                          {{ a.isActive ? 'Aktif' : 'Pasif' }}
+                          {{ (a.isActive ? 'status.customer.Active' : 'status.customer.Inactive') | transloco }}
                         </span>
                       </td>
                       <td class="actions-cell">
-                        <button type="button" class="btn-icon-danger" title="Atamayı kaldır"
+                        <button type="button" class="btn-icon-danger" [title]="'productDetail.removeAssignment' | transloco"
                           [disabled]="removingPersonId() === a.personId" (click)="removePerson(a.personId, a.fullName)">
                           @if (removingPersonId() === a.personId) { <i class="pi pi-spin pi-spinner"></i> }
                           @else { <i class="pi pi-trash"></i> }
@@ -306,21 +304,21 @@ interface ProductDetail {
         @if (activeTab() === 'resources') {
           <div class="tab-content">
             <div class="tab-actions-row">
-              <span class="tab-section-count">{{ product()!.resourceTemplates.length }} şablon</span>
+              <span class="tab-section-count">{{ 'productDetail.templateCount' | transloco:{ count: product()!.resourceTemplates.length } }}</span>
               <button type="button" class="btn btn-primary btn-sm" (click)="openAddTemplate()">
-                <i class="pi pi-plus"></i> Şablon Ekle
+                <i class="pi pi-plus"></i> {{ 'productDetail.addTemplate' | transloco }}
               </button>
             </div>
             @if (!product()!.resourceTemplates.length) {
-              <p class="empty-text">Henüz kaynak şablonu tanımlanmamış.</p>
+              <p class="empty-text">{{ 'productDetail.noTemplates' | transloco }}</p>
             } @else {
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Kaynak Tipi</th>
-                    <th>Şablon Adı</th>
-                    <th>Zorunlu</th>
-                    <th>Paylaşılabilir</th>
+                    <th>{{ 'productDetail.colResourceType' | transloco }}</th>
+                    <th>{{ 'productDetail.colTemplateName' | transloco }}</th>
+                    <th>{{ 'productDetail.colRequired' | transloco }}</th>
+                    <th>{{ 'productDetail.colShareable' | transloco }}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -333,24 +331,24 @@ interface ProductDetail {
                       <td class="font-medium">{{ t.name }}</td>
                       <td>
                         @if (t.isRequired) {
-                          <span class="badge badge--active">Evet</span>
+                          <span class="badge badge--active">{{ 'common.yes' | transloco }}</span>
                         } @else {
-                          <span class="muted">Hayır</span>
+                          <span class="muted">{{ 'common.no' | transloco }}</span>
                         }
                       </td>
                       <td>
                         @if (t.canBeShared) {
-                          <span class="badge badge--shared">Paylaşılabilir</span>
+                          <span class="badge badge--shared">{{ 'productDetail.shareable' | transloco }}</span>
                         } @else {
-                          <span class="muted">Hayır</span>
+                          <span class="muted">{{ 'common.no' | transloco }}</span>
                         }
                       </td>
                       <td style="text-align:right;width:80px">
-                        <button type="button" class="btn-icon" title="Düzenle"
+                        <button type="button" class="btn-icon" [title]="'common.edit' | transloco"
                           (click)="openEditTemplate(t)">
                           <i class="pi pi-pencil"></i>
                         </button>
-                        <button type="button" class="btn-icon-danger" title="Sil"
+                        <button type="button" class="btn-icon-danger" [title]="'common.delete' | transloco"
                           [disabled]="deletingTemplateId() === t.id"
                           (click)="deleteTemplate(t.id, t.name)">
                           @if (deletingTemplateId() === t.id) { <i class="pi pi-spin pi-spinner"></i> }
@@ -372,7 +370,7 @@ interface ProductDetail {
       <div class="modal-backdrop" (click)="showTemplateModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ editingTemplateId() ? 'Kaynak Şablonu Düzenle' : 'Kaynak Şablonu Ekle' }}</h2>
+            <h2>{{ (editingTemplateId() ? 'productDetail.templateEditTitle' : 'productDetail.templateAddTitle') | transloco }}</h2>
             <button type="button" class="close-btn" (click)="showTemplateModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -383,92 +381,92 @@ interface ProductDetail {
                 <button type="button"
                   class="mode-btn" [class.mode-btn--active]="!templateFromShared()"
                   (click)="onTemplateFromSharedToggle(false)">
-                  <i class="pi pi-file"></i> Sıfırdan Oluştur
+                  <i class="pi pi-file"></i> {{ 'productDetail.templateFromScratch' | transloco }}
                 </button>
                 <button type="button"
                   class="mode-btn" [class.mode-btn--active]="templateFromShared()"
                   (click)="onTemplateFromSharedToggle(true)">
-                  <i class="pi pi-share-alt"></i> Paylaşımlı Kaynaktan
+                  <i class="pi pi-share-alt"></i> {{ 'productDetail.templateFromShared' | transloco }}
                 </button>
               </div>
 
               @if (templateFromShared()) {
                 <!-- Paylaşımlı kaynaktan seç -->
                 <div class="form-group">
-                  <label>Paylaşımlı Kaynak <span class="req">*</span></label>
+                  <label>{{ 'productDetail.sharedResource' | transloco }} <span class="req">*</span></label>
                   @if (!sharedResourcesForTemplate().length) {
-                    <p class="hint-text">Henüz paylaşımlı kaynak tanımlanmamış.
-                      <a routerLink="/resources/shared">Paylaşımlı Kaynaklar</a> sayfasından ekleyin.
+                    <p class="hint-text">{{ 'productDetail.noSharedResources' | transloco }}
+                      <a routerLink="/resources/shared">{{ 'menu.sharedResources' | transloco }}</a> {{ 'productDetail.addFromPage' | transloco }}
                     </p>
                   } @else {
                     <select
                       [value]="selectedSharedForTemplate()?.id ?? ''"
                       (change)="onSharedResourceForTemplateSelect($any($event.target).value)"
                       [class.input-error]="templateSubmitted() && !selectedSharedForTemplate()">
-                      <option value="">Seçin</option>
+                      <option value="">{{ 'productDetail.selectGeneric' | transloco }}</option>
                       @for (sr of sharedResourcesForTemplate(); track sr.id) {
                         <option [value]="sr.id">{{ sr.name }} ({{ sr.resourceTypeName }})</option>
                       }
                     </select>
                     @if (templateSubmitted() && !selectedSharedForTemplate()) {
-                      <span class="field-error">Paylaşımlı kaynak seçimi zorunludur</span>
+                      <span class="field-error">{{ 'productDetail.sharedRequired' | transloco }}</span>
                     }
                   }
                 </div>
                 @if (selectedSharedForTemplate(); as sr) {
                   <div class="form-group">
-                    <label>Kaynak Tipi</label>
+                    <label>{{ 'productDetail.resourceType' | transloco }}</label>
                     <input type="text" [value]="sr.resourceTypeName" readonly class="input-readonly" />
                   </div>
                 }
               } @else {
                 <!-- Manuel kaynak tipi seçimi -->
                 <div class="form-group">
-                  <label>Kaynak Tipi <span class="req">*</span></label>
+                  <label>{{ 'productDetail.resourceType' | transloco }} <span class="req">*</span></label>
                   <select [(ngModel)]="templateForm.resourceTypeId" [class.input-error]="templateSubmitted() && !templateForm.resourceTypeId">
-                    <option value="">Tip seçin</option>
+                    <option value="">{{ 'productDetail.selectType' | transloco }}</option>
                     @for (rt of resourceTypes(); track rt.id) {
                       <option [value]="rt.id">{{ rt.name }}</option>
                     }
                   </select>
                   @if (templateSubmitted() && !templateForm.resourceTypeId) {
-                    <span class="field-error">Kaynak tipi zorunludur</span>
+                    <span class="field-error">{{ 'productDetail.resourceTypeRequired' | transloco }}</span>
                   }
                 </div>
               }
             }
             <div class="form-group">
-              <label>Şablon Adı <span class="req">*</span></label>
-              <input type="text" [(ngModel)]="templateForm.name" placeholder="ör. Ana Veritabanı"
+              <label>{{ 'productDetail.templateName' | transloco }} <span class="req">*</span></label>
+              <input type="text" [(ngModel)]="templateForm.name" [placeholder]="'productDetail.templateNamePlaceholder' | transloco"
                 [class.input-error]="templateSubmitted() && !templateForm.name.trim()" />
               @if (templateSubmitted() && !templateForm.name.trim()) {
-                <span class="field-error">Ad zorunludur</span>
+                <span class="field-error">{{ 'productDetail.nameRequired' | transloco }}</span>
               }
             </div>
             <div class="form-group">
-              <label>Açıklama</label>
-              <input type="text" [(ngModel)]="templateForm.description" placeholder="İsteğe bağlı..." />
+              <label>{{ 'products.description' | transloco }}</label>
+              <input type="text" [(ngModel)]="templateForm.description" [placeholder]="'productDetail.descriptionOptional' | transloco" />
             </div>
             <div class="form-row">
               <label class="checkbox-label">
                 <input type="checkbox" [(ngModel)]="templateForm.isRequired" />
-                Zorunlu kaynak
+                {{ 'productDetail.requiredResource' | transloco }}
               </label>
               <label class="checkbox-label">
                 <input type="checkbox" [(ngModel)]="templateForm.canBeShared" />
-                Paylaşılabilir
+                {{ 'productDetail.shareable' | transloco }}
               </label>
             </div>
             <div class="form-group">
-              <label>Sıralama</label>
+              <label>{{ 'productDetail.order' | transloco }}</label>
               <input type="number" [(ngModel)]="templateForm.sortOrder" min="0" style="width:6rem" />
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="showTemplateModal.set(false)">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="showTemplateModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="templateSaving()"
               (click)="editingTemplateId() ? updateTemplate() : saveTemplate()">
-              {{ templateSaving() ? 'Kaydediliyor...' : (editingTemplateId() ? 'Güncelle' : 'Ekle') }}
+              {{ (templateSaving() ? 'common.saving' : (editingTemplateId() ? 'common.update' : 'common.add')) | transloco }}
             </button>
           </div>
         </div>
@@ -480,41 +478,41 @@ interface ProductDetail {
       <div class="modal-backdrop" (click)="showEndpointModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Yeni Endpoint</h2>
+            <h2>{{ 'productDetail.newEndpoint' | transloco }}</h2>
             <button type="button" class="close-btn" (click)="showEndpointModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (epError()) { <div class="alert-error">{{ epError() }}</div> }
             <div class="form-row">
               <div class="form-group">
-                <label>Ad <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="epForm.name" [class.input-error]="epSubmitted() && !epForm.name.trim()" placeholder="ör. Web Arayüzü" />
-                @if (epSubmitted() && !epForm.name.trim()) { <span class="field-error">Zorunlu alan</span> }
+                <label>{{ 'productDetail.endpointName' | transloco }} <span class="req">*</span></label>
+                <input type="text" [(ngModel)]="epForm.name" [class.input-error]="epSubmitted() && !epForm.name.trim()" [placeholder]="'productDetail.endpointNamePlaceholder' | transloco" />
+                @if (epSubmitted() && !epForm.name.trim()) { <span class="field-error">{{ 'common.required' | transloco }}</span> }
               </div>
               <div class="form-group">
-                <label>Tip <span class="req">*</span></label>
+                <label>{{ 'productDetail.type' | transloco }} <span class="req">*</span></label>
                 <select [(ngModel)]="epForm.endpointType">
-                  <option value="0">Frontend</option>
-                  <option value="1">REST API</option>
-                  <option value="2">gRPC</option>
-                  <option value="3">SOAP</option>
-                  <option value="4">GraphQL</option>
+                  <option value="0">{{ 'type.endpoint.0' | transloco }}</option>
+                  <option value="1">{{ 'type.endpoint.1' | transloco }}</option>
+                  <option value="2">{{ 'type.endpoint.2' | transloco }}</option>
+                  <option value="3">{{ 'type.endpoint.3' | transloco }}</option>
+                  <option value="4">{{ 'type.endpoint.4' | transloco }}</option>
                 </select>
               </div>
             </div>
             <div class="form-group">
-              <label>Varsayılan Base URL</label>
+              <label>{{ 'productDetail.defaultBaseUrl' | transloco }}</label>
               <input type="url" [(ngModel)]="epForm.defaultBaseUrl" placeholder="https://..." />
             </div>
             <div class="form-group">
-              <label>Swagger / OpenAPI URL</label>
+              <label>{{ 'productDetail.swaggerUrl' | transloco }}</label>
               <input type="url" [(ngModel)]="epForm.swaggerUrl" placeholder="https://.../swagger" />
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="showEndpointModal.set(false)">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="showEndpointModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="epSaving()" (click)="saveEndpoint()">
-              {{ epSaving() ? 'Kaydediliyor...' : 'Ekle' }}
+              {{ (epSaving() ? 'common.saving' : 'common.add') | transloco }}
             </button>
           </div>
         </div>
@@ -526,36 +524,36 @@ interface ProductDetail {
       <div class="modal-backdrop" (click)="showTeamModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Ekip Ata</h2>
+            <h2>{{ 'productDetail.assignTeamTitle' | transloco }}</h2>
             <button type="button" class="close-btn" (click)="showTeamModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (teamAssignError()) { <div class="alert-error">{{ teamAssignError() }}</div> }
             <div class="form-group">
-              <label>Ekip <span class="req">*</span></label>
+              <label>{{ 'productDetail.team' | transloco }} <span class="req">*</span></label>
               <select [(ngModel)]="teamForm.teamId" [class.input-error]="teamSubmitted() && !teamForm.teamId">
-                <option value="">Ekip seçin...</option>
+                <option value="">{{ 'productDetail.selectTeam' | transloco }}</option>
                 @for (t of availableTeams(); track t.id) {
                   <option [value]="t.id">{{ t.name }}</option>
                 }
               </select>
-              @if (teamSubmitted() && !teamForm.teamId) { <span class="field-error">Ekip seçimi zorunludur</span> }
+              @if (teamSubmitted() && !teamForm.teamId) { <span class="field-error">{{ 'productDetail.teamRequired' | transloco }}</span> }
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Rol</label>
-                <input type="text" [(ngModel)]="teamForm.role" placeholder="ör. Geliştirici Ekibi" />
+                <label>{{ 'productDetail.role' | transloco }}</label>
+                <input type="text" [(ngModel)]="teamForm.role" [placeholder]="'productDetail.rolePlaceholder' | transloco" />
               </div>
               <div class="form-group">
-                <label>Atama Tarihi</label>
+                <label>{{ 'productDetail.assignDate' | transloco }}</label>
                 <input type="date" [(ngModel)]="teamForm.since" />
               </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="showTeamModal.set(false)">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="showTeamModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="teamSaving()" (click)="saveTeamAssign()">
-              {{ teamSaving() ? 'Kaydediliyor...' : 'Ata' }}
+              {{ (teamSaving() ? 'common.saving' : 'common.assign') | transloco }}
             </button>
           </div>
         </div>
@@ -567,14 +565,14 @@ interface ProductDetail {
       <div class="modal-backdrop" (click)="showPersonModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Kişi Ata</h2>
+            <h2>{{ 'productDetail.assignPersonTitle' | transloco }}</h2>
             <button type="button" class="close-btn" (click)="showPersonModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (personAssignError()) { <div class="alert-error">{{ personAssignError() }}</div> }
             <div class="form-group">
-              <label>Kişi <span class="req">*</span></label>
-              <input type="text" placeholder="İsim veya e-posta ara..."
+              <label>{{ 'productDetail.person' | transloco }} <span class="req">*</span></label>
+              <input type="text" [placeholder]="'productDetail.personSearchPlaceholder' | transloco"
                 [(ngModel)]="personSearch" (ngModelChange)="searchPersons($event)" />
               @if (personOptions().length > 0) {
                 <div class="dropdown">
@@ -589,23 +587,23 @@ interface ProductDetail {
               @if (personForm.personId) {
                 <div class="selected-hint"><i class="pi pi-check-circle"></i> {{ selectedPersonName() }}</div>
               }
-              @if (personSubmitted() && !personForm.personId) { <span class="field-error">Kişi seçimi zorunludur</span> }
+              @if (personSubmitted() && !personForm.personId) { <span class="field-error">{{ 'productDetail.personRequired' | transloco }}</span> }
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Sorumluluk</label>
-                <input type="text" [(ngModel)]="personForm.responsibility" placeholder="ör. Backend Geliştirme" />
+                <label>{{ 'productDetail.responsibility' | transloco }}</label>
+                <input type="text" [(ngModel)]="personForm.responsibility" [placeholder]="'productDetail.responsibilityPlaceholder' | transloco" />
               </div>
               <div class="form-group">
-                <label>Başlangıç Tarihi</label>
+                <label>{{ 'productDetail.startDate' | transloco }}</label>
                 <input type="date" [(ngModel)]="personForm.startedAt" />
               </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="showPersonModal.set(false)">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="showPersonModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="personSaving()" (click)="savePersonAssign()">
-              {{ personSaving() ? 'Kaydediliyor...' : 'Ata' }}
+              {{ (personSaving() ? 'common.saving' : 'common.assign') | transloco }}
             </button>
           </div>
         </div>
@@ -617,7 +615,7 @@ interface ProductDetail {
       <div class="modal-backdrop" (click)="showEditModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Ürünü Düzenle</h2>
+            <h2>{{ 'productDetail.editTitle' | transloco }}</h2>
             <button type="button" class="close-btn" (click)="showEditModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -626,24 +624,24 @@ interface ProductDetail {
             }
             <div class="form-row">
               <div class="form-group">
-                <label>Ürün Adı <span class="req">*</span></label>
+                <label>{{ 'products.name' | transloco }} <span class="req">*</span></label>
                 <input type="text" [(ngModel)]="editForm.name" [class.input-error]="editSubmitted() && !editForm.name.trim()" />
                 @if (editSubmitted() && !editForm.name.trim()) {
-                  <span class="field-error">Zorunlu alan</span>
+                  <span class="field-error">{{ 'common.required' | transloco }}</span>
                 }
               </div>
               <div class="form-group">
-                <label>Durum</label>
+                <label>{{ 'productDetail.colStatus' | transloco }}</label>
                 <select [(ngModel)]="editForm.status">
-                  <option value="Active">Aktif</option>
-                  <option value="Deprecated">Kullanımdan Kalkıyor</option>
-                  <option value="Discontinued">Kapatıldı</option>
+                  <option value="Active">{{ 'status.product.Active' | transloco }}</option>
+                  <option value="Deprecated">{{ 'status.product.Deprecated' | transloco }}</option>
+                  <option value="Discontinued">{{ 'status.product.Discontinued' | transloco }}</option>
                 </select>
               </div>
             </div>
             <div class="form-group" style="position:relative">
-              <label>Ürün Sahibi</label>
-              <input type="text" placeholder="İsim veya e-posta ara..."
+              <label>{{ 'products.owner' | transloco }}</label>
+              <input type="text" [placeholder]="'productDetail.personSearchPlaceholder' | transloco"
                 [(ngModel)]="editPoSearch" (ngModelChange)="searchEditPo($event)" [disabled]="!!editPoId" />
               @if (editPoOptions().length) {
                 <div class="dropdown">
@@ -664,26 +662,26 @@ interface ProductDetail {
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Sürüm</label>
-                <input type="text" [(ngModel)]="editForm.version" placeholder="ör. 2.4.1" />
+                <label>{{ 'productDetail.version' | transloco }}</label>
+                <input type="text" [(ngModel)]="editForm.version" [placeholder]="'productDetail.versionPlaceholder' | transloco" />
               </div>
               <div class="form-group">
-                <label>Kaynak Kod URL</label>
+                <label>{{ 'productDetail.sourceCodeUrl' | transloco }}</label>
                 <input type="url" [(ngModel)]="editForm.repositoryUrl" placeholder="https://github.com/..." />
               </div>
             </div>
             <div class="form-group">
-              <label>Dokümantasyon URL</label>
+              <label>{{ 'productDetail.documentationUrl' | transloco }}</label>
               <input type="url" [(ngModel)]="editForm.documentationUrl" placeholder="https://docs.example.com/..." />
             </div>
             <div class="form-group">
-              <label>Açıklama</label>
+              <label>{{ 'products.description' | transloco }}</label>
               <textarea [(ngModel)]="editForm.description" rows="2"></textarea>
             </div>
             <div class="form-group">
-              <label>Teknoloji Stack'i</label>
-              <input type="text" [(ngModel)]="editForm.techStack" placeholder="ör. .NET, Angular, PostgreSQL (virgülle ayırın)" />
-              <span class="hint">Virgülle ayırarak girin: .NET, Angular, PostgreSQL</span>
+              <label>{{ 'productDetail.techStack' | transloco }}</label>
+              <input type="text" [(ngModel)]="editForm.techStack" [placeholder]="'productDetail.techStackPlaceholder' | transloco" />
+              <span class="hint">{{ 'productDetail.techStackHint' | transloco }}</span>
             </div>
             <app-custom-field-inputs
               [defs]="customFieldDefs()"
@@ -692,9 +690,9 @@ interface ProductDetail {
               mode="edit" />
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="showEditModal.set(false)">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="showEditModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="editSaving()" (click)="saveEdit()">
-              {{ editSaving() ? 'Kaydediliyor...' : 'Kaydet' }}
+              {{ (editSaving() ? 'common.saving' : 'common.save') | transloco }}
             </button>
           </div>
         </div>
@@ -814,6 +812,7 @@ export class ProductDetailComponent implements OnInit {
   private http = inject(HttpClient);
   protected perms = inject(PermissionService);
   private route = inject(ActivatedRoute);
+  private transloco = inject(TranslocoService);
 
   product = signal<ProductDetail | null>(null);
   loading = signal(true);
@@ -877,21 +876,18 @@ export class ProductDetailComponent implements OnInit {
     this.editPoOptions.set([]);
   }
   readonly tabs = [
-    { key: 'info', label: 'Genel Bilgiler' },
-    { key: 'endpoints', label: 'Endpoint\'ler' },
-    { key: 'teams', label: 'Ekipler' },
-    { key: 'assignments', label: 'Çalışanlar' },
-    { key: 'resources', label: 'Kaynak Şablonları' },
+    { key: 'info', label: 'productDetail.tabInfo' },
+    { key: 'endpoints', label: 'productDetail.tabEndpoints' },
+    { key: 'teams', label: 'productDetail.tabTeams' },
+    { key: 'assignments', label: 'productDetail.tabAssignments' },
+    { key: 'resources', label: 'productDetail.tabResources' },
   ];
 
   activeAssignments() { return (this.product()?.assignments ?? []).filter(a => a.isActive).length; }
   sortedEndpoints() { return [...(this.product()?.endpoints ?? [])].sort((a, b) => a.sortOrder - b.sortOrder); }
 
-  typeLabel(t: number) { return PRODUCT_TYPE[t] ?? t; }
   typeCss(t: number) { return PRODUCT_TYPE_CSS[t] ?? ''; }
-  statusLabel(s: string) { return STATUS_LABEL[s] ?? s; }
   statusCss(s: string) { return STATUS_CSS[s] ?? ''; }
-  endpointTypeLabel(t: number) { return ENDPOINT_TYPE[t] ?? t; }
   endpointIcon(t: number) { return ENDPOINT_ICON[t] ?? 'pi-server'; }
 
   ngOnInit() {
@@ -960,7 +956,7 @@ export class ProductDetailComponent implements OnInit {
       },
       error: err => {
         this.editSaving.set(false);
-        this.editError.set(err.error?.detail ?? 'Güncelleme başarısız');
+        this.editError.set(err.error?.detail ?? this.transloco.translate('productDetail.editErr'));
       }
     });
   }
@@ -1000,12 +996,12 @@ export class ProductDetailComponent implements OnInit {
         this.showEndpointModal.set(false);
         this.reload();
       },
-      error: err => { this.epSaving.set(false); this.epError.set(err.error?.detail ?? 'Endpoint eklenemedi'); }
+      error: err => { this.epSaving.set(false); this.epError.set(err.error?.detail ?? this.transloco.translate('productDetail.endpointErr')); }
     });
   }
 
   deleteEndpoint(endpointId: string) {
-    if (!confirm('Bu endpoint silinecek. Emin misiniz?')) return;
+    if (!confirm(this.transloco.translate('productDetail.deleteEndpointConfirm'))) return;
     const id = this.route.snapshot.paramMap.get('id');
     this.http.delete(`${environment.apiUrl}/products/${id}/endpoints/${endpointId}`).subscribe({
       next: () => this.reload()
@@ -1049,13 +1045,13 @@ export class ProductDetailComponent implements OnInit {
       since: this.teamForm.since || null
     }).subscribe({
       next: () => { this.teamSaving.set(false); this.showTeamModal.set(false); this.reload(); },
-      error: err => { this.teamSaving.set(false); this.teamAssignError.set(err.error?.detail ?? 'Ekip atanamadı'); }
+      error: err => { this.teamSaving.set(false); this.teamAssignError.set(err.error?.detail ?? this.transloco.translate('productDetail.teamAssignErr')); }
     });
   }
 
   removingTeamId = signal<string | null>(null);
   removeTeam(teamId: string, teamName: string) {
-    if (!confirm(`"${teamName}" ekibini bu üründen kaldırmak istediğinize emin misiniz?`)) return;
+    if (!confirm(this.transloco.translate('productDetail.removeTeamConfirm', { name: teamName }))) return;
     this.removingTeamId.set(teamId);
     const id = this.route.snapshot.paramMap.get('id');
     this.http.delete(`${environment.apiUrl}/products/${id}/teams/${teamId}`).subscribe({
@@ -1113,13 +1109,13 @@ export class ProductDetailComponent implements OnInit {
       startedAt: this.personForm.startedAt || null
     }).subscribe({
       next: () => { this.personSaving.set(false); this.showPersonModal.set(false); this.reload(); },
-      error: err => { this.personSaving.set(false); this.personAssignError.set(err.error?.detail ?? 'Kişi atanamadı'); }
+      error: err => { this.personSaving.set(false); this.personAssignError.set(err.error?.detail ?? this.transloco.translate('productDetail.personAssignErr')); }
     });
   }
 
   removingPersonId = signal<string | null>(null);
   removePerson(personId: string, fullName: string) {
-    if (!confirm(`"${fullName}" kişisinin bu ürüne atamasını kaldırmak istediğinize emin misiniz?`)) return;
+    if (!confirm(this.transloco.translate('productDetail.removeAssignmentConfirm', { name: fullName }))) return;
     this.removingPersonId.set(personId);
     const id = this.route.snapshot.paramMap.get('id');
     this.http.delete(`${environment.apiUrl}/products/${id}/assignments/${personId}`).subscribe({
@@ -1215,7 +1211,7 @@ export class ProductDetailComponent implements OnInit {
       sharedResourceId: this.templateFromShared() ? this.selectedSharedForTemplate()?.id ?? null : null
     }).subscribe({
       next: () => { this.templateSaving.set(false); this.showTemplateModal.set(false); this.reload(); },
-      error: err => { this.templateSaving.set(false); this.templateError.set(err.error?.detail ?? 'Şablon eklenemedi'); }
+      error: err => { this.templateSaving.set(false); this.templateError.set(err.error?.detail ?? this.transloco.translate('productDetail.templateErr')); }
     });
   }
 
@@ -1234,19 +1230,19 @@ export class ProductDetailComponent implements OnInit {
       sortOrder: this.templateForm.sortOrder
     }).subscribe({
       next: () => { this.templateSaving.set(false); this.showTemplateModal.set(false); this.reload(); },
-      error: err => { this.templateSaving.set(false); this.templateError.set(err.error?.detail ?? 'Şablon güncellenemedi'); }
+      error: err => { this.templateSaving.set(false); this.templateError.set(err.error?.detail ?? this.transloco.translate('productDetail.templateUpdateErr')); }
     });
   }
 
   deleteTemplate(templateId: string, templateName: string) {
-    if (!confirm(`"${templateName}" kaynak şablonunu silmek istediğinizden emin misiniz?`)) return;
+    if (!confirm(this.transloco.translate('productDetail.deleteTemplateConfirm', { name: templateName }))) return;
     this.deletingTemplateId.set(templateId);
     const productId = this.route.snapshot.paramMap.get('id');
     this.http.delete(`${environment.apiUrl}/products/${productId}/resource-templates/${templateId}`).subscribe({
       next: () => { this.deletingTemplateId.set(null); this.reload(); },
       error: (err) => {
         this.deletingTemplateId.set(null);
-        alert(err.error?.detail ?? 'Şablon silinemedi.');
+        alert(err.error?.detail ?? this.transloco.translate('productDetail.templateDeleteErr'));
       }
     });
   }
