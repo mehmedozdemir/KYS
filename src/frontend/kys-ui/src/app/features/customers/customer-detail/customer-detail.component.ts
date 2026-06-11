@@ -6,12 +6,10 @@ import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 import { PermissionService } from '../../../core/services/permission.service';
 import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 
-const CUST_STATUS: Record<string, string> = { Prospect: 'Potansiyel', Onboarding: 'Onboarding', Active: 'Aktif', Inactive: 'Pasif', Churned: 'Ayrıldı' };
 const CUST_STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
-const USAGE_MODE: Record<string, string> = { SaaS: 'SaaS', Dedicated: 'Dedicated' };
 const USAGE_MODE_CSS: Record<string, string> = { SaaS: 'badge--saas', Dedicated: 'badge--custom' };
-const CP_STATUS: Record<string, string> = { Onboarding: 'Onboarding', Active: 'Aktif', Inactive: 'Pasif', Discontinued: 'Kapatıldı' };
 const CP_STATUS_CSS: Record<string, string> = { Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Discontinued: 'badge--archived' };
 
 interface EnvironmentSummary {
@@ -87,17 +85,17 @@ interface CustomerDetail {
 @Component({
   selector: 'app-customer-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent, TranslocoModule],
   template: `
     <div class="page-content">
       @if (loading()) {
-        <div class="loading-state">Yükleniyor...</div>
+        <div class="loading-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!customer()) {
-        <div class="loading-state">Müşteri bulunamadı. <a routerLink="/customers">← Geri dön</a></div>
+        <div class="loading-state">{{ 'customerDetail.notFound' | transloco }} <a routerLink="/customers">{{ 'customerDetail.back' | transloco }}</a></div>
       } @else {
         <!-- Breadcrumb -->
         <div class="breadcrumb">
-          <a routerLink="/customers">Müşteriler</a>
+          <a routerLink="/customers">{{ 'customers.title' | transloco }}</a>
           <span>/</span>
           <span>{{ customer()!.name }}</span>
         </div>
@@ -127,16 +125,16 @@ interface CustomerDetail {
             </div>
           </div>
           <div class="header-right">
-            <span class="badge" [ngClass]="statusCss(customer()!.status)">{{ statusLabel(customer()!.status) }}</span>
+            <span class="badge" [ngClass]="statusCss(customer()!.status)">{{ 'status.customer.' + customer()!.status | transloco }}</span>
             @if (customer()!.isArchived) {
-              <span class="badge badge--archived">Arşivlendi</span>
+              <span class="badge badge--archived">{{ 'customerDetail.archived' | transloco }}</span>
             }
             @if (perms.has('customer:write')) {
               <button type="button" class="btn-edit" (click)="openStatusChange()">
-                <i class="pi pi-sync"></i> Durum
+                <i class="pi pi-sync"></i> {{ 'customerDetail.statusBtn' | transloco }}
               </button>
               <button type="button" class="btn-edit" (click)="openEdit()">
-                <i class="pi pi-pencil"></i> Düzenle
+                <i class="pi pi-pencil"></i> {{ 'common.edit' | transloco }}
               </button>
             }
           </div>
@@ -145,17 +143,17 @@ interface CustomerDetail {
         <!-- Tabs -->
         <div class="tabs">
           <button class="tab-btn" [class.active]="activeTab() === 'info'" (click)="activeTab.set('info')">
-            Genel Bilgiler
+            {{ 'customerDetail.tabInfo' | transloco }}
           </button>
           <button class="tab-btn" [class.active]="activeTab() === 'products'" (click)="activeTab.set('products')">
-            Ürünler
+            {{ 'customerDetail.tabProducts' | transloco }}
             <span class="tab-count">{{ customer()!.products.length }}</span>
           </button>
           <button class="tab-btn" [class.active]="activeTab() === 'lifecycle'" (click)="activeTab.set('lifecycle')">
-            Lifecycle
+            {{ 'customerDetail.tabLifecycle' | transloco }}
           </button>
           <button class="tab-btn" [class.active]="activeTab() === 'environments'" (click)="onEnvironmentsTab()">
-            Ortamlar
+            {{ 'customerDetail.tabEnvironments' | transloco }}
           </button>
         </div>
 
@@ -164,25 +162,25 @@ interface CustomerDetail {
           <div class="tab-content">
             <div class="info-grid">
               <div class="info-item">
-                <label>Sektör</label>
+                <label>{{ 'customers.sector' | transloco }}</label>
                 <span>{{ customer()!.sector ?? '—' }}</span>
               </div>
               <div class="info-item">
-                <label>Ülke / Şehir</label>
+                <label>{{ 'customerDetail.countryCity' | transloco }}</label>
                 <span>{{ location(customer()!) }}</span>
               </div>
               <div class="info-item">
-                <label>Go-Live Tarihi</label>
+                <label>{{ 'customerDetail.goLiveDate' | transloco }}</label>
                 <span>{{ customer()!.productionLiveAt ? (customer()!.productionLiveAt | date:'dd.MM.yyyy') : '—' }}</span>
               </div>
               @if (customer()!.isArchived) {
                 <div class="info-item">
-                  <label>Arşivlenme</label>
+                  <label>{{ 'customerDetail.archivedAt' | transloco }}</label>
                   <span>{{ customer()!.archivedAt ? (customer()!.archivedAt | date:'dd.MM.yyyy') : '—' }}</span>
                 </div>
                 @if (customer()!.churnReason) {
                   <div class="info-item span-full">
-                    <label>Ayrılma Nedeni</label>
+                    <label>{{ 'customerDetail.churnReason' | transloco }}</label>
                     <span>{{ customer()!.churnReason }}</span>
                   </div>
                 }
@@ -196,7 +194,7 @@ interface CustomerDetail {
 
             @if (customer()!.primaryContactName) {
               <div class="contact-card">
-                <h3>Birincil İletişim</h3>
+                <h3>{{ 'customerDetail.primaryContact' | transloco }}</h3>
                 <div class="contact-info">
                   <div class="contact-avatar">{{ customer()!.primaryContactName![0] }}</div>
                   <div>
@@ -220,13 +218,13 @@ interface CustomerDetail {
         @if (activeTab() === 'products') {
           <div class="tab-content">
             <div class="section-action-row">
-              <span class="section-count">{{ customer()!.products.length }} ürün</span>
+              <span class="section-count">{{ 'customerDetail.productCount' | transloco:{ count: customer()!.products.length } }}</span>
               <button class="btn-sm" (click)="openAddProduct()">
-                <i class="pi pi-plus"></i> Ürün Ekle
+                <i class="pi pi-plus"></i> {{ 'customerDetail.addProduct' | transloco }}
               </button>
             </div>
             @if (!customer()!.products.length) {
-              <p class="empty-text">Ürün atanmamış.</p>
+              <p class="empty-text">{{ 'customerDetail.noProducts' | transloco }}</p>
             } @else {
               <div class="product-grid">
                 @for (cp of customer()!.products; track cp.id) {
@@ -237,7 +235,7 @@ interface CustomerDetail {
                         <a [routerLink]="['/products', cp.productId]" class="link">{{ cp.productName }}</a>
                         <code class="code-sm">{{ cp.productCode }}</code>
                       </div>
-                      <button type="button" class="btn-icon-danger-sm" title="Ürünü kaldır"
+                      <button type="button" class="btn-icon-danger-sm" [title]="'customerDetail.removeProduct' | transloco"
                         [disabled]="removingProductId() === cp.id"
                         (click)="removeProduct(cp.id, cp.productName)">
                         @if (removingProductId() === cp.id) { <i class="pi pi-spin pi-spinner"></i> }
@@ -245,11 +243,11 @@ interface CustomerDetail {
                       </button>
                     </div>
                     <div class="pc-badges">
-                      <span class="badge" [ngClass]="usageModeCss(cp.usageMode)">{{ usageModeLabel(cp.usageMode) }}</span>
-                      <span class="badge" [ngClass]="cpStatusCss(cp.status)">{{ cpStatusLabel(cp.status) }}</span>
+                      <span class="badge" [ngClass]="usageModeCss(cp.usageMode)">{{ 'status.usageMode.' + cp.usageMode | transloco }}</span>
+                      <span class="badge" [ngClass]="cpStatusCss(cp.status)">{{ 'status.customerProduct.' + cp.status | transloco }}</span>
                     </div>
                     @if (cp.goLiveAt) {
-                      <p class="pc-date">Go-live: {{ cp.goLiveAt | date:'dd.MM.yyyy' }}</p>
+                      <p class="pc-date">{{ 'customerDetail.goLive' | transloco }}: {{ cp.goLiveAt | date:'dd.MM.yyyy' }}</p>
                     }
                   </div>
                 }
@@ -266,11 +264,11 @@ interface CustomerDetail {
                 <div class="timeline-step" [class.done]="!!step.date" [class.active]="step.active">
                   <div class="step-dot"></div>
                   <div class="step-content">
-                    <span class="step-label">{{ step.label }}</span>
+                    <span class="step-label">{{ step.label | transloco }}</span>
                     @if (step.date) {
                       <span class="step-date">{{ step.date | date:'dd.MM.yyyy' }}</span>
                     } @else {
-                      <span class="step-pending">Henüz gerçekleşmedi</span>
+                      <span class="step-pending">{{ 'customerDetail.lifecycleNotYet' | transloco }}</span>
                     }
                   </div>
                 </div>
@@ -283,7 +281,7 @@ interface CustomerDetail {
         @if (activeTab() === 'environments') {
           <div class="tab-content">
             @if (envLoading()) {
-              <p class="empty-text">Yükleniyor...</p>
+              <p class="empty-text">{{ 'common.loading' | transloco }}</p>
             } @else {
               @for (cp of nonSaasProducts(); track cp.id) {
                 <div class="env-product-section">
@@ -292,15 +290,15 @@ interface CustomerDetail {
                       <i class="pi pi-box"></i>
                       <a [routerLink]="['/products', cp.productId]" class="link">{{ cp.productName }}</a>
                       <code class="code-sm">{{ cp.productCode }}</code>
-                      <span class="badge" [ngClass]="usageModeCss(cp.usageMode)">{{ usageModeLabel(cp.usageMode) }}</span>
+                      <span class="badge" [ngClass]="usageModeCss(cp.usageMode)">{{ 'status.usageMode.' + cp.usageMode | transloco }}</span>
                     </div>
                     <button class="btn-sm" (click)="openCreateEnv(cp.id)">
-                      <i class="pi pi-plus"></i> Ortam Ekle
+                      <i class="pi pi-plus"></i> {{ 'customerDetail.addEnv' | transloco }}
                     </button>
                   </div>
                   @let envs = envsForProduct(cp.id);
                   @if (!envs.length) {
-                    <p class="env-empty">Bu ürün için ortam tanımlanmamış.</p>
+                    <p class="env-empty">{{ 'customerDetail.noEnvForProduct' | transloco }}</p>
                   } @else {
                     <div class="env-card-row">
                       @for (e of envs; track e.id) {
@@ -319,19 +317,19 @@ interface CustomerDetail {
                               </span>
                             }
                             @if (!e.isActive) {
-                              <span class="badge badge--inactive">Pasif</span>
+                              <span class="badge badge--inactive">{{ 'status.customer.Inactive' | transloco }}</span>
                             }
                           </div>
                           <h4 class="env-name">{{ e.name }}</h4>
                           <div class="env-stats">
-                            <span><i class="pi pi-database"></i> {{ e.resourceCount }} kaynak</span>
-                            <span><i class="pi pi-link"></i> {{ e.endpointCount }} endpoint</span>
+                            <span><i class="pi pi-database"></i> {{ 'customerDetail.resourceCount' | transloco:{ count: e.resourceCount } }}</span>
+                            <span><i class="pi pi-link"></i> {{ 'customerDetail.endpointCount' | transloco:{ count: e.endpointCount } }}</span>
                           </div>
                           <div class="env-card-footer">
                             <a [routerLink]="['/environments', e.id]" class="env-detail-link">
-                              Detay <i class="pi pi-arrow-right"></i>
+                              {{ 'customerDetail.detail' | transloco }} <i class="pi pi-arrow-right"></i>
                             </a>
-                            <button type="button" class="btn-icon-danger-sm" title="Ortamı kaldır"
+                            <button type="button" class="btn-icon-danger-sm" [title]="'customerDetail.removeEnv' | transloco"
                               [disabled]="removingEnvId() === e.id"
                               (click)="removeEnvironment(e.id, e.name)">
                               @if (removingEnvId() === e.id) { <i class="pi pi-spin pi-spinner"></i> }
@@ -345,7 +343,7 @@ interface CustomerDetail {
                 </div>
               }
               @if (!nonSaasProducts().length) {
-                <p class="empty-text">Bu müşterinin tüm ürünleri SaaS modunda olduğundan ortam tanımlanamaz.</p>
+                <p class="empty-text">{{ 'customerDetail.allSaasNoEnv' | transloco }}</p>
               }
             }
           </div>
@@ -358,41 +356,41 @@ interface CustomerDetail {
       <div class="modal-backdrop" (click)="showAddProductModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Ürün Ekle</h2>
+            <h2>{{ 'customerDetail.addProduct' | transloco }}</h2>
             <button class="modal-close" (click)="showAddProductModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <div class="form-group">
-              <label>Ürün <span class="required">*</span></label>
+              <label>{{ 'customerDetail.product' | transloco }} <span class="required">*</span></label>
               <select [(ngModel)]="addProductForm.productId" [class.input-error]="addProductSubmitted() && !addProductForm.productId">
-                <option value="">Ürün seçin...</option>
+                <option value="">{{ 'customerDetail.selectProduct' | transloco }}</option>
                 @for (p of availableProducts(); track p.id) {
                   <option [value]="p.id">{{ p.name }} ({{ p.code }})</option>
                 }
               </select>
               @if (addProductSubmitted() && !addProductForm.productId) {
-                <span class="error-msg">Ürün seçimi zorunludur</span>
+                <span class="error-msg">{{ 'customerDetail.productRequired' | transloco }}</span>
               }
             </div>
             <div class="form-group">
-              <label>Kullanım Modu <span class="required">*</span></label>
+              <label>{{ 'customerDetail.usageModeLabel' | transloco }} <span class="required">*</span></label>
               <select [(ngModel)]="addProductForm.usageMode">
-                <option value="0">SaaS — Paylaşımlı (ortam tanımlanamaz)</option>
-                <option value="1">Dedicated — Müşteriye özel (ortam tanımlanabilir)</option>
+                <option value="0">{{ 'customerDetail.usageSaas' | transloco }}</option>
+                <option value="1">{{ 'customerDetail.usageDedicated' | transloco }}</option>
               </select>
             </div>
             <div class="form-group">
-              <label>Notlar</label>
-              <textarea [(ngModel)]="addProductForm.notes" rows="2" placeholder="İsteğe bağlı not..."></textarea>
+              <label>{{ 'customerDetail.notes' | transloco }}</label>
+              <textarea [(ngModel)]="addProductForm.notes" rows="2" [placeholder]="'customerDetail.notesPlaceholder' | transloco"></textarea>
             </div>
             @if (addProductError()) {
               <div class="alert-error">{{ addProductError() }}</div>
             }
           </div>
           <div class="modal-footer">
-            <button class="btn-cancel" (click)="showAddProductModal.set(false)">İptal</button>
+            <button class="btn-cancel" (click)="showAddProductModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button class="btn-save" [disabled]="addProductSaving()" (click)="saveAddProduct()">
-              {{ addProductSaving() ? 'Ekleniyor...' : 'Ekle' }}
+              {{ (addProductSaving() ? 'customerDetail.adding' : 'common.add') | transloco }}
             </button>
           </div>
         </div>
@@ -404,7 +402,7 @@ interface CustomerDetail {
       <div class="modal-backdrop" (click)="showEditModal.set(false)">
         <div class="modal modal--wide" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Müşteriyi Düzenle</h2>
+            <h2>{{ 'customerDetail.editTitle' | transloco }}</h2>
             <button type="button" class="modal-close" (click)="showEditModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -413,51 +411,51 @@ interface CustomerDetail {
             }
             <div class="form-row">
               <div class="form-group">
-                <label>Müşteri Adı <span class="required">*</span></label>
+                <label>{{ 'customers.name' | transloco }} <span class="required">*</span></label>
                 <input type="text" [(ngModel)]="editForm.name" [class.input-error]="editSubmitted() && !editForm.name.trim()" />
                 @if (editSubmitted() && !editForm.name.trim()) {
-                  <span class="error-msg">Zorunlu alan</span>
+                  <span class="error-msg">{{ 'common.required' | transloco }}</span>
                 }
               </div>
               <div class="form-group">
-                <label>Kısa Ad</label>
+                <label>{{ 'customers.shortName' | transloco }}</label>
                 <input type="text" [(ngModel)]="editForm.shortName" />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Sektör</label>
+                <label>{{ 'customers.sector' | transloco }}</label>
                 <input type="text" [(ngModel)]="editForm.sector" />
               </div>
               <div class="form-group">
-                <label>Ülke</label>
+                <label>{{ 'customers.country' | transloco }}</label>
                 <input type="text" [(ngModel)]="editForm.country" />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Şehir</label>
+                <label>{{ 'customers.city' | transloco }}</label>
                 <input type="text" [(ngModel)]="editForm.city" />
               </div>
               <div class="form-group"></div>
             </div>
             <div class="form-group">
-              <label>Açıklama</label>
+              <label>{{ 'customers.description' | transloco }}</label>
               <textarea [(ngModel)]="editForm.description" rows="2"></textarea>
             </div>
-            <div class="section-title" style="margin-top:0.5rem">Birincil İletişim</div>
+            <div class="section-title" style="margin-top:0.5rem">{{ 'customerDetail.primaryContact' | transloco }}</div>
             <div class="form-row">
               <div class="form-group">
-                <label>Ad Soyad</label>
+                <label>{{ 'customers.contactName' | transloco }}</label>
                 <input type="text" [(ngModel)]="editForm.primaryContactName" />
               </div>
               <div class="form-group">
-                <label>E-posta</label>
+                <label>{{ 'common.email' | transloco }}</label>
                 <input type="email" [(ngModel)]="editForm.primaryContactEmail" />
               </div>
             </div>
             <div class="form-group">
-              <label>Telefon</label>
+              <label>{{ 'customerDetail.phone' | transloco }}</label>
               <input type="tel" [(ngModel)]="editForm.primaryContactPhone" />
             </div>
             <app-custom-field-inputs
@@ -467,9 +465,9 @@ interface CustomerDetail {
               mode="edit" />
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn-cancel" (click)="showEditModal.set(false)">İptal</button>
+            <button type="button" class="btn-cancel" (click)="showEditModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn-save" [disabled]="editSaving()" (click)="saveEdit()">
-              {{ editSaving() ? 'Kaydediliyor...' : 'Kaydet' }}
+              {{ (editSaving() ? 'common.saving' : 'common.save') | transloco }}
             </button>
           </div>
         </div>
@@ -481,7 +479,7 @@ interface CustomerDetail {
       <div class="modal-backdrop" (click)="showStatusModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Durum Değiştir</h2>
+            <h2>{{ 'customerDetail.statusTitle' | transloco }}</h2>
             <button type="button" class="modal-close" (click)="showStatusModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -489,30 +487,30 @@ interface CustomerDetail {
               <div class="alert-error">{{ statusChangeError() }}</div>
             }
             <div class="form-group">
-              <label>Yeni Durum <span class="required">*</span></label>
+              <label>{{ 'customerDetail.newStatus' | transloco }} <span class="required">*</span></label>
               <select [(ngModel)]="statusForm.newStatus">
-                <option value="Prospect">Potansiyel</option>
-                <option value="Onboarding">Onboarding</option>
-                <option value="Active">Aktif</option>
-                <option value="Inactive">Pasif</option>
-                <option value="Churned">Ayrıldı (Churned)</option>
+                <option value="Prospect">{{ 'status.customer.Prospect' | transloco }}</option>
+                <option value="Onboarding">{{ 'status.customer.Onboarding' | transloco }}</option>
+                <option value="Active">{{ 'status.customer.Active' | transloco }}</option>
+                <option value="Inactive">{{ 'status.customer.Inactive' | transloco }}</option>
+                <option value="Churned">{{ 'customerDetail.churnedOption' | transloco }}</option>
               </select>
             </div>
             @if (statusForm.newStatus === 'Churned') {
               <div class="form-group">
-                <label>Hizmet Bitiş Tarihi</label>
+                <label>{{ 'customerDetail.serviceEndDate' | transloco }}</label>
                 <input type="date" [(ngModel)]="statusForm.serviceEndedAt" />
               </div>
               <div class="form-group">
-                <label>Ayrılma Nedeni</label>
-                <textarea [(ngModel)]="statusForm.churnReason" rows="3" placeholder="İsteğe bağlı neden..."></textarea>
+                <label>{{ 'customerDetail.churnReason' | transloco }}</label>
+                <textarea [(ngModel)]="statusForm.churnReason" rows="3" [placeholder]="'customerDetail.churnReasonPlaceholder' | transloco"></textarea>
               </div>
             }
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn-cancel" (click)="showStatusModal.set(false)">İptal</button>
+            <button type="button" class="btn-cancel" (click)="showStatusModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn-save" [disabled]="statusChangeSaving()" (click)="saveStatusChange()">
-              {{ statusChangeSaving() ? 'Kaydediliyor...' : 'Kaydet' }}
+              {{ (statusChangeSaving() ? 'common.saving' : 'common.save') | transloco }}
             </button>
           </div>
         </div>
@@ -524,26 +522,26 @@ interface CustomerDetail {
       <div class="modal-backdrop" (click)="showEnvModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Yeni Ortam</h2>
+            <h2>{{ 'customerDetail.envTitle' | transloco }}</h2>
             <button class="modal-close" (click)="showEnvModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <div class="form-group">
-              <label>Ortam Tipi <span class="required">*</span></label>
+              <label>{{ 'customerDetail.envType' | transloco }} <span class="required">*</span></label>
               <select [(ngModel)]="envForm.environmentTypeId" [class.input-error]="envFormSubmitted() && !envForm.environmentTypeId">
-                <option value="">Tip seçin...</option>
+                <option value="">{{ 'customerDetail.selectType' | transloco }}</option>
                 @for (t of envTypes(); track t.id) {
                   <option [value]="t.id">{{ t.name }}</option>
                 }
               </select>
               @if (envFormSubmitted() && !envForm.environmentTypeId) {
-                <span class="error-msg">Tip zorunludur</span>
+                <span class="error-msg">{{ 'customerDetail.typeRequired' | transloco }}</span>
               }
             </div>
             <div class="form-group">
-              <label>Barındırma Platformu</label>
+              <label>{{ 'customerDetail.hostingPlatform' | transloco }}</label>
               <select [(ngModel)]="envForm.hostingPlatformId">
-                <option value="">— (belirtilmedi)</option>
+                <option value="">{{ 'customerDetail.notSpecified' | transloco }}</option>
                 @for (p of hostingPlatforms(); track p.id) {
                   <option [value]="p.id">{{ p.name }}</option>
                 }
@@ -554,9 +552,9 @@ interface CustomerDetail {
             }
           </div>
           <div class="modal-footer">
-            <button class="btn-cancel" (click)="showEnvModal.set(false)">İptal</button>
+            <button class="btn-cancel" (click)="showEnvModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button class="btn-save" [disabled]="envFormSaving()" (click)="saveEnv()">
-              {{ envFormSaving() ? 'Kaydediliyor...' : 'Oluştur' }}
+              {{ (envFormSaving() ? 'common.saving' : 'common.create') | transloco }}
             </button>
           </div>
         </div>
@@ -669,6 +667,7 @@ export class CustomerDetailComponent implements OnInit {
   private http = inject(HttpClient);
   protected perms = inject(PermissionService);
   private route = inject(ActivatedRoute);
+  private transloco = inject(TranslocoService);
 
   customer = signal<CustomerDetail | null>(null);
   loading = signal(true);
@@ -713,7 +712,7 @@ export class CustomerDetailComponent implements OnInit {
       },
       error: err => {
         this.statusChangeSaving.set(false);
-        this.statusChangeError.set(err.error?.detail ?? 'Durum güncellenemedi');
+        this.statusChangeError.set(err.error?.detail ?? this.transloco.translate('customerDetail.statusError'));
       }
     });
   }
@@ -763,7 +762,7 @@ export class CustomerDetailComponent implements OnInit {
       },
       error: err => {
         this.addProductSaving.set(false);
-        this.addProductError.set(err.error?.detail ?? 'Ürün eklenemedi');
+        this.addProductError.set(err.error?.detail ?? this.transloco.translate('customerDetail.addProductErr'));
       }
     });
   }
@@ -860,7 +859,7 @@ export class CustomerDetailComponent implements OnInit {
       },
       error: err => {
         this.editSaving.set(false);
-        this.editError.set(err.error?.detail ?? 'Güncelleme başarısız');
+        this.editError.set(err.error?.detail ?? this.transloco.translate('customerDetail.editErr'));
       }
     });
   }
@@ -869,20 +868,20 @@ export class CustomerDetailComponent implements OnInit {
   removingEnvId = signal<string | null>(null);
 
   removeProduct(customerProductId: string, productName: string) {
-    if (!confirm(`"${productName}" ürününü bu müşteriden kaldırmak istediğinizden emin misiniz?\n\nBu işlem için önce tüm ortamların kaldırılmış olması gerekir.`)) return;
+    if (!confirm(this.transloco.translate('customerDetail.removeProductConfirm', { name: productName }))) return;
     this.removingProductId.set(customerProductId);
     const customerId = this.route.snapshot.paramMap.get('id');
     this.http.delete(`${environment.apiUrl}/customers/${customerId}/customer-products/${customerProductId}`).subscribe({
       next: () => { this.removingProductId.set(null); this.loadCustomer(); },
       error: (err) => {
         this.removingProductId.set(null);
-        alert(err.error?.detail ?? 'Ürün kaldırılamadı.');
+        alert(err.error?.detail ?? this.transloco.translate('customerDetail.removeProductError'));
       }
     });
   }
 
   removeEnvironment(envId: string, envName: string) {
-    if (!confirm(`"${envName}" ortamını kaldırmak istediğinizden emin misiniz?\n\nBu işlem için önce tüm kaynakların kaldırılmış olması gerekir.`)) return;
+    if (!confirm(this.transloco.translate('customerDetail.removeEnvConfirm', { name: envName }))) return;
     this.removingEnvId.set(envId);
     this.http.delete(`${environment.apiUrl}/environments/${envId}`).subscribe({
       next: () => {
@@ -893,7 +892,7 @@ export class CustomerDetailComponent implements OnInit {
       },
       error: (err) => {
         this.removingEnvId.set(null);
-        alert(err.error?.detail ?? 'Ortam kaldırılamadı.');
+        alert(err.error?.detail ?? this.transloco.translate('customerDetail.removeEnvError'));
       }
     });
   }
@@ -909,22 +908,19 @@ export class CustomerDetailComponent implements OnInit {
     return [c.city, c.country].filter(v => v).join(', ') || '—';
   }
 
-  statusLabel(s: string) { return CUST_STATUS[s] ?? s; }
   statusCss(s: string) { return CUST_STATUS_CSS[s] ?? ''; }
-  usageModeLabel(m: string) { return USAGE_MODE[m] ?? m; }
   usageModeCss(m: string) { return USAGE_MODE_CSS[m] ?? ''; }
-  cpStatusLabel(s: string) { return CP_STATUS[s] ?? s; }
   cpStatusCss(s: string) { return CP_STATUS_CSS[s] ?? ''; }
 
   lifecycleSteps() {
     const c = this.customer()!;
     const currentStatus = c.status;
     const steps = [
-      { label: 'Onboarding Başladı', date: c.onboardingStartedAt, active: currentStatus === 'Onboarding' },
-      { label: 'Test Ortamı Hazır', date: c.testEnvReadyAt, active: false },
-      { label: 'Prod Ortamı Hazır', date: c.prodEnvReadyAt, active: false },
-      { label: 'Canlıya Geçildi', date: c.productionLiveAt, active: currentStatus === 'Active' || currentStatus === 'Inactive' },
-      { label: 'Hizmet Sonlandırıldı', date: c.serviceEndedAt, active: currentStatus === 'Churned' },
+      { label: 'customerDetail.lcOnboarding', date: c.onboardingStartedAt, active: currentStatus === 'Onboarding' },
+      { label: 'customerDetail.lcTestEnv', date: c.testEnvReadyAt, active: false },
+      { label: 'customerDetail.lcProdEnv', date: c.prodEnvReadyAt, active: false },
+      { label: 'customerDetail.lcGoLive', date: c.productionLiveAt, active: currentStatus === 'Active' || currentStatus === 'Inactive' },
+      { label: 'customerDetail.lcServiceEnded', date: c.serviceEndedAt, active: currentStatus === 'Churned' },
     ];
     return steps;
   }
@@ -1016,7 +1012,7 @@ export class CustomerDetailComponent implements OnInit {
       },
       error: err => {
         this.envFormSaving.set(false);
-        this.envFormError.set(err.error?.detail ?? 'Ortam oluşturulamadı');
+        this.envFormError.set(err.error?.detail ?? this.transloco.translate('customerDetail.envErr'));
       }
     });
   }
