@@ -16,6 +16,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.31.2] — 2026-06-11 (Düzeltme — Audit Log 500 / çift controller)
+
+### Düzeltildi
+- **`GET /admin/audit-logs` 500 (`AmbiguousMatchException`)**: aynı route'a sahip iki controller vardı (`Admin/AuditLogController` + `AdminAuditLogController`). İsim çözümlemesi yapan (`changedByName`) ve frontend ile uyumlu olan `AdminAuditLogController` tutuldu (`admin:audit` guard eklendi); yinelenen controller + `Admin/Queries/GetAuditLogs` query/handler silindi
+- **Erişim Yetkileri "Kişi" listesi boş görünüyordu**: `PersonListDto` `fullName` taşımıyor; mapping `firstName + lastName` olarak düzeltildi
+
+---
+
 ## [0.31.1] — 2026-06-10 (Kritik Düzeltme — Pipeline Behavior void komutlarda çalışmıyordu)
 
 ### Düzeltildi / Güvenlik
