@@ -45,9 +45,40 @@ public sealed class SmtpEmailSender(
         var password = encryption.Decrypt(account.EncryptedPassword);
 
         using var client = new SmtpClient();
-        await client.ConnectAsync(account.Host, account.Port, secure, ct);
-        await client.AuthenticateAsync(account.Username, password, ct);
-        await client.SendAsync(message, ct);
-        await client.DisconnectAsync(true, ct);
+        try
+        {
+            await client.ConnectAsync(account.Host, account.Port, secure, ct);
+            await client.AuthenticateAsync(account.Username, password, ct);
+            await client.SendAsync(message, ct);
+            await client.DisconnectAsync(true, ct);
+        }
+        catch (System.Net.Sockets.SocketException ex)
+        {
+            throw new DomainException(
+                $"SMTP sunucusuna bağlanılamadı ({account.Host}:{account.Port}). " +
+                $"Sunucu adresi/port hatalı olabilir veya erişim engelli. ({ex.Message})");
+        }
+        catch (MailKit.Security.SslHandshakeException)
+        {
+            throw new DomainException(
+                $"TLS/SSL el sıkışma hatası ({account.Host}:{account.Port}). " +
+                "Güvenlik ayarını (STARTTLS/SSL) ve portu kontrol edin (genelde STARTTLS→587, SSL→465).");
+        }
+        catch (MailKit.Security.AuthenticationException)
+        {
+            throw new DomainException("Kimlik doğrulama başarısız: kullanıcı adı veya parola hatalı.");
+        }
+        catch (MailKit.Net.Smtp.SmtpCommandException ex)
+        {
+            throw new DomainException($"SMTP sunucusu reddetti: {ex.Message}");
+        }
+        catch (MailKit.Net.Smtp.SmtpProtocolException ex)
+        {
+            throw new DomainException($"SMTP protokol hatası: {ex.Message}");
+        }
+        catch (OperationCanceledException)
+        {
+            throw new DomainException($"SMTP bağlantısı zaman aşımına uğradı ({account.Host}:{account.Port}).");
+        }
     }
 }
