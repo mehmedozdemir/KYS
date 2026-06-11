@@ -5,6 +5,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { NgClass, DatePipe } from '@angular/common';
 import { environment } from '../../../../environments/environment';
 import { PermissionService } from '../../../core/services/permission.service';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 
 interface PersonListItem {
   id: string;
@@ -22,24 +23,23 @@ interface GetPeopleResult {
   pageSize: number;
 }
 
-const STATUS_LABELS: Record<number, string> = { 0: 'Aktif', 1: 'İzinde', 2: 'İstifa', 3: 'Ayrıldı' };
 const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilot', 2: 'badge--suspended', 3: 'badge--archived' };
 
 @Component({
   selector: 'app-people-list',
   standalone: true,
-  imports: [RouterLink, FormsModule, ReactiveFormsModule, NgClass, DatePipe],
+  imports: [RouterLink, FormsModule, ReactiveFormsModule, NgClass, DatePipe, TranslocoModule],
   template: `
     <div class="page-content">
       <!-- Header -->
       <div class="flex-between" style="margin-bottom:1.5rem">
         <div>
-          <h1 class="page-title">Kişiler</h1>
-          <p class="page-subtitle">{{ result()?.totalCount ?? 0 }} kişi</p>
+          <h1 class="page-title">{{ 'people.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'people.count' | transloco:{ count: result()?.totalCount ?? 0 } }}</p>
         </div>
         @if (perms.has('person:create')) {
           <button class="btn-primary" (click)="openCreate()">
-            <i class="pi pi-plus"></i> Yeni Kişi
+            <i class="pi pi-plus"></i> {{ 'people.new' | transloco }}
           </button>
         }
       </div>
@@ -48,15 +48,15 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       <div class="filters-bar">
         <div class="search-wrap">
           <i class="pi pi-search search-icon"></i>
-          <input class="search-input" placeholder="Ad, soyad veya e-posta..." [(ngModel)]="search"
+          <input class="search-input" [placeholder]="'people.searchPlaceholder' | transloco" [(ngModel)]="search"
             (ngModelChange)="onSearchChange()" />
         </div>
         <select class="filter-select" [(ngModel)]="statusFilter" (ngModelChange)="load()">
-          <option value="">Tüm durumlar</option>
-          <option value="0">Aktif</option>
-          <option value="1">İzinde</option>
-          <option value="2">İstifa</option>
-          <option value="3">Ayrıldı</option>
+          <option value="">{{ 'people.allStatuses' | transloco }}</option>
+          <option value="0">{{ 'status.employment.0' | transloco }}</option>
+          <option value="1">{{ 'status.employment.1' | transloco }}</option>
+          <option value="2">{{ 'status.employment.2' | transloco }}</option>
+          <option value="3">{{ 'status.employment.3' | transloco }}</option>
         </select>
       </div>
 
@@ -65,18 +65,18 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
         <table class="data-table">
           <thead>
             <tr>
-              <th>Kişi</th>
-              <th>Unvan</th>
-              <th>Durum</th>
-              <th>Platform</th>
+              <th>{{ 'people.colPerson' | transloco }}</th>
+              <th>{{ 'people.colTitle' | transloco }}</th>
+              <th>{{ 'people.colStatus' | transloco }}</th>
+              <th>{{ 'people.colPlatform' | transloco }}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             @if (loading()) {
-              <tr><td colspan="5" class="table-empty">Yükleniyor...</td></tr>
+              <tr><td colspan="5" class="table-empty">{{ 'common.loading' | transloco }}</td></tr>
             } @else if (!result()?.items?.length) {
-              <tr><td colspan="5" class="table-empty">Kayıt bulunamadı.</td></tr>
+              <tr><td colspan="5" class="table-empty">{{ 'people.notFound' | transloco }}</td></tr>
             } @else {
               @for (p of result()!.items; track p.id) {
                 <tr class="table-row">
@@ -92,29 +92,29 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
                   <td class="text-muted">{{ p.title ?? '—' }}</td>
                   <td>
                     <span class="badge" [ngClass]="statusCss(p.employmentStatus)">
-                      {{ statusLabel(p.employmentStatus) }}
+                      {{ 'status.employment.' + p.employmentStatus | transloco }}
                     </span>
                   </td>
                   <td>
                     @if (p.isPlatformUser) {
-                      <span class="badge badge--active">Evet</span>
+                      <span class="badge badge--active">{{ 'common.yes' | transloco }}</span>
                     } @else {
                       <span class="text-muted">—</span>
                     }
                   </td>
                   <td class="action-cell">
-                    <a [routerLink]="['/people', p.id]" class="btn-link">Detay →</a>
+                    <a [routerLink]="['/people', p.id]" class="btn-link">{{ 'people.detail' | transloco }}</a>
                     <div class="kebab-wrap">
                       <button class="kebab-btn" (click)="$event.stopPropagation(); toggleMenu(p.id)"><i class="pi pi-ellipsis-v"></i></button>
                       @if (openMenuId() === p.id) {
                         <div class="kebab-menu">
                           @if (!p.isPlatformUser && perms.has('person:write')) {
                             <button class="km-item" (click)="openPromote(p)">
-                              <i class="pi pi-key"></i> Platforma al
+                              <i class="pi pi-key"></i> {{ 'people.promote' | transloco }}
                             </button>
                           }
                           <button class="km-item km-danger" (click)="confirmDelete(p)">
-                            <i class="pi pi-trash"></i> Sil
+                            <i class="pi pi-trash"></i> {{ 'common.delete' | transloco }}
                           </button>
                         </div>
                       }
@@ -141,17 +141,17 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       <div class="modal-overlay" (click)="cancelDelete()">
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Kişiyi Sil</h2>
+            <h2>{{ 'people.deleteTitle' | transloco }}</h2>
             <button class="modal-close" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
-            <p style="margin:0;color:var(--text)"><strong>{{ deleteTarget()!.firstName }} {{ deleteTarget()!.lastName }}</strong> kişisini silmek istediğinize emin misiniz?</p>
-            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:var(--text-muted)">Bu işlem geri alınamaz.</p>
+            <p style="margin:0;color:var(--text)" [innerHTML]="'people.deleteConfirm' | transloco:{ name: deleteTarget()!.firstName + ' ' + deleteTarget()!.lastName }"></p>
+            <p style="margin:0.5rem 0 0;font-size:0.8125rem;color:var(--text-muted)">{{ 'common.irreversible' | transloco }}</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn-secondary" (click)="cancelDelete()">İptal</button>
+            <button type="button" class="btn-secondary" (click)="cancelDelete()">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn-danger" [disabled]="deleting()" (click)="deletePerson()">
-              {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+              {{ (deleting() ? 'common.deleting' : 'common.delete') | transloco }}
             </button>
           </div>
         </div>
@@ -162,29 +162,29 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       <div class="modal-overlay" (click)="closePromote()">
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Platforma Al</h2>
+            <h2>{{ 'people.promoteTitle' | transloco }}</h2>
             <button class="modal-close" (click)="closePromote()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
-            <p style="margin:0 0 1rem;color:var(--text)"><strong>{{ promoteTarget()!.firstName }} {{ promoteTarget()!.lastName }}</strong> platform kullanıcısı yapılacak. Giriş bilgileri e-posta ile gönderilecek.</p>
+            <p style="margin:0 0 1rem;color:var(--text)" [innerHTML]="'people.promoteInfo' | transloco:{ name: promoteTarget()!.firstName + ' ' + promoteTarget()!.lastName }"></p>
             <div class="form-group">
-              <label>Kullanıcı Adı</label>
+              <label>{{ 'people.username' | transloco }}</label>
               <input type="text" [value]="promoteTarget()!.email" readonly style="background:var(--surface-2);color:var(--text-muted)" />
-              <span class="form-hint">Kullanıcı adı kişinin e-postasıdır.</span>
+              <span class="form-hint">{{ 'people.usernameHint' | transloco }}</span>
             </div>
             <div class="form-group">
-              <label>Şifre *</label>
+              <label>{{ 'people.password' | transloco }} *</label>
               <div style="display:flex;gap:0.5rem">
-                <input type="text" [(ngModel)]="promotePassword" style="flex:1" placeholder="En az 8 karakter, büyük harf ve rakam" />
-                <button type="button" class="btn-secondary" (click)="promotePassword.set(randomPassword())" title="Şifre üret"><i class="pi pi-refresh"></i></button>
+                <input type="text" [(ngModel)]="promotePassword" style="flex:1" [placeholder]="'people.passwordPlaceholder' | transloco" />
+                <button type="button" class="btn-secondary" (click)="promotePassword.set(randomPassword())" [title]="'people.genPassword' | transloco"><i class="pi pi-refresh"></i></button>
               </div>
             </div>
             @if (promoteError()) { <div class="alert-error">{{ promoteError() }}</div> }
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn-secondary" (click)="closePromote()">İptal</button>
+            <button type="button" class="btn-secondary" (click)="closePromote()">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn-primary" [disabled]="promoteSaving()" (click)="submitPromote()">
-              {{ promoteSaving() ? 'Kaydediliyor...' : 'Platforma Al' }}
+              {{ (promoteSaving() ? 'common.saving' : 'people.promoteTitle') | transloco }}
             </button>
           </div>
         </div>
@@ -196,74 +196,74 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       <div class="modal-overlay" (click)="closeCreate()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Yeni Kişi</h2>
+            <h2>{{ 'people.new' | transloco }}</h2>
             <button class="modal-close" (click)="closeCreate()"><i class="pi pi-times"></i></button>
           </div>
           <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="modal-body">
             <div class="form-row">
               <div class="form-group" [class.has-error]="isInvalid('firstName')">
-                <label>Ad *</label>
-                <input formControlName="firstName" placeholder="Ad" />
-                @if (isInvalid('firstName')) { <span class="form-error">Zorunlu alan.</span> }
+                <label>{{ 'people.firstName' | transloco }} *</label>
+                <input formControlName="firstName" [placeholder]="'people.firstName' | transloco" />
+                @if (isInvalid('firstName')) { <span class="form-error">{{ 'common.required' | transloco }}</span> }
               </div>
               <div class="form-group" [class.has-error]="isInvalid('lastName')">
-                <label>Soyad *</label>
-                <input formControlName="lastName" placeholder="Soyad" />
-                @if (isInvalid('lastName')) { <span class="form-error">Zorunlu alan.</span> }
+                <label>{{ 'people.lastName' | transloco }} *</label>
+                <input formControlName="lastName" [placeholder]="'people.lastName' | transloco" />
+                @if (isInvalid('lastName')) { <span class="form-error">{{ 'common.required' | transloco }}</span> }
               </div>
             </div>
             <div class="form-group" [class.has-error]="isInvalid('email')">
-              <label>E-posta *</label>
+              <label>{{ 'common.email' | transloco }} *</label>
               <input type="email" formControlName="email" placeholder="ad@sirket.com" />
-              @if (isInvalid('email')) { <span class="form-error">Geçerli e-posta giriniz.</span> }
+              @if (isInvalid('email')) { <span class="form-error">{{ 'people.emailInvalid' | transloco }}</span> }
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Unvan</label>
-                <input formControlName="title" placeholder="Yazılım Geliştirici" />
+                <label>{{ 'people.jobTitle' | transloco }}</label>
+                <input formControlName="title" [placeholder]="'people.jobTitlePlaceholder' | transloco" />
               </div>
               <div class="form-group">
-                <label>Telefon</label>
-                <input formControlName="phone" placeholder="+90 5xx xxx xx xx" />
+                <label>{{ 'people.phone' | transloco }}</label>
+                <input formControlName="phone" [placeholder]="'people.phonePlaceholder' | transloco" />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>İşe Başlama Tarihi</label>
+                <label>{{ 'people.hireDate' | transloco }}</label>
                 <input type="date" formControlName="hireDate" />
               </div>
               <div class="form-group">
-                <label>Durum</label>
+                <label>{{ 'people.statusLabel' | transloco }}</label>
                 <select formControlName="employmentStatus">
-                  <option value="0">Aktif</option>
-                  <option value="1">İzinde</option>
+                  <option value="0">{{ 'status.employment.0' | transloco }}</option>
+                  <option value="1">{{ 'status.employment.1' | transloco }}</option>
                 </select>
               </div>
             </div>
 
             <label class="toggle-row">
               <input type="checkbox" formControlName="isPlatformUser" />
-              <span>Platform erişimi ver</span>
+              <span>{{ 'people.grantPlatformAccess' | transloco }}</span>
             </label>
 
             @if (createForm.get('isPlatformUser')?.value) {
               <div class="form-group">
-                <label>Kullanıcı Adı</label>
-                <input type="text" [value]="createForm.get('email')?.value || '(e-posta giriniz)'" readonly
+                <label>{{ 'people.username' | transloco }}</label>
+                <input type="text" [value]="createForm.get('email')?.value || ('people.enterEmail' | transloco)" readonly
                   style="background:var(--surface-2);color:var(--text-muted)" />
-                <span class="form-hint">Kullanıcı adı kişinin e-postasıdır.</span>
+                <span class="form-hint">{{ 'people.usernameHint' | transloco }}</span>
               </div>
               <div class="form-group" [class.has-error]="isInvalid('password')">
-                <label>Şifre *</label>
+                <label>{{ 'people.password' | transloco }} *</label>
                 <div style="display:flex;gap:0.5rem">
                   <input type="text" formControlName="password" style="flex:1"
-                    placeholder="En az 8 karakter, büyük harf ve rakam" />
-                  <button type="button" class="btn-secondary" (click)="generatePassword()" title="Şifre üret">
+                    [placeholder]="'people.passwordPlaceholder' | transloco" />
+                  <button type="button" class="btn-secondary" (click)="generatePassword()" [title]="'people.genPassword' | transloco">
                     <i class="pi pi-refresh"></i>
                   </button>
                 </div>
                 @if (isInvalid('password')) {
-                  <span class="form-error">En az 8 karakter, bir büyük harf ve rakam içermeli.</span>
+                  <span class="form-error">{{ 'people.passwordRule' | transloco }}</span>
                 }
               </div>
             }
@@ -273,9 +273,9 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
             }
 
             <div class="modal-footer">
-              <button type="button" class="btn-secondary" (click)="closeCreate()">İptal</button>
+              <button type="button" class="btn-secondary" (click)="closeCreate()">{{ 'common.cancel' | transloco }}</button>
               <button type="submit" class="btn-primary" [disabled]="saving()">
-                {{ saving() ? 'Kaydediliyor...' : 'Kaydet' }}
+                {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
               </button>
             </div>
           </form>
@@ -473,6 +473,7 @@ export class PeopleListComponent implements OnInit {
   private http = inject(HttpClient);
   protected perms = inject(PermissionService);
   private fb = inject(FormBuilder);
+  private transloco = inject(TranslocoService);
 
   result = signal<GetPeopleResult | null>(null);
   loading = signal(true);
@@ -516,14 +517,14 @@ export class PeopleListComponent implements OnInit {
     if (!p) return;
     const pw = this.promotePassword();
     if (!pw || pw.length < 8 || !/(?=.*[A-Z])(?=.*[0-9])/.test(pw)) {
-      this.promoteError.set('Şifre en az 8 karakter, bir büyük harf ve rakam içermeli.');
+      this.promoteError.set(this.transloco.translate('people.passwordRule'));
       return;
     }
     this.promoteSaving.set(true);
     this.promoteError.set('');
     this.http.post(`${environment.apiUrl}/admin/users/${p.id}/make-platform-user`, { password: pw }).subscribe({
       next: () => { this.promoteSaving.set(false); this.closePromote(); this.load(); },
-      error: err => { this.promoteSaving.set(false); this.promoteError.set(err.error?.detail ?? 'İşlem başarısız.'); }
+      error: err => { this.promoteSaving.set(false); this.promoteError.set(err.error?.detail ?? this.transloco.translate('people.operationFailed')); }
     });
   }
 
@@ -593,7 +594,6 @@ export class PeopleListComponent implements OnInit {
   goPage(p: number) { this.page = p; this.load(); }
   totalPages() { return Math.ceil((this.result()?.totalCount ?? 0) / this.pageSize); }
 
-  statusLabel(s: number) { return STATUS_LABELS[s] ?? s; }
   statusCss(s: number) { return STATUS_CSS[s] ?? ''; }
 
   openCreate() {
@@ -652,7 +652,7 @@ export class PeopleListComponent implements OnInit {
         const errors = err.error?.extensions?.errors;
         this.createError.set(errors
           ? Object.values(errors).flat().join(' ')
-          : err.error?.detail ?? 'Bir hata oluştu.');
+          : err.error?.detail ?? this.transloco.translate('people.genericError'));
       }
     });
   }

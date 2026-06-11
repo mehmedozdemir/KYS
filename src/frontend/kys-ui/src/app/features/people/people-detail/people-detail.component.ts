@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 
 interface PersonDetail {
@@ -23,23 +24,22 @@ interface PersonDetail {
   teamMemberships: { teamId: string; teamName: string; organizationRole: string; startDate: string; endDate: string | null }[];
 }
 
-const STATUS_LABELS: Record<number, string> = { 0: 'Aktif', 1: 'İzinde', 2: 'İstifa', 3: 'Ayrıldı' };
 const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilot', 2: 'badge--suspended', 3: 'badge--archived' };
 
 @Component({
   selector: 'app-people-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe, FormsModule],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       @if (loading()) {
-        <div class="loading-state">Yükleniyor...</div>
+        <div class="loading-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!person()) {
-        <div class="loading-state">Kişi bulunamadı. <a routerLink="/people">← Geri dön</a></div>
+        <div class="loading-state">{{ 'peopleDetail.notFound' | transloco }} <a routerLink="/people">{{ 'common.goBack' | transloco }}</a></div>
       } @else {
         <!-- Breadcrumb -->
         <div class="breadcrumb">
-          <a routerLink="/people">Kişiler</a>
+          <a routerLink="/people">{{ 'people.title' | transloco }}</a>
           <span>/</span>
           <span>{{ person()!.firstName }} {{ person()!.lastName }}</span>
         </div>
@@ -52,7 +52,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
             </div>
             <div class="header-info">
               <h1>{{ person()!.firstName }} {{ person()!.lastName }}</h1>
-              <p class="header-title">{{ person()!.title ?? 'Unvan belirtilmemiş' }}</p>
+              <p class="header-title">{{ person()!.title ?? ('peopleDetail.noTitle' | transloco) }}</p>
               <div class="header-meta">
                 <span><i class="pi pi-envelope"></i> {{ person()!.email }}</span>
                 @if (person()!.phone) {
@@ -63,19 +63,19 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
           </div>
           <div class="header-badges">
             <span class="badge" [ngClass]="statusCss(person()!.employmentStatus)">
-              {{ statusLabel(person()!.employmentStatus) }}
+              {{ 'status.employment.' + person()!.employmentStatus | transloco }}
             </span>
             @if (person()!.isPlatformUser) {
-              <span class="badge badge--active">Platform Kullanıcısı</span>
+              <span class="badge badge--active">{{ 'peopleDetail.platformUser' | transloco }}</span>
             }
             @if (person()!.isLocked) {
-              <span class="badge badge--churned">Kilitli</span>
+              <span class="badge badge--churned">{{ 'peopleDetail.locked' | transloco }}</span>
             }
             <button type="button" class="btn-edit" (click)="openStatusChange()">
-              <i class="pi pi-sync"></i> Durum
+              <i class="pi pi-sync"></i> {{ 'peopleDetail.statusBtn' | transloco }}
             </button>
             <button type="button" class="btn-edit" (click)="openEdit()">
-              <i class="pi pi-pencil"></i> Düzenle
+              <i class="pi pi-pencil"></i> {{ 'common.edit' | transloco }}
             </button>
           </div>
         </div>
@@ -83,14 +83,14 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
         <!-- Tabs -->
         <div class="tabs">
           <button class="tab-btn" [class.active]="activeTab() === 'info'" (click)="activeTab.set('info')">
-            Genel Bilgiler
+            {{ 'peopleDetail.tabInfo' | transloco }}
           </button>
           <button class="tab-btn" [class.active]="activeTab() === 'teams'" (click)="activeTab.set('teams')">
-            Ekip Geçmişi
+            {{ 'peopleDetail.tabTeams' | transloco }}
             <span class="tab-count">{{ person()!.teamMemberships.length }}</span>
           </button>
           <button class="tab-btn" [class.active]="activeTab() === 'roles'" (click)="activeTab.set('roles')">
-            Sistem Rolleri
+            {{ 'peopleDetail.tabRoles' | transloco }}
             <span class="tab-count">{{ person()!.systemRoles.length }}</span>
           </button>
         </div>
@@ -100,19 +100,19 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
           <div class="tab-content">
             <div class="info-grid">
               <div class="info-item">
-                <label>İşe Başlama</label>
+                <label>{{ 'peopleDetail.hireDate' | transloco }}</label>
                 <span>{{ person()!.hireDate ? (person()!.hireDate | date:'dd.MM.yyyy') : '—' }}</span>
               </div>
               <div class="info-item">
-                <label>Ayrılma Tarihi</label>
+                <label>{{ 'peopleDetail.terminationDate' | transloco }}</label>
                 <span>{{ person()!.terminationDate ? (person()!.terminationDate | date:'dd.MM.yyyy') : '—' }}</span>
               </div>
               <div class="info-item">
-                <label>Kullanıcı Adı</label>
+                <label>{{ 'peopleDetail.username' | transloco }}</label>
                 <span>{{ person()!.username ?? '—' }}</span>
               </div>
               <div class="info-item">
-                <label>Son Giriş</label>
+                <label>{{ 'peopleDetail.lastLogin' | transloco }}</label>
                 <span>{{ person()!.lastLoginAt ? (person()!.lastLoginAt | date:'dd.MM.yyyy HH:mm') : '—' }}</span>
               </div>
             </div>
@@ -123,15 +123,15 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
         @if (activeTab() === 'teams') {
           <div class="tab-content">
             @if (!person()!.teamMemberships.length) {
-              <p class="empty-text">Ekip üyeliği bulunmuyor.</p>
+              <p class="empty-text">{{ 'peopleDetail.noMemberships' | transloco }}</p>
             } @else {
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Ekip</th>
-                    <th>Organizasyon Rolü</th>
-                    <th>Başlangıç</th>
-                    <th>Bitiş</th>
+                    <th>{{ 'peopleDetail.colTeam' | transloco }}</th>
+                    <th>{{ 'peopleDetail.colOrgRole' | transloco }}</th>
+                    <th>{{ 'peopleDetail.colStart' | transloco }}</th>
+                    <th>{{ 'peopleDetail.colEnd' | transloco }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -146,7 +146,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
                         @if (m.endDate) {
                           {{ m.endDate | date:'dd.MM.yyyy' }}
                         } @else {
-                          <span class="badge badge--active">Devam ediyor</span>
+                          <span class="badge badge--active">{{ 'peopleDetail.ongoing' | transloco }}</span>
                         }
                       </td>
                     </tr>
@@ -161,7 +161,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
         @if (activeTab() === 'roles') {
           <div class="tab-content">
             @if (!person()!.systemRoles.length) {
-              <p class="empty-text">Sistem rolü atanmamış.</p>
+              <p class="empty-text">{{ 'peopleDetail.noRoles' | transloco }}</p>
             } @else {
               <div class="role-list">
                 @for (r of person()!.systemRoles; track r.roleId) {
@@ -183,7 +183,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       <div class="modal-backdrop" (click)="showStatusModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Çalışma Durumu Değiştir</h2>
+            <h2>{{ 'peopleDetail.statusTitle' | transloco }}</h2>
             <button type="button" class="close-btn" (click)="showStatusModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -191,29 +191,29 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
               <div class="alert-error">{{ statusError() }}</div>
             }
             <div class="form-group">
-              <label>Yeni Durum <span class="req">*</span></label>
+              <label>{{ 'peopleDetail.newStatus' | transloco }} <span class="req">*</span></label>
               <select [(ngModel)]="statusForm.newStatus" style="padding:0.5rem 0.75rem;border:1px solid var(--border-strong);border-radius:0.375rem;font-size:0.875rem;width:100%;box-sizing:border-box;">
-                <option value="0">Aktif</option>
-                <option value="1">İzinde</option>
-                <option value="2">İstifa</option>
-                <option value="3">Ayrıldı</option>
+                <option value="0">{{ 'status.employment.0' | transloco }}</option>
+                <option value="1">{{ 'status.employment.1' | transloco }}</option>
+                <option value="2">{{ 'status.employment.2' | transloco }}</option>
+                <option value="3">{{ 'status.employment.3' | transloco }}</option>
               </select>
             </div>
             @if (+statusForm.newStatus === 2 || +statusForm.newStatus === 3) {
               <div class="form-group">
-                <label>Ayrılma Tarihi</label>
+                <label>{{ 'peopleDetail.terminationDate' | transloco }}</label>
                 <input type="date" [(ngModel)]="statusForm.terminationDate" />
               </div>
               <div class="form-group">
-                <label>Ayrılma Nedeni</label>
-                <input type="text" [(ngModel)]="statusForm.terminationReason" placeholder="İsteğe bağlı..." />
+                <label>{{ 'peopleDetail.terminationReason' | transloco }}</label>
+                <input type="text" [(ngModel)]="statusForm.terminationReason" [placeholder]="'peopleDetail.terminationReasonPlaceholder' | transloco" />
               </div>
             }
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="showStatusModal.set(false)">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="showStatusModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="statusSaving()" (click)="saveStatusChange()">
-              {{ statusSaving() ? 'Kaydediliyor...' : 'Kaydet' }}
+              {{ (statusSaving() ? 'common.saving' : 'common.save') | transloco }}
             </button>
           </div>
         </div>
@@ -225,7 +225,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
       <div class="modal-backdrop" (click)="showEditModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Kişiyi Düzenle</h2>
+            <h2>{{ 'peopleDetail.editTitle' | transloco }}</h2>
             <button type="button" class="close-btn" (click)="showEditModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -234,39 +234,39 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
             }
             <div class="form-row">
               <div class="form-group">
-                <label>Ad <span class="req">*</span></label>
+                <label>{{ 'peopleDetail.firstName' | transloco }} <span class="req">*</span></label>
                 <input type="text" [(ngModel)]="editForm.firstName" [class.input-error]="editSubmitted() && !editForm.firstName.trim()" />
                 @if (editSubmitted() && !editForm.firstName.trim()) {
-                  <span class="field-error">Zorunlu alan</span>
+                  <span class="field-error">{{ 'common.required' | transloco }}</span>
                 }
               </div>
               <div class="form-group">
-                <label>Soyad <span class="req">*</span></label>
+                <label>{{ 'peopleDetail.lastName' | transloco }} <span class="req">*</span></label>
                 <input type="text" [(ngModel)]="editForm.lastName" [class.input-error]="editSubmitted() && !editForm.lastName.trim()" />
                 @if (editSubmitted() && !editForm.lastName.trim()) {
-                  <span class="field-error">Zorunlu alan</span>
+                  <span class="field-error">{{ 'common.required' | transloco }}</span>
                 }
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Unvan</label>
-                <input type="text" [(ngModel)]="editForm.title" placeholder="ör. Senior Developer" />
+                <label>{{ 'peopleDetail.jobTitle' | transloco }}</label>
+                <input type="text" [(ngModel)]="editForm.title" [placeholder]="'peopleDetail.jobTitlePlaceholder' | transloco" />
               </div>
               <div class="form-group">
-                <label>Telefon</label>
-                <input type="tel" [(ngModel)]="editForm.phone" placeholder="ör. +90 555 123 4567" />
+                <label>{{ 'peopleDetail.phone' | transloco }}</label>
+                <input type="tel" [(ngModel)]="editForm.phone" [placeholder]="'peopleDetail.phonePlaceholder' | transloco" />
               </div>
             </div>
             <div class="form-group">
-              <label>İşe Başlama Tarihi</label>
+              <label>{{ 'peopleDetail.hireDateLabel' | transloco }}</label>
               <input type="date" [(ngModel)]="editForm.hireDate" />
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="showEditModal.set(false)">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="showEditModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="editSaving()" (click)="saveEdit()">
-              {{ editSaving() ? 'Kaydediliyor...' : 'Kaydet' }}
+              {{ (editSaving() ? 'common.saving' : 'common.save') | transloco }}
             </button>
           </div>
         </div>
@@ -393,6 +393,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
 })
 export class PeopleDetailComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
   private route = inject(ActivatedRoute);
 
   person = signal<PersonDetail | null>(null);
@@ -429,7 +430,7 @@ export class PeopleDetailComponent implements OnInit {
       },
       error: err => {
         this.statusSaving.set(false);
-        this.statusError.set(err.error?.detail ?? 'Durum güncellenemedi');
+        this.statusError.set(err.error?.detail ?? this.transloco.translate('peopleDetail.statusErr'));
       }
     });
   }
@@ -482,11 +483,10 @@ export class PeopleDetailComponent implements OnInit {
       },
       error: err => {
         this.editSaving.set(false);
-        this.editError.set(err.error?.detail ?? 'Güncelleme başarısız');
+        this.editError.set(err.error?.detail ?? this.transloco.translate('peopleDetail.editErr'));
       }
     });
   }
 
-  statusLabel(s: number) { return STATUS_LABELS[s] ?? s; }
   statusCss(s: number) { return STATUS_CSS[s] ?? ''; }
 }
