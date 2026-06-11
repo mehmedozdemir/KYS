@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { TopbarComponent } from '../topbar/topbar.component';
 import { SessionTimeoutService } from '../../core/services/session-timeout.service';
+import { LayoutService } from '../../core/services/layout.service';
 
 @Component({
   selector: 'app-shell',
@@ -11,6 +12,9 @@ import { SessionTimeoutService } from '../../core/services/session-timeout.servi
   template: `
     <div class="shell">
       <app-sidebar />
+      @if (layout.mobileOpen()) {
+        <div class="shell__backdrop" (click)="layout.closeMobile()"></div>
+      }
       <div class="shell__main">
         <app-topbar />
         <main class="shell__content">
@@ -58,6 +62,13 @@ import { SessionTimeoutService } from '../../core/services/session-timeout.servi
       flex: 1;
       overflow-y: auto;
       background: var(--bg);
+    }
+    .shell__backdrop {
+      position: fixed; inset: 0; z-index: 1090;
+      background: rgba(0, 0, 0, 0.45);
+    }
+    @media (min-width: 1024px) {
+      .shell__backdrop { display: none; }
     }
 
     .timeout-backdrop {
@@ -140,6 +151,7 @@ import { SessionTimeoutService } from '../../core/services/session-timeout.servi
 })
 export class ShellComponent implements OnInit {
   readonly sessionTimeout = inject(SessionTimeoutService);
+  readonly layout = inject(LayoutService);
 
   ngOnInit(): void {
     // Schedule on init to handle page-refresh session restores
