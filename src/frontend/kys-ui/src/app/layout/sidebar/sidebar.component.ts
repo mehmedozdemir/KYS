@@ -26,10 +26,9 @@ interface NavGroup {
         @if (branding.logoUrl(); as logo) {
           <img [src]="logo" alt="logo" class="sidebar__logo-img" />
         } @else {
-          <span class="sidebar__logo">KYS</span>
+          <span class="sidebar__logo"><i class="pi pi-th-large"></i></span>
         }
         <div class="sidebar__brand-text">
-          <span class="sidebar__name">KYS</span>
           <span class="sidebar__subtitle">KURUMSAL YAZILIM SİSTEMİ</span>
         </div>
       </div>
