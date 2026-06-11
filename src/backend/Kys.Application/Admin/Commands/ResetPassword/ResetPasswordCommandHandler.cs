@@ -1,6 +1,7 @@
 using Kys.Domain.Entities;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
+using Kys.Domain.Interfaces.Services;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
@@ -9,6 +10,7 @@ namespace Kys.Application.Admin.Commands.ResetPassword;
 public sealed class ResetPasswordCommandHandler(
     IPersonRepository personRepository,
     IPasswordHasher<Person> passwordHasher,
+    IAccountEmailService accountEmail,
     IUnitOfWork unitOfWork
 ) : IRequestHandler<ResetPasswordCommand>
 {
@@ -27,5 +29,10 @@ public sealed class ResetPasswordCommandHandler(
 
         personRepository.Update(person);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Yeni şifreyi kullanıcıya e-posta ile bildir (best-effort, kuyruğa atılır)
+        await accountEmail.SendPasswordResetAsync(
+            person.Email, $"{person.FirstName} {person.LastName}",
+            person.Username ?? person.Email, request.NewPassword, cancellationToken);
     }
 }
