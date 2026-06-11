@@ -12,6 +12,8 @@ import { logout } from '../../core/store/auth/auth.actions';
 import { environment } from '../../../environments/environment';
 import { ThemeService, THEMES, ThemeId } from '../../core/services/theme.service';
 import { LayoutService } from '../../core/services/layout.service';
+import { LanguageService } from '../../core/i18n/language.service';
+import { TranslocoModule } from '@jsverse/transloco';
 
 interface SearchItem { id: string; name: string; subTitle: string | null; category: string; status: string | null; }
 interface SearchResult { customers: SearchItem[]; products: SearchItem[]; people: SearchItem[]; teams: SearchItem[]; articles: SearchItem[]; }
@@ -29,11 +31,11 @@ const CATEGORY_ROUTE: Record<string, string> = {
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [FormsModule, AsyncPipe, NgClass, RouterLink],
+  imports: [FormsModule, AsyncPipe, NgClass, RouterLink, TranslocoModule],
   template: `
     <header class="topbar">
       <div class="topbar__left">
-      <button class="topbar__menu-btn" (click)="layout.primaryToggle()" title="Menü">
+      <button class="topbar__menu-btn" (click)="layout.primaryToggle()" [title]="'topbar.menu' | transloco">
         <i class="pi pi-bars"></i>
       </button>
       <div class="topbar__search" [class.topbar__search--active]="showDropdown()">
@@ -41,7 +43,7 @@ const CATEGORY_ROUTE: Record<string, string> = {
         <input
           #searchInput
           type="text"
-          placeholder="Ara... (müşteri, ürün, kişi)"
+          [placeholder]="'topbar.searchPlaceholder' | transloco"
           [(ngModel)]="searchQuery"
           (ngModelChange)="onQueryChange($event)"
           (keyup.enter)="onEnter()"
@@ -95,8 +97,11 @@ const CATEGORY_ROUTE: Record<string, string> = {
       </div>
 
       <div class="topbar__right">
+        <button class="topbar__lang-btn" (click)="lang.toggle()" [title]="'topbar.language' | transloco">
+          <i class="pi pi-globe"></i> {{ lang.current().toUpperCase() }}
+        </button>
         <div class="theme-menu">
-          <button class="topbar__icon-btn" (click)="toggleThemeMenu($event)" title="Tema seç">
+          <button class="topbar__icon-btn" (click)="toggleThemeMenu($event)" [title]="'topbar.theme' | transloco">
             <i class="pi pi-palette"></i>
           </button>
           @if (showThemeMenu()) {
@@ -115,11 +120,11 @@ const CATEGORY_ROUTE: Record<string, string> = {
           }
         </div>
         @if (user$ | async; as user) {
-          <a class="topbar__user" routerLink="/account" title="Hesabım">
+          <a class="topbar__user" routerLink="/account" [title]="'topbar.account' | transloco">
             <i class="pi pi-user"></i> {{ user.fullName }}
           </a>
         }
-        <button class="topbar__logout" (click)="onLogout()" title="Çıkış Yap">
+        <button class="topbar__logout" (click)="onLogout()" [title]="'topbar.logout' | transloco">
           <i class="pi pi-sign-out"></i>
         </button>
       </div>
@@ -218,6 +223,13 @@ const CATEGORY_ROUTE: Record<string, string> = {
       &:hover { color: var(--danger); }
     }
 
+    .topbar__lang-btn {
+      background: none; border: none; cursor: pointer; color: var(--text-muted);
+      font-size: 0.8125rem; font-weight: 600; padding: 0.3rem 0.5rem; border-radius: 0.375rem;
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      &:hover { color: var(--primary); background: var(--hover); }
+      i { font-size: 0.9rem; }
+    }
     .theme-menu { position: relative; }
     .topbar__icon-btn {
       background: none; border: none; cursor: pointer; color: var(--text-muted);
@@ -255,6 +267,7 @@ export class TopbarComponent {
 
   readonly theme = inject(ThemeService);
   readonly layout = inject(LayoutService);
+  readonly lang = inject(LanguageService);
   readonly themeGroups = [
     { group: 'Açık' as const, items: THEMES.filter(t => t.group === 'Açık') },
     { group: 'Koyu' as const, items: THEMES.filter(t => t.group === 'Koyu') }

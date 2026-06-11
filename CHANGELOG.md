@@ -28,6 +28,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.38.0] — 2026-06-11 (Lokalizasyon Faz 0 — TR/EN Altyapı)
+
+### Eklendi
+- **Çok dilli altyapı (Transloco)**: çalışma zamanı TR/EN dil değişimi, `public/i18n/{tr,en}.json` sözlükleri, `TranslocoHttpLoader`, tercih `localStorage`'da kalıcı, `<html lang>` güncellenir
+- **Dil değiştirici**: topbar'da globe + TR/EN düğmesi (`LanguageService`)
+- **Çevrilen ilk kapsam**: sol menü (tüm grup/öğeler), login ekranı, topbar, ortak terimler + platform sloganı
+- (Faz 1+: modül modül metin çevirisi — dashboard, müşteriler, ürünler ... devam edecek)
+
+---
+
 ## [0.37.0] — 2026-06-11 (Sidebar Yeniden Tasarım — Modern & Responsive)
 
 ### Değişti

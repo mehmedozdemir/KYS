@@ -1,0 +1,61 @@
+{
+  "app": {
+    "tagline": "Kurumsal Yazılım Sistemi"
+  },
+  "common": {
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "add": "Ekle",
+    "remove": "Kaldır",
+    "search": "Ara",
+    "yes": "Evet",
+    "no": "Hayır",
+    "loading": "Yükleniyor...",
+    "back": "Geri",
+    "close": "Kapat",
+    "actions": "İşlemler",
+    "required": "Zorunlu alan."
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "workspace": "Çalışma Alanı",
+    "customers": "Müşteriler",
+    "products": "Ürünler",
+    "teams": "Ekipler",
+    "people": "Kişiler",
+    "knowledgeBase": "Bilgi Bankası",
+    "definitions": "Tanımlar",
+    "environmentTypes": "Ortam Tipleri",
+    "hostingPlatforms": "Barındırma Platformları",
+    "resourceTypes": "Kaynak Tipleri",
+    "sharedResources": "Paylaşımlı Kaynaklar",
+    "management": "Yönetim",
+    "overview": "Genel Bakış",
+    "platformUsers": "Platform Kullanıcıları",
+    "organizationProfile": "Kurum Profili",
+    "accessGrants": "Erişim Yetkileri",
+    "emailSettings": "Mail Ayarları",
+    "customFields": "Özel Alanlar",
+    "auditLog": "Audit Log"
+  },
+  "topbar": {
+    "searchPlaceholder": "Ara... (müşteri, ürün, kişi)",
+    "account": "Hesabım",
+    "logout": "Çıkış Yap",
+    "theme": "Tema seç",
+    "menu": "Menü",
+    "language": "Dil"
+  },
+  "login": {
+    "email": "E-posta",
+    "password": "Şifre",
+    "emailPlaceholder": "ornek@sirket.com",
+    "emailRequired": "E-posta zorunludur.",
+    "emailInvalid": "Geçerli bir e-posta girin.",
+    "passwordRequired": "Şifre zorunludur.",
+    "submit": "Giriş Yap",
+    "signingIn": "Giriş yapılıyor..."
+  }
+}

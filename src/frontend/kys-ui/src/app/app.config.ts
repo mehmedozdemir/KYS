@@ -9,6 +9,10 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { authReducer } from './core/store/auth/auth.reducer';
 import { AuthEffects } from './core/store/auth/auth.effects';
 import { GlobalErrorHandler } from './core/handlers/global-error.handler';
+import { provideTransloco } from '@jsverse/transloco';
+import { TranslocoHttpLoader } from './core/i18n/transloco-loader';
+
+const savedLang = (typeof localStorage !== 'undefined' && localStorage.getItem('kys-lang')) || 'tr';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,6 +22,16 @@ export const appConfig: ApplicationConfig = {
     provideStore({ auth: authReducer }),
     provideEffects([AuthEffects]),
     provideRouterStore(),
-    { provide: ErrorHandler, useClass: GlobalErrorHandler }
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
+    provideTransloco({
+      config: {
+        availableLangs: ['tr', 'en'],
+        defaultLang: savedLang,
+        fallbackLang: 'tr',
+        reRenderOnLangChange: true,
+        prodMode: false
+      },
+      loader: TranslocoHttpLoader
+    })
   ]
 };
