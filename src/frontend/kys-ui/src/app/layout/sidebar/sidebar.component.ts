@@ -83,9 +83,10 @@ interface NavGroup {
     }
     .sidebar__brand {
       display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 1.25rem 1.5rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.4rem;
+      padding: 0.875rem 1.5rem;
       border-bottom: 1px solid var(--sidebar-border);
       min-height: 64px;
       box-sizing: border-box;
@@ -105,7 +106,7 @@ interface NavGroup {
       font-size: 0.5625rem;
       font-weight: 600;
       letter-spacing: 0.06em;
-      white-space: nowrap;
+      line-height: 1.3;
     }
     .sidebar__brand-mini {
       font-size: 0.75rem;
@@ -171,7 +172,7 @@ interface NavGroup {
 
     /* --- Mini (ikon) mod --- */
     .sidebar--collapsed { width: 72px; }
-    .sidebar--collapsed .sidebar__brand { justify-content: center; padding: 1.25rem 0; }
+    .sidebar--collapsed .sidebar__brand { align-items: center; justify-content: center; padding: 1.25rem 0; }
     .sidebar--collapsed .sidebar__brand-text { display: none; }
     .sidebar--collapsed .sidebar__nav { padding: 0.75rem 0.5rem; }
     .sidebar--collapsed .sidebar__item { justify-content: center; padding: 0.6rem 0; gap: 0; }
