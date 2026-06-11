@@ -129,6 +129,9 @@ const ROLE_COLOR: Record<string, string> = {
                           <i class="pi pi-lock-open"></i> Kilidi Aç
                         </button>
                       }
+                      <button class="btn-sm btn-danger-sm" (click)="removePlatformUser(p)" title="Platform erişimini kaldır">
+                        <i class="pi pi-user-minus"></i> Kaldır
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -189,13 +192,16 @@ const ROLE_COLOR: Record<string, string> = {
               <div class="alert-error">{{ resetError() }}</div>
             }
             @if (resetSuccess()) {
-              <div class="alert-success">Şifre başarıyla sıfırlandı.</div>
+              <div class="alert-success">Şifre sıfırlandı ve yeni şifre kullanıcının e-postasına gönderildi.</div>
             }
             <div style="display:flex;flex-direction:column;gap:0.375rem">
               <label style="font-size:0.875rem;font-weight:500;color:var(--text)">Yeni Şifre *</label>
-              <input type="password" [(ngModel)]="newPassword"
-                style="padding:0.5rem 0.75rem;border:1px solid var(--border-strong);border-radius:0.375rem;font-size:0.875rem"
-                placeholder="En az 8 karakter" />
+              <div style="display:flex;gap:0.5rem">
+                <input type="text" [(ngModel)]="newPassword"
+                  style="flex:1;padding:0.5rem 0.75rem;border:1px solid var(--border-strong);border-radius:0.375rem;font-size:0.875rem"
+                  placeholder="En az 8 karakter" />
+                <button type="button" class="btn-secondary" (click)="generateResetPassword()" title="Otomatik şifre üret"><i class="pi pi-refresh"></i></button>
+              </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:0.375rem">
               <label style="font-size:0.875rem;font-weight:500;color:var(--text)">Şifre Tekrar *</label>
@@ -326,6 +332,7 @@ const ROLE_COLOR: Record<string, string> = {
     .locked-badge { display: inline-flex; align-items: center; gap: 0.25rem; background: var(--warning-soft-bg); color: var(--warning-soft-text); font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 9999px; margin-bottom: 0.25rem; }
     .action-group { display: flex; gap: 0.375rem; justify-content: flex-end; flex-wrap: wrap; }
     .btn-warning { border-color: var(--warning); color: var(--warning-soft-text); &:hover { background: var(--warning-soft-bg); } }
+    .btn-danger-sm { border-color: var(--danger-border); color: var(--danger-soft-text); &:hover { background: var(--danger-faint-bg); color: var(--danger); } }
   `]
 })
 export class PlatformUsersComponent implements OnInit {
@@ -495,6 +502,21 @@ export class PlatformUsersComponent implements OnInit {
     });
   }
 
+  randomPassword(): string {
+    const U = 'ABCDEFGHJKLMNPQRSTUVWXYZ', L = 'abcdefghijkmnpqrstuvwxyz', D = '23456789', S = '!@#$%&*?';
+    const all = U + L + D + S;
+    const pick = (s: string) => s[Math.floor(Math.random() * s.length)];
+    let pw = pick(U) + pick(L) + pick(D) + pick(S);
+    for (let i = 0; i < 8; i++) pw += pick(all);
+    return pw.split('').sort(() => Math.random() - 0.5).join('');
+  }
+
+  generateResetPassword() {
+    const pw = this.randomPassword();
+    this.newPassword = pw;
+    this.confirmPassword = pw;
+  }
+
   // --- Unlock Account ---
   unlockAccount(personId: string) {
     this.http.post(`${environment.apiUrl}/admin/users/${personId}/unlock`, {}).subscribe({
@@ -502,6 +524,15 @@ export class PlatformUsersComponent implements OnInit {
         this.users.update(list => list.map(p => p.id === personId ? { ...p, isLocked: false } : p));
         this.filterUsers();
       }
+    });
+  }
+
+  // --- Platform erişimini kaldır ---
+  removePlatformUser(p: PersonItem) {
+    if (!confirm(`${p.firstName} ${p.lastName} kişisinin platform erişimi kaldırılsın mı? (Kişi kaydı silinmez, giriş yapamaz hale gelir.)`)) return;
+    this.http.post(`${environment.apiUrl}/admin/users/${p.id}/remove-platform-user`, {}).subscribe({
+      next: () => { this.notify.success('Platform erişimi kaldırıldı.'); this.loadUsers(); },
+      error: e => this.notify.error(e.error?.detail ?? 'İşlem başarısız.')
     });
   }
 }

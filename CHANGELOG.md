@@ -28,6 +28,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.35.0] — 2026-06-11 (Platform Kullanıcı Yönetimi İyileştirmeleri)
+
+### Eklendi
+- **Platform erişimini kaldırma**: Platform Kullanıcıları ekranında "Kaldır" → kişinin platform erişimi geri alınır (kayıt silinmez; kullanıcı adı/şifre/oturum temizlenir). `POST /admin/users/{id}/remove-platform-user`
+- **Şifre sıfırlamada otomatik şifre üretme**: reset modalında "üret" butonu (güçlü rastgele şifre)
+- **Şifre sıfırlama e-postası**: sıfırlama sonrası kullanıcının e-postasına yeni şifresini bildiren profesyonel HTML mail (async kuyruk). `IAccountEmailService.SendPasswordResetAsync`
+
+---
+
 ## [0.34.0] — 2026-06-11 (Mail Otomatik Keşif — Outlook benzeri)
 
 ### Eklendi

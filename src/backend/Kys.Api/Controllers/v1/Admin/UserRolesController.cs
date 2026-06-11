@@ -7,6 +7,7 @@ using Kys.Application.Admin.Commands.ResetPassword;
 using Kys.Application.Admin.Commands.UnlockAccount;
 using Kys.Application.People.Commands.MakePlatformUser;
 using Kys.Application.People.Commands.MakePlatformUsers;
+using Kys.Application.People.Commands.RemovePlatformUser;
 using Kys.Application.People.Queries.GetProvisionablePeople;
 using Kys.Application.Admin.Queries.GetPersonSystemRoles;
 using Kys.Domain.Entities;
@@ -69,6 +70,15 @@ public sealed class UserRolesController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> MakePlatformUser(Guid personId, [FromBody] MakePlatformUserRequest request, CancellationToken ct)
     {
         await mediator.Send(new MakePlatformUserCommand(personId, request.Password), ct);
+        return NoContent();
+    }
+
+    [HttpPost("/api/v{version:apiVersion}/admin/users/{personId:guid}/remove-platform-user")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemovePlatformUser(Guid personId, CancellationToken ct)
+    {
+        await mediator.Send(new RemovePlatformUserCommand(personId), ct);
         return NoContent();
     }
 
