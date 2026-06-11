@@ -5,11 +5,12 @@ import { AsyncPipe } from '@angular/common';
 import { login } from '../../../core/store/auth/auth.actions';
 import { selectAuthLoading, selectAuthError } from '../../../core/store/auth/auth.selectors';
 import { BrandingService } from '../../../core/services/branding.service';
+import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, AsyncPipe],
+  imports: [ReactiveFormsModule, AsyncPipe, TranslocoModule],
   template: `
     <div class="login-page">
       <div class="login-card">
@@ -20,7 +21,7 @@ import { BrandingService } from '../../../core/services/branding.service';
             <div class="login-card__logo">{{ branding.branding()?.shortName || 'KYS' }}</div>
           }
           <h1>{{ branding.branding()?.shortName || branding.companyName() }}</h1>
-          <p>Kurumsal Yazılım Sistemi</p>
+          <p>{{ 'app.tagline' | transloco }}</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-card__form">
@@ -32,23 +33,23 @@ import { BrandingService } from '../../../core/services/branding.service';
           }
 
           <div class="form-group">
-            <label for="email">E-posta</label>
+            <label for="email">{{ 'login.email' | transloco }}</label>
             <input
               id="email"
               type="email"
               formControlName="email"
-              placeholder="ornek@sirket.com"
+              [placeholder]="'login.emailPlaceholder' | transloco"
               [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched" />
             @if (form.get('email')?.errors?.['required'] && form.get('email')?.touched) {
-              <span class="form-error">E-posta zorunludur.</span>
+              <span class="form-error">{{ 'login.emailRequired' | transloco }}</span>
             }
             @if (form.get('email')?.errors?.['email'] && form.get('email')?.touched) {
-              <span class="form-error">Geçerli bir e-posta girin.</span>
+              <span class="form-error">{{ 'login.emailInvalid' | transloco }}</span>
             }
           </div>
 
           <div class="form-group">
-            <label for="password">Şifre</label>
+            <label for="password">{{ 'login.password' | transloco }}</label>
             <input
               id="password"
               type="password"
@@ -56,15 +57,15 @@ import { BrandingService } from '../../../core/services/branding.service';
               placeholder="••••••••"
               [class.is-invalid]="form.get('password')?.invalid && form.get('password')?.touched" />
             @if (form.get('password')?.errors?.['required'] && form.get('password')?.touched) {
-              <span class="form-error">Şifre zorunludur.</span>
+              <span class="form-error">{{ 'login.passwordRequired' | transloco }}</span>
             }
           </div>
 
           <button type="submit" [disabled]="(loading$ | async) || form.invalid" class="btn-primary">
             @if (loading$ | async) {
-              <i class="pi pi-spin pi-spinner"></i> Giriş yapılıyor...
+              <i class="pi pi-spin pi-spinner"></i> {{ 'login.signingIn' | transloco }}
             } @else {
-              Giriş Yap
+              {{ 'login.submit' | transloco }}
             }
           </button>
         </form>

@@ -1,0 +1,61 @@
+{
+  "app": {
+    "tagline": "Enterprise Software System"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "search": "Search",
+    "yes": "Yes",
+    "no": "No",
+    "loading": "Loading...",
+    "back": "Back",
+    "close": "Close",
+    "actions": "Actions",
+    "required": "Required field."
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "workspace": "Workspace",
+    "customers": "Customers",
+    "products": "Products",
+    "teams": "Teams",
+    "people": "People",
+    "knowledgeBase": "Knowledge Base",
+    "definitions": "Definitions",
+    "environmentTypes": "Environment Types",
+    "hostingPlatforms": "Hosting Platforms",
+    "resourceTypes": "Resource Types",
+    "sharedResources": "Shared Resources",
+    "management": "Administration",
+    "overview": "Overview",
+    "platformUsers": "Platform Users",
+    "organizationProfile": "Organization Profile",
+    "accessGrants": "Access Grants",
+    "emailSettings": "Mail Settings",
+    "customFields": "Custom Fields",
+    "auditLog": "Audit Log"
+  },
+  "topbar": {
+    "searchPlaceholder": "Search... (customer, product, person)",
+    "account": "My Account",
+    "logout": "Sign Out",
+    "theme": "Select theme",
+    "menu": "Menu",
+    "language": "Language"
+  },
+  "login": {
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "example@company.com",
+    "emailRequired": "Email is required.",
+    "emailInvalid": "Enter a valid email.",
+    "passwordRequired": "Password is required.",
+    "submit": "Sign In",
+    "signingIn": "Signing in..."
+  }
+}

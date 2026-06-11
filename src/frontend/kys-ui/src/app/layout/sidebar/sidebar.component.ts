@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, NavigationEnd, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { TranslocoModule } from '@jsverse/transloco';
 import { PermissionService } from '../../core/services/permission.service';
 import { BrandingService } from '../../core/services/branding.service';
 import { LayoutService } from '../../core/services/layout.service';
@@ -21,7 +22,7 @@ interface NavGroup {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, TranslocoModule],
   template: `
     <aside class="sidebar"
       [class.sidebar--collapsed]="collapsedMode()"
@@ -37,7 +38,7 @@ interface NavGroup {
             <span class="sidebar__logo"><i class="pi pi-th-large"></i></span>
           }
           <div class="sidebar__brand-text">
-            <span class="sidebar__subtitle">KURUMSAL YAZILIM SİSTEMİ</span>
+            <span class="sidebar__subtitle">{{ 'app.tagline' | transloco }}</span>
           </div>
         }
       </div>
@@ -46,7 +47,7 @@ interface NavGroup {
         @for (group of visibleGroups(); track $index) {
           @if (group.header && !collapsedMode()) {
             <button type="button" class="sidebar__group-header" (click)="toggleGroup(group.header)">
-              <span>{{ group.header }}</span>
+              <span>{{ group.header | transloco }}</span>
               <i class="pi pi-chevron-down sidebar__chevron" [class.sidebar__chevron--open]="isExpanded(group.header)"></i>
             </button>
           } @else if (group.header && collapsedMode() && !$first) {
@@ -60,10 +61,10 @@ interface NavGroup {
                 routerLinkActive="sidebar__item--active"
                 [routerLinkActiveOptions]="item.exact ? exactMatch : prefixMatch"
                 class="sidebar__item"
-                [title]="collapsedMode() ? item.label : ''"
+                [title]="collapsedMode() ? (item.label | transloco) : ''"
                 (click)="onNavigate()">
                 <i [class]="'pi ' + item.icon"></i>
-                <span class="sidebar__label">{{ item.label }}</span>
+                <span class="sidebar__label">{{ item.label | transloco }}</span>
               </a>
             }
           }
@@ -107,6 +108,7 @@ interface NavGroup {
       font-weight: 600;
       letter-spacing: 0.06em;
       line-height: 1.3;
+      text-transform: uppercase;
     }
     .sidebar__brand-mini {
       font-size: 0.75rem;
@@ -204,45 +206,45 @@ export class SidebarComponent {
 
   readonly collapsedMode = computed(() => this.layout.collapsed() && !this.layout.isMobile());
 
-  private readonly expanded = signal<Set<string>>(new Set(['Çalışma Alanı']));
+  private readonly expanded = signal<Set<string>>(new Set(['menu.workspace']));
 
   private readonly groups: NavGroup[] = [
     {
       items: [
-        { label: 'Dashboard', icon: 'pi-home', route: '/dashboard' }
+        { label: 'menu.dashboard', icon: 'pi-home', route: '/dashboard' }
       ]
     },
     {
-      header: 'Çalışma Alanı',
+      header: 'menu.workspace',
       items: [
-        { label: 'Müşteriler', icon: 'pi-building', route: '/customers' },
-        { label: 'Ürünler', icon: 'pi-box', route: '/products' },
-        { label: 'Ekipler', icon: 'pi-users', route: '/teams' },
-        { label: 'Kişiler', icon: 'pi-user', route: '/people' },
-        { label: 'Bilgi Bankası', icon: 'pi-book', route: '/knowledge-base' }
+        { label: 'menu.customers', icon: 'pi-building', route: '/customers' },
+        { label: 'menu.products', icon: 'pi-box', route: '/products' },
+        { label: 'menu.teams', icon: 'pi-users', route: '/teams' },
+        { label: 'menu.people', icon: 'pi-user', route: '/people' },
+        { label: 'menu.knowledgeBase', icon: 'pi-book', route: '/knowledge-base' }
       ]
     },
     {
-      header: 'Tanımlar',
+      header: 'menu.definitions',
       adminOnly: true,
       items: [
-        { label: 'Ortam Tipleri', icon: 'pi-server', route: '/admin/environment-types' },
-        { label: 'Barındırma Platformları', icon: 'pi-cloud', route: '/admin/hosting-platforms' },
-        { label: 'Kaynak Tipleri', icon: 'pi-database', route: '/admin/resource-types' },
-        { label: 'Paylaşımlı Kaynaklar', icon: 'pi-share-alt', route: '/admin/shared-resources' }
+        { label: 'menu.environmentTypes', icon: 'pi-server', route: '/admin/environment-types' },
+        { label: 'menu.hostingPlatforms', icon: 'pi-cloud', route: '/admin/hosting-platforms' },
+        { label: 'menu.resourceTypes', icon: 'pi-database', route: '/admin/resource-types' },
+        { label: 'menu.sharedResources', icon: 'pi-share-alt', route: '/admin/shared-resources' }
       ]
     },
     {
-      header: 'Yönetim',
+      header: 'menu.management',
       adminOnly: true,
       items: [
-        { label: 'Genel Bakış', icon: 'pi-chart-bar', route: '/admin', exact: true },
-        { label: 'Platform Kullanıcıları', icon: 'pi-shield', route: '/admin/platform-users' },
-        { label: 'Kurum Profili', icon: 'pi-building', route: '/admin/organization' },
-        { label: 'Erişim Yetkileri', icon: 'pi-key', route: '/admin/access-grants' },
-        { label: 'Mail Ayarları', icon: 'pi-envelope', route: '/admin/email-accounts' },
-        { label: 'Özel Alanlar', icon: 'pi-sliders-h', route: '/admin/custom-fields' },
-        { label: 'Audit Log', icon: 'pi-history', route: '/admin/audit-log' }
+        { label: 'menu.overview', icon: 'pi-chart-bar', route: '/admin', exact: true },
+        { label: 'menu.platformUsers', icon: 'pi-shield', route: '/admin/platform-users' },
+        { label: 'menu.organizationProfile', icon: 'pi-building', route: '/admin/organization' },
+        { label: 'menu.accessGrants', icon: 'pi-key', route: '/admin/access-grants' },
+        { label: 'menu.emailSettings', icon: 'pi-envelope', route: '/admin/email-accounts' },
+        { label: 'menu.customFields', icon: 'pi-sliders-h', route: '/admin/custom-fields' },
+        { label: 'menu.auditLog', icon: 'pi-history', route: '/admin/audit-log' }
       ]
     }
   ];

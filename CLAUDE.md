@@ -233,7 +233,8 @@ Her geliştirme görevi için aşağıdaki adımlar **tartışmasız** uygulanı
   "@ngrx/entity": "^18.0.0",
   "@ngrx/router-store": "^18.0.0",
   "rxjs": "^7.8.0",
-  "marked": "^13.0.0"
+  "marked": "^13.0.0",
+  "@jsverse/transloco": "^7.0.0"
 }
 ```
 
