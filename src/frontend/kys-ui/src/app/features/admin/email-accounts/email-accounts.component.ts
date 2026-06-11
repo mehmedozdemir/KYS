@@ -14,6 +14,7 @@ interface EmailAccount {
   username: string;
   fromAddress: string;
   fromName: string | null;
+  acceptAllCertificates: boolean;
   isActive: boolean;
 }
 
@@ -134,6 +135,7 @@ const PRESETS: Record<string, { host: string; port: number; security: string }> 
                 <input type="text" [(ngModel)]="form.fromName" placeholder="KYS Platform" />
               </div>
             </div>
+            <label class="checkbox-label"><input type="checkbox" [(ngModel)]="form.acceptAllCertificates" /> Sunucu sertifikasını doğrulama (self-signed / iç sunucular için)</label>
             @if (!editId()) {
               <label class="checkbox-label"><input type="checkbox" [(ngModel)]="form.makeActive" /> Bu hesabı aktif yap</label>
             }
@@ -195,7 +197,7 @@ export class EmailAccountsComponent implements OnInit {
   discovering = signal(false);
   discoverHint = signal('');
 
-  form = { name: '', provider: 'Exchange', host: 'smtp.office365.com', port: 587, security: 'StartTls', username: '', password: '', fromAddress: '', fromName: '', makeActive: true };
+  form = { name: '', provider: 'Exchange', host: 'smtp.office365.com', port: 587, security: 'StartTls', username: '', password: '', fromAddress: '', fromName: '', acceptAllCertificates: false, makeActive: true };
 
   ngOnInit() { this.load(); }
 
@@ -235,7 +237,7 @@ export class EmailAccountsComponent implements OnInit {
 
   openCreate() {
     this.editId.set(null);
-    this.form = { name: '', provider: 'Exchange', host: 'smtp.office365.com', port: 587, security: 'StartTls', username: '', password: '', fromAddress: '', fromName: '', makeActive: true };
+    this.form = { name: '', provider: 'Exchange', host: 'smtp.office365.com', port: 587, security: 'StartTls', username: '', password: '', fromAddress: '', fromName: '', acceptAllCertificates: false, makeActive: true };
     this.error.set('');
     this.discoverHint.set('');
     this.showModal.set(true);
@@ -243,7 +245,7 @@ export class EmailAccountsComponent implements OnInit {
 
   openEdit(a: EmailAccount) {
     this.editId.set(a.id);
-    this.form = { name: a.name, provider: a.provider, host: a.host, port: a.port, security: a.security, username: a.username, password: '', fromAddress: a.fromAddress, fromName: a.fromName ?? '', makeActive: a.isActive };
+    this.form = { name: a.name, provider: a.provider, host: a.host, port: a.port, security: a.security, username: a.username, password: '', fromAddress: a.fromAddress, fromName: a.fromName ?? '', acceptAllCertificates: a.acceptAllCertificates, makeActive: a.isActive };
     this.error.set('');
     this.discoverHint.set('');
     this.showModal.set(true);
@@ -256,7 +258,7 @@ export class EmailAccountsComponent implements OnInit {
     const body: Record<string, unknown> = {
       name: this.form.name, provider: this.form.provider, host: this.form.host, port: Number(this.form.port),
       security: this.form.security, username: this.form.username, fromAddress: this.form.fromAddress,
-      fromName: this.form.fromName || null
+      fromName: this.form.fromName || null, acceptAllCertificates: this.form.acceptAllCertificates
     };
     if (this.editId()) {
       body['password'] = this.form.password || null;

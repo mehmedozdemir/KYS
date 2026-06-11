@@ -50,6 +50,8 @@ public sealed class SmtpEmailSender(
         var token = timeoutCts.Token;
 
         using var client = new SmtpClient { Timeout = 20000 };
+        if (account.AcceptAllCertificates)
+            client.ServerCertificateValidationCallback = (_, _, _, _) => true;
         try
         {
             await client.ConnectAsync(account.Host, account.Port, secure, token);

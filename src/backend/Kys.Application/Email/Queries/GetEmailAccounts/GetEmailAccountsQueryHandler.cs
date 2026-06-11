@@ -11,6 +11,6 @@ public sealed class GetEmailAccountsQueryHandler(IEmailAccountRepository reposit
         var accounts = await repository.GetAllAsync(ct);
         return accounts.Select(a => new EmailAccountDto(
             a.Id, a.Name, a.Provider, a.Host, a.Port, a.Security,
-            a.Username, a.FromAddress, a.FromName, a.IsActive)).ToList();
+            a.Username, a.FromAddress, a.FromName, a.AcceptAllCertificates, a.IsActive)).ToList();
     }
 }

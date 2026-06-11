@@ -33,7 +33,7 @@ public sealed class EmailAccountsController(IMediator mediator) : ControllerBase
     {
         var id = await mediator.Send(new CreateEmailAccountCommand(
             r.Name, r.Provider, r.Host, r.Port, r.Security, r.Username, r.Password,
-            r.FromAddress, r.FromName, r.MakeActive), ct);
+            r.FromAddress, r.FromName, r.AcceptAllCertificates, r.MakeActive), ct);
         return Created(string.Empty, new { id });
     }
 
@@ -42,7 +42,7 @@ public sealed class EmailAccountsController(IMediator mediator) : ControllerBase
     {
         await mediator.Send(new UpdateEmailAccountCommand(
             id, r.Name, r.Provider, r.Host, r.Port, r.Security, r.Username, r.Password,
-            r.FromAddress, r.FromName), ct);
+            r.FromAddress, r.FromName, r.AcceptAllCertificates), ct);
         return NoContent();
     }
 
@@ -70,10 +70,10 @@ public sealed class EmailAccountsController(IMediator mediator) : ControllerBase
 
 public sealed record CreateEmailAccountRequest(
     string Name, EmailProvider Provider, string Host, int Port, EmailSecurity Security,
-    string Username, string Password, string FromAddress, string? FromName, bool MakeActive);
+    string Username, string Password, string FromAddress, string? FromName, bool AcceptAllCertificates, bool MakeActive);
 
 public sealed record UpdateEmailAccountRequest(
     string Name, EmailProvider Provider, string Host, int Port, EmailSecurity Security,
-    string Username, string? Password, string FromAddress, string? FromName);
+    string Username, string? Password, string FromAddress, string? FromName, bool AcceptAllCertificates);
 
 public sealed record SendTestRequest(string ToEmail);
