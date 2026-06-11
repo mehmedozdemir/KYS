@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ThemeService } from './core/services/theme.service';
 import { NotificationService } from './core/services/notification.service';
+import { BrandingService } from './core/services/branding.service';
 
 @Component({
   selector: 'app-root',
@@ -35,5 +36,6 @@ export class AppComponent {
 
   constructor() {
     inject(ThemeService).init();
+    inject(BrandingService).load();
   }
 }

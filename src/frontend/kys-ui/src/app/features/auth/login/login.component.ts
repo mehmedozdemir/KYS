@@ -4,6 +4,7 @@ import { Store } from '@ngrx/store';
 import { AsyncPipe } from '@angular/common';
 import { login } from '../../../core/store/auth/auth.actions';
 import { selectAuthLoading, selectAuthError } from '../../../core/store/auth/auth.selectors';
+import { BrandingService } from '../../../core/services/branding.service';
 
 @Component({
   selector: 'app-login',
@@ -13,9 +14,13 @@ import { selectAuthLoading, selectAuthError } from '../../../core/store/auth/aut
     <div class="login-page">
       <div class="login-card">
         <div class="login-card__header">
-          <div class="login-card__logo">KYS</div>
-          <h1>Kurumsal Yazılım Yönetim</h1>
-          <p>Hesabınıza giriş yapın</p>
+          @if (branding.logoUrl(); as logo) {
+            <img [src]="logo" alt="logo" class="login-card__logo-img" />
+          } @else {
+            <div class="login-card__logo">{{ branding.branding()?.shortName || 'KYS' }}</div>
+          }
+          <h1>{{ branding.companyName() }}</h1>
+          <p>{{ branding.slogan() || 'Hesabınıza giriş yapın' }}</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-card__form">
@@ -87,6 +92,7 @@ import { selectAuthLoading, selectAuthError } from '../../../core/store/auth/aut
       text-align: center;
       margin-bottom: 2rem;
     }
+    .login-card__logo-img { max-height: 64px; max-width: 220px; object-fit: contain; margin-bottom: 0.5rem; }
     .login-card__logo {
       display: inline-flex;
       background: var(--primary);
@@ -173,6 +179,7 @@ import { selectAuthLoading, selectAuthError } from '../../../core/store/auth/aut
 export class LoginComponent {
   private store = inject(Store);
   private fb = inject(FormBuilder);
+  protected branding = inject(BrandingService);
 
   loading$ = this.store.select(selectAuthLoading);
   error$ = this.store.select(selectAuthError);

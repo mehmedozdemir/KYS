@@ -40,5 +40,9 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'email-accounts',
     loadComponent: () => import('./email-accounts/email-accounts.component').then(m => m.EmailAccountsComponent)
+  },
+  {
+    path: 'organization',
+    loadComponent: () => import('./organization-profile/organization-profile.component').then(m => m.OrganizationProfileComponent)
   }
 ];
