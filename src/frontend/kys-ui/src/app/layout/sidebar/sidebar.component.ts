@@ -28,14 +28,18 @@ interface NavGroup {
       [class.sidebar--mobile-open]="layout.mobileOpen()">
 
       <div class="sidebar__brand">
-        @if (branding.logoUrl(); as logo) {
-          <img [src]="logo" alt="logo" class="sidebar__logo-img" />
+        @if (collapsedMode()) {
+          <span class="sidebar__brand-mini">KYS</span>
         } @else {
-          <span class="sidebar__logo"><i class="pi pi-th-large"></i></span>
+          @if (branding.logoUrl(); as logo) {
+            <img [src]="logo" alt="logo" class="sidebar__logo-img" />
+          } @else {
+            <span class="sidebar__logo"><i class="pi pi-th-large"></i></span>
+          }
+          <div class="sidebar__brand-text">
+            <span class="sidebar__subtitle">KURUMSAL YAZILIM SİSTEMİ</span>
+          </div>
         }
-        <div class="sidebar__brand-text">
-          <span class="sidebar__subtitle">KURUMSAL YAZILIM SİSTEMİ</span>
-        </div>
       </div>
 
       <nav class="sidebar__nav">
@@ -102,6 +106,12 @@ interface NavGroup {
       font-weight: 600;
       letter-spacing: 0.06em;
       white-space: nowrap;
+    }
+    .sidebar__brand-mini {
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: var(--sidebar-brand);
     }
 
     .sidebar__nav {
