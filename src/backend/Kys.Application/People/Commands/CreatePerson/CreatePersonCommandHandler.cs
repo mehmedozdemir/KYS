@@ -1,6 +1,7 @@
 using Kys.Domain.Entities;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
+using Kys.Domain.Interfaces.Services;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
@@ -9,7 +10,8 @@ namespace Kys.Application.People.Commands.CreatePerson;
 public sealed class CreatePersonCommandHandler(
     IPersonRepository personRepository,
     IUnitOfWork unitOfWork,
-    IPasswordHasher<Person> passwordHasher
+    IPasswordHasher<Person> passwordHasher,
+    IAccountEmailService accountEmail
 ) : IRequestHandler<CreatePersonCommand, Guid>
 {
     public async Task<Guid> Handle(CreatePersonCommand request, CancellationToken cancellationToken)
@@ -28,7 +30,8 @@ public sealed class CreatePersonCommandHandler(
             EmploymentStatus = request.EmploymentStatus,
             HireDate = request.HireDate,
             IsPlatformUser = request.IsPlatformUser,
-            Username = request.Username
+            // Platform kullanıcısında kullanıcı adı = e-posta
+            Username = request.IsPlatformUser ? request.Email : request.Username
         };
 
         if (request.IsPlatformUser && request.Password is not null)
@@ -36,6 +39,11 @@ public sealed class CreatePersonCommandHandler(
 
         await personRepository.AddAsync(person, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Platform erişimi verildiyse karşılama e-postası gönder (best-effort)
+        if (request.IsPlatformUser && !string.IsNullOrEmpty(request.Password))
+            await accountEmail.SendPlatformWelcomeAsync(
+                person.Email, $"{person.FirstName} {person.LastName}", person.Email, request.Password, cancellationToken);
 
         return person.Id;
     }

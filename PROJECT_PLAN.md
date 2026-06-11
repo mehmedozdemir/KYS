@@ -372,7 +372,15 @@ Plana dahil olmayan ama geliştirilen özellikler:
 - [x] `EmailAccount` entity (şifreli parola) + migration `Sprint35_EmailAccount`
 - [x] `IEmailSender`/`SmtpEmailSender` (MailKit) + repo + DI
 - [x] Admin API `/admin/email-accounts` (CRUD + aktif + test) + Mail Ayarları ekranı (preset'ler)
-- [ ] **Faz B:** mevcut kişiyi platforma alma + welcome maili + frontend otomatik şifre üretme
+- [x] **Faz B:** mevcut kişiyi platforma alma (`make-platform-user`) + karşılama maili + frontend otomatik şifre üretme (Sprint 36)
+
+---
+
+## Sprint 36 — Platform Kullanıcı Sağlama + Karşılama Maili (Faz B) ✅ (2026-06-11)
+
+- [x] `MakePlatformUserCommand` + endpoint (`admin:users`); kullanıcı adı = e-posta
+- [x] `IAccountEmailService` karşılama maili (HTML; platform adresi `App:PublicUrl`); CreatePerson + MakePlatformUser tetikler (best-effort)
+- [x] Frontend: kullanıcı adı readonly=e-posta + şifre üret butonu; "Platforma al" diyaloğu
 
 ---
 

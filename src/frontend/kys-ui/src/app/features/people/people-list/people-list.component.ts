@@ -108,6 +108,11 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
                       <button class="kebab-btn" (click)="$event.stopPropagation(); toggleMenu(p.id)"><i class="pi pi-ellipsis-v"></i></button>
                       @if (openMenuId() === p.id) {
                         <div class="kebab-menu">
+                          @if (!p.isPlatformUser && perms.has('person:write')) {
+                            <button class="km-item" (click)="openPromote(p)">
+                              <i class="pi pi-key"></i> Platforma al
+                            </button>
+                          }
                           <button class="km-item km-danger" (click)="confirmDelete(p)">
                             <i class="pi pi-trash"></i> Sil
                           </button>
@@ -147,6 +152,39 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
             <button type="button" class="btn-secondary" (click)="cancelDelete()">İptal</button>
             <button type="button" class="btn-danger" [disabled]="deleting()" (click)="deletePerson()">
               {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (promoteTarget()) {
+      <div class="modal-overlay" (click)="closePromote()">
+        <div class="modal modal--sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Platforma Al</h2>
+            <button class="modal-close" (click)="closePromote()"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <p style="margin:0 0 1rem;color:var(--text)"><strong>{{ promoteTarget()!.firstName }} {{ promoteTarget()!.lastName }}</strong> platform kullanıcısı yapılacak. Giriş bilgileri e-posta ile gönderilecek.</p>
+            <div class="form-group">
+              <label>Kullanıcı Adı</label>
+              <input type="text" [value]="promoteTarget()!.email" readonly style="background:var(--surface-2);color:var(--text-muted)" />
+              <span class="form-hint">Kullanıcı adı kişinin e-postasıdır.</span>
+            </div>
+            <div class="form-group">
+              <label>Şifre *</label>
+              <div style="display:flex;gap:0.5rem">
+                <input type="text" [(ngModel)]="promotePassword" style="flex:1" placeholder="En az 8 karakter, büyük harf ve rakam" />
+                <button type="button" class="btn-secondary" (click)="promotePassword.set(randomPassword())" title="Şifre üret"><i class="pi pi-refresh"></i></button>
+              </div>
+            </div>
+            @if (promoteError()) { <div class="alert-error">{{ promoteError() }}</div> }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" (click)="closePromote()">İptal</button>
+            <button type="button" class="btn-primary" [disabled]="promoteSaving()" (click)="submitPromote()">
+              {{ promoteSaving() ? 'Kaydediliyor...' : 'Platforma Al' }}
             </button>
           </div>
         </div>
@@ -209,17 +247,21 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
             </label>
 
             @if (createForm.get('isPlatformUser')?.value) {
-              <div class="form-group" [class.has-error]="isInvalid('username')">
-                <label>Kullanıcı Adı *</label>
-                <input type="text" formControlName="username" placeholder="ör. ahmet.yilmaz" />
-                @if (isInvalid('username')) {
-                  <span class="form-error">Kullanıcı adı zorunludur.</span>
-                }
+              <div class="form-group">
+                <label>Kullanıcı Adı</label>
+                <input type="text" [value]="createForm.get('email')?.value || '(e-posta giriniz)'" readonly
+                  style="background:var(--surface-2);color:var(--text-muted)" />
+                <span class="form-hint">Kullanıcı adı kişinin e-postasıdır.</span>
               </div>
               <div class="form-group" [class.has-error]="isInvalid('password')">
                 <label>Şifre *</label>
-                <input type="password" formControlName="password"
-                  placeholder="En az 8 karakter, büyük harf ve rakam" />
+                <div style="display:flex;gap:0.5rem">
+                  <input type="text" formControlName="password" style="flex:1"
+                    placeholder="En az 8 karakter, büyük harf ve rakam" />
+                  <button type="button" class="btn-secondary" (click)="generatePassword()" title="Şifre üret">
+                    <i class="pi pi-refresh"></i>
+                  </button>
+                </div>
                 @if (isInvalid('password')) {
                   <span class="form-error">En az 8 karakter, bir büyük harf ve rakam içermeli.</span>
                 }
@@ -442,6 +484,49 @@ export class PeopleListComponent implements OnInit {
   deleteTarget = signal<PersonListItem | null>(null);
   deleting = signal(false);
 
+  promoteTarget = signal<PersonListItem | null>(null);
+  promotePassword = signal('');
+  promoteSaving = signal(false);
+  promoteError = signal('');
+
+  /** Güçlü rastgele şifre üretir (büyük/küçük harf + rakam + özel). */
+  randomPassword(): string {
+    const U = 'ABCDEFGHJKLMNPQRSTUVWXYZ', L = 'abcdefghijkmnpqrstuvwxyz', D = '23456789', S = '!@#$%&*?';
+    const all = U + L + D + S;
+    const pick = (s: string) => s[Math.floor(Math.random() * s.length)];
+    let pw = pick(U) + pick(L) + pick(D) + pick(S);
+    for (let i = 0; i < 8; i++) pw += pick(all);
+    return pw.split('').sort(() => Math.random() - 0.5).join('');
+  }
+
+  generatePassword(): void {
+    this.createForm.get('password')?.setValue(this.randomPassword());
+  }
+
+  openPromote(p: PersonListItem): void {
+    this.openMenuId.set(null);
+    this.promoteTarget.set(p);
+    this.promotePassword.set(this.randomPassword());
+    this.promoteError.set('');
+  }
+  closePromote(): void { this.promoteTarget.set(null); }
+
+  submitPromote(): void {
+    const p = this.promoteTarget();
+    if (!p) return;
+    const pw = this.promotePassword();
+    if (!pw || pw.length < 8 || !/(?=.*[A-Z])(?=.*[0-9])/.test(pw)) {
+      this.promoteError.set('Şifre en az 8 karakter, bir büyük harf ve rakam içermeli.');
+      return;
+    }
+    this.promoteSaving.set(true);
+    this.promoteError.set('');
+    this.http.post(`${environment.apiUrl}/admin/users/${p.id}/make-platform-user`, { password: pw }).subscribe({
+      next: () => { this.promoteSaving.set(false); this.closePromote(); this.load(); },
+      error: err => { this.promoteSaving.set(false); this.promoteError.set(err.error?.detail ?? 'İşlem başarısız.'); }
+    });
+  }
+
   toggleMenu(id: string): void {
     this.openMenuId.set(this.openMenuId() === id ? null : id);
   }
@@ -528,16 +613,13 @@ export class PeopleListComponent implements OnInit {
 
     const isPlatformUser = this.createForm.get('isPlatformUser')?.value;
     if (isPlatformUser) {
-      this.createForm.get('username')?.addValidators([Validators.required]);
       this.createForm.get('password')?.addValidators([
         Validators.required, Validators.minLength(8),
         Validators.pattern('(?=.*[A-Z])(?=.*[0-9]).{8,}')
       ]);
     } else {
-      this.createForm.get('username')?.clearValidators();
       this.createForm.get('password')?.clearValidators();
     }
-    this.createForm.get('username')?.updateValueAndValidity();
     this.createForm.get('password')?.updateValueAndValidity();
 
     if (this.createForm.invalid) return;
@@ -555,7 +637,7 @@ export class PeopleListComponent implements OnInit {
       hireDate: v.hireDate || null,
       employmentStatus: Number(v.employmentStatus),
       isPlatformUser: v.isPlatformUser,
-      username: v.isPlatformUser ? v.username : null,
+      username: v.isPlatformUser ? v.email : null,
       password: v.isPlatformUser ? v.password : null
     };
 

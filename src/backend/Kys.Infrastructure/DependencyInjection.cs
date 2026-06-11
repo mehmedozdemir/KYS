@@ -72,6 +72,10 @@ public static class DependencyInjection
         services.AddScoped<Kys.Domain.Authorization.IScopeService, ScopeService>();
         services.AddScoped<Kys.Domain.Authorization.IGrantService, GrantService>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<IAccountEmailService, AccountEmailService>();
+        services.AddSingleton<EmailQueue>();
+        services.AddSingleton<IEmailQueue>(sp => sp.GetRequiredService<EmailQueue>());
+        services.AddHostedService<EmailBackgroundService>();
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<IJwtService, JwtService>();
