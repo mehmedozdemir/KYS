@@ -36,5 +36,9 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'access-grants',
     loadComponent: () => import('./access-grants/access-grants.component').then(m => m.AccessGrantsComponent)
+  },
+  {
+    path: 'email-accounts',
+    loadComponent: () => import('./email-accounts/email-accounts.component').then(m => m.EmailAccountsComponent)
   }
 ];

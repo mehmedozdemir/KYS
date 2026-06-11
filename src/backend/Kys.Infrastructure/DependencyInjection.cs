@@ -54,6 +54,7 @@ public static class DependencyInjection
         services.AddScoped<ITeamMembershipRepository, TeamMembershipRepository>();
         services.AddScoped<ISystemRoleRepository, SystemRoleRepository>();
         services.AddScoped<IAccessGrantRepository, AccessGrantRepository>();
+        services.AddScoped<IEmailAccountRepository, EmailAccountRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICustomFieldDefinitionRepository, CustomFieldDefinitionRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
@@ -70,6 +71,7 @@ public static class DependencyInjection
         services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
         services.AddScoped<Kys.Domain.Authorization.IScopeService, ScopeService>();
         services.AddScoped<Kys.Domain.Authorization.IGrantService, GrantService>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<IJwtService, JwtService>();

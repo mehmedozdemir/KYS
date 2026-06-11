@@ -367,6 +367,15 @@ Plana dahil olmayan ama geliştirilen özellikler:
 
 ---
 
+## Sprint 35 — Mail Altyapısı (Faz A) ✅ (2026-06-11)
+
+- [x] `EmailAccount` entity (şifreli parola) + migration `Sprint35_EmailAccount`
+- [x] `IEmailSender`/`SmtpEmailSender` (MailKit) + repo + DI
+- [x] Admin API `/admin/email-accounts` (CRUD + aktif + test) + Mail Ayarları ekranı (preset'ler)
+- [ ] **Faz B:** mevcut kişiyi platforma alma + welcome maili + frontend otomatik şifre üretme
+
+---
+
 ## Sprint 30 — Yetkilendirme Faz 3 (Okuma Kapsamı) ✅ (2026-06-10)
 
 Bkz. `docs/AUTHORIZATION.md` §10. **Katman B (kayıt düzeyi okuma) — ürün + müşteri**.
