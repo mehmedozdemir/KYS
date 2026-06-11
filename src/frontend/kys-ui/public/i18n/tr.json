@@ -78,7 +78,43 @@
       "Project": "Project — Proje bazlı ekip",
       "Domain": "Domain — Etki alanı ekibi",
       "Platform": "Platform — Altyapı/platform ekibi"
+    },
+    "kbVisibility": {
+      "Internal": "Dahili",
+      "TeamOnly": "Ekip",
+      "Public": "Herkese Açık"
     }
+  },
+  "kb": {
+    "title": "Bilgi Bankası",
+    "count": "{{count}} makale",
+    "new": "Yeni Makale",
+    "searchPlaceholder": "Makale ara...",
+    "allTags": "Tüm etiketler",
+    "allVisibility": "Tüm görünürlük",
+    "notFound": "Makale bulunamadı.",
+    "visibility": "Görünürlük",
+    "tags": "Etiketler",
+    "product": "Ürün",
+    "customer": "Müşteri",
+    "team": "Ekip",
+    "createdAt": "Oluşturuldu",
+    "updatedAt": "Güncellendi",
+    "deleteArticle": "Makaleyi Sil",
+    "deleteConfirm": "Bu makaleyi silmek istediğinize emin misiniz?",
+    "titlePlaceholder": "Makale başlığı...",
+    "titleRequired": "Başlık zorunludur",
+    "mdEditor": "Markdown Editör",
+    "hidePreview": "Önizlemeyi Gizle",
+    "preview": "Önizle",
+    "contentPlaceholder": "Markdown formatında yazın...",
+    "visInternalOpt": "Dahili (sadece platform kullanıcıları)",
+    "visTeamOnlyOpt": "Ekip (ilgili ekip)",
+    "visPublicOpt": "Herkese Açık",
+    "tagPlaceholder": "Etiket ekle...",
+    "metaNote": "İsteğe bağlı: makaleyi bir ürün, müşteri veya ekiple ilişkilendirebilirsiniz.",
+    "publish": "Yayınla",
+    "saveError": "Makale kaydedilemedi"
   },
   "people": {
     "title": "Kişiler",
