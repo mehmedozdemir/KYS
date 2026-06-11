@@ -6,11 +6,11 @@ using Microsoft.Extensions.Logging;
 namespace Kys.Infrastructure.Services;
 
 public sealed class AccountEmailService(
-    IEmailSender emailSender,
+    IEmailQueue emailQueue,
     IConfiguration configuration,
     ILogger<AccountEmailService> logger) : IAccountEmailService
 {
-    public async Task SendPlatformWelcomeAsync(string toEmail, string fullName, string username, string plainPassword, CancellationToken ct = default)
+    public Task SendPlatformWelcomeAsync(string toEmail, string fullName, string username, string plainPassword, CancellationToken ct = default)
     {
         try
         {
@@ -38,12 +38,15 @@ public sealed class AccountEmailService(
                 </div>
                 """;
 
-            await emailSender.SendAsync(toEmail, fullName, "KYS Platform Hesabınız", html, ct);
+            // Kuyruğa at; SMTP gönderimi arka planda yapılır (istek beklemez)
+            emailQueue.Enqueue(new EmailMessage(toEmail, fullName, "KYS Platform Hesabınız", html));
         }
         catch (Exception ex)
         {
             // Kullanıcı sağlama işlemi e-posta hatası yüzünden başarısız olmamalı
-            logger.LogError(ex, "Platform karşılama e-postası gönderilemedi: {Email}", toEmail);
+            logger.LogError(ex, "Platform karşılama e-postası kuyruğa eklenemedi: {Email}", toEmail);
         }
+
+        return Task.CompletedTask;
     }
 }

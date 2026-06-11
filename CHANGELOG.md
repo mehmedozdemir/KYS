@@ -23,6 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 - **Karşılama e-postası**: yeni platform kullanıcısı **veya** mevcut kişi platforma alındığında kişiye HTML bilgilendirme maili (platform adresi, kullanıcı adı, geçici şifre). `IAccountEmailService` (best-effort — mail hatası kullanıcı işlemini bozmaz). Platform adresi `appsettings App:PublicUrl`
 - **Kullanıcı adı = e-posta**: hem yeni kullanıcı hem platforma alma akışında kullanıcı adı kişinin e-postasıdır (backend zorlar, frontend readonly gösterir)
 - **Frontend**: kişi oluşturma formunda kullanıcı adı (e-posta, readonly) + **şifre üret butonu**; kişi listesinde platform kullanıcısı olmayanlar için "Platforma al" diyaloğu (otomatik üretilen şifre + üret butonu)
+- **Asenkron mail gönderimi**: karşılama maili artık istek içinde değil, in-process kuyruğa (`IEmailQueue`, Channel tabanlı) atılıp bir `BackgroundService` ile arka planda gönderilir — kişi oluşturma/platforma alma yanıtı SMTP'yi beklemez. (Test maili senkron kalır.)
 
 ---
 
