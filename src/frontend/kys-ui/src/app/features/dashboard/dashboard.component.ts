@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { WorkspaceWidgetComponent } from './workspace-widget.component';
+import { TranslocoModule } from '@jsverse/transloco';
 
 interface DashboardStats {
   activeCustomerCount: number;
@@ -16,11 +17,11 @@ interface DashboardStats {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [WorkspaceWidgetComponent],
+  imports: [WorkspaceWidgetComponent, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
-        <h1>Dashboard</h1>
+        <h1>{{ 'dashboard.title' | transloco }}</h1>
       </div>
 
       @if (stats) {
@@ -31,7 +32,7 @@ interface DashboardStats {
             </div>
             <div>
               <div class="stat-card__value">{{ stats.activeCustomerCount }}</div>
-              <div class="stat-card__label">Aktif Müşteri</div>
+              <div class="stat-card__label">{{ 'dashboard.activeCustomers' | transloco }}</div>
             </div>
           </div>
           <div class="stat-card">
@@ -40,7 +41,7 @@ interface DashboardStats {
             </div>
             <div>
               <div class="stat-card__value">{{ stats.activeProductCount }}</div>
-              <div class="stat-card__label">Aktif Ürün</div>
+              <div class="stat-card__label">{{ 'dashboard.activeProducts' | transloco }}</div>
             </div>
           </div>
           <div class="stat-card">
@@ -49,7 +50,7 @@ interface DashboardStats {
             </div>
             <div>
               <div class="stat-card__value">{{ stats.totalTeamCount }}</div>
-              <div class="stat-card__label">Ekip</div>
+              <div class="stat-card__label">{{ 'dashboard.teams' | transloco }}</div>
             </div>
           </div>
           <div class="stat-card">
@@ -58,7 +59,7 @@ interface DashboardStats {
             </div>
             <div>
               <div class="stat-card__value">{{ stats.activePersonCount }}</div>
-              <div class="stat-card__label">Aktif Personel</div>
+              <div class="stat-card__label">{{ 'dashboard.activeStaff' | transloco }}</div>
             </div>
           </div>
         </div>
