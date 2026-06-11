@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 
 interface TeamDetail {
@@ -54,17 +55,17 @@ interface AddMemberRequest {
 @Component({
   selector: 'app-team-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe, FormsModule],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       @if (loading()) {
-        <div class="loading-state">Yükleniyor...</div>
+        <div class="loading-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!team()) {
-        <div class="loading-state">Ekip bulunamadı. <a routerLink="/teams">← Geri dön</a></div>
+        <div class="loading-state">{{ 'teamDetail.notFound' | transloco }} <a routerLink="/teams">{{ 'common.goBack' | transloco }}</a></div>
       } @else {
         <!-- Breadcrumb -->
         <div class="breadcrumb">
-          <a routerLink="/teams">Ekipler</a>
+          <a routerLink="/teams">{{ 'teams.title' | transloco }}</a>
           <span>/</span>
           <span>{{ team()!.name }}</span>
         </div>
@@ -80,33 +81,33 @@ interface AddMemberRequest {
                   <span class="code-badge">{{ team()!.code }}</span>
                 }
               </div>
-              <p class="header-desc">{{ team()!.description ?? 'Açıklama eklenmemiş' }}</p>
+              <p class="header-desc">{{ team()!.description ?? ('productDetail.noDescription' | transloco) }}</p>
             </div>
           </div>
           <span class="badge" [ngClass]="team()!.isActive ? 'badge--active' : 'badge--archived'">
-            {{ team()!.isActive ? 'Aktif' : 'Pasif' }}
+            {{ (team()!.isActive ? 'status.customer.Active' : 'status.customer.Inactive') | transloco }}
           </span>
         </div>
 
         <!-- Members section -->
         <div class="section-header">
-          <h2>Üyeler <span class="count">{{ activeMembers().length }}</span></h2>
+          <h2>{{ 'teamDetail.members' | transloco }} <span class="count">{{ activeMembers().length }}</span></h2>
           <button class="btn btn-primary" (click)="openAddMember()">
-            <i class="pi pi-user-plus"></i> Üye Ekle
+            <i class="pi pi-user-plus"></i> {{ 'teamDetail.addMember' | transloco }}
           </button>
         </div>
 
         <div class="table-wrapper">
           @if (!team()!.members.length) {
-            <div class="empty-state">Henüz üye eklenmemiş.</div>
+            <div class="empty-state">{{ 'teamDetail.noMembers' | transloco }}</div>
           } @else {
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Kişi</th>
-                  <th>Organizasyon Rolü</th>
-                  <th>Başlangıç</th>
-                  <th>Bitiş</th>
+                  <th>{{ 'teamDetail.colPerson' | transloco }}</th>
+                  <th>{{ 'teamDetail.colOrgRole' | transloco }}</th>
+                  <th>{{ 'teamDetail.colStart' | transloco }}</th>
+                  <th>{{ 'teamDetail.colEnd' | transloco }}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -126,12 +127,12 @@ interface AddMemberRequest {
                       @if (m.endDate) {
                         {{ m.endDate | date:'dd.MM.yyyy' }}
                       } @else {
-                        <span class="badge badge--active">Devam ediyor</span>
+                        <span class="badge badge--active">{{ 'teamDetail.ongoing' | transloco }}</span>
                       }
                     </td>
                     <td>
                       @if (!m.endDate) {
-                        <button type="button" class="btn-end" (click)="openEndMembership(m)">Bitir</button>
+                        <button type="button" class="btn-end" (click)="openEndMembership(m)">{{ 'teamDetail.end' | transloco }}</button>
                       }
                     </td>
                   </tr>
@@ -148,28 +149,26 @@ interface AddMemberRequest {
       <div class="modal-backdrop" (click)="closeEndModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Üyeliği Bitir</h2>
+            <h2>{{ 'teamDetail.endMembershipTitle' | transloco }}</h2>
             <button type="button" class="close-btn" (click)="closeEndModal()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (endError()) {
               <div class="alert-error">{{ endError() }}</div>
             }
-            <p class="end-confirm-text">
-              <strong>{{ endingMember()?.personName }}</strong> adlı kişinin ekip üyeliği bitirilecek.
-            </p>
+            <p class="end-confirm-text" [innerHTML]="'teamDetail.endConfirm' | transloco:{ name: endingMember()?.personName }"></p>
             <div class="form-group">
-              <label>Bitiş Tarihi <span class="required">*</span></label>
+              <label>{{ 'teamDetail.endDate' | transloco }} <span class="required">*</span></label>
               <input type="date" [(ngModel)]="endDate" [class.input-error]="endSubmitted() && !endDate" />
               @if (endSubmitted() && !endDate) {
-                <span class="field-error">Bitiş tarihi zorunludur</span>
+                <span class="field-error">{{ 'teamDetail.endDateRequired' | transloco }}</span>
               }
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeEndModal()">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="closeEndModal()">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-danger" [disabled]="endSaving()" (click)="endMembership()">
-              {{ endSaving() ? 'Kaydediliyor...' : 'Üyeliği Bitir' }}
+              {{ (endSaving() ? 'common.saving' : 'teamDetail.endMembershipTitle') | transloco }}
             </button>
           </div>
         </div>
@@ -181,7 +180,7 @@ interface AddMemberRequest {
       <div class="modal-backdrop" (click)="closeAddModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Üye Ekle</h2>
+            <h2>{{ 'teamDetail.addMember' | transloco }}</h2>
             <button class="close-btn" (click)="closeAddModal()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -191,15 +190,15 @@ interface AddMemberRequest {
 
             <!-- Person search -->
             <div class="form-group">
-              <label>Kişi <span class="required">*</span></label>
+              <label>{{ 'teamDetail.person' | transloco }} <span class="required">*</span></label>
               <input
                 type="text"
-                placeholder="İsim veya e-posta ara..."
+                [placeholder]="'teamDetail.personSearchPlaceholder' | transloco"
                 [(ngModel)]="personSearch"
                 (ngModelChange)="searchPeople($event)"
               />
               @if (addSubmitted() && !addForm.personId) {
-                <span class="field-error">Kişi seçimi zorunludur</span>
+                <span class="field-error">{{ 'teamDetail.personRequired' | transloco }}</span>
               }
               @if (personOptions().length > 0) {
                 <div class="dropdown">
@@ -219,30 +218,30 @@ interface AddMemberRequest {
             </div>
 
             <div class="form-group">
-              <label>Organizasyon Rolü <span class="required">*</span></label>
+              <label>{{ 'teamDetail.orgRole' | transloco }} <span class="required">*</span></label>
               <select [(ngModel)]="addForm.organizationRoleId">
-                <option value="">Rol seçin</option>
+                <option value="">{{ 'teamDetail.selectRole' | transloco }}</option>
                 @for (r of orgRoles(); track r.id) {
                   <option [value]="r.id">{{ r.name }}</option>
                 }
               </select>
               @if (addSubmitted() && !addForm.organizationRoleId) {
-                <span class="field-error">Rol seçimi zorunludur</span>
+                <span class="field-error">{{ 'teamDetail.roleRequired' | transloco }}</span>
               }
             </div>
 
             <div class="form-group">
-              <label>Başlangıç Tarihi <span class="required">*</span></label>
+              <label>{{ 'teamDetail.startDate' | transloco }} <span class="required">*</span></label>
               <input type="date" [(ngModel)]="addForm.startDate" />
               @if (addSubmitted() && !addForm.startDate) {
-                <span class="field-error">Başlangıç tarihi zorunludur</span>
+                <span class="field-error">{{ 'teamDetail.startDateRequired' | transloco }}</span>
               }
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="closeAddModal()">İptal</button>
+            <button class="btn btn-secondary" (click)="closeAddModal()">{{ 'common.cancel' | transloco }}</button>
             <button class="btn btn-primary" [disabled]="addSaving()" (click)="addMember()">
-              {{ addSaving() ? 'Ekleniyor...' : 'Ekle' }}
+              {{ (addSaving() ? 'common.adding' : 'common.add') | transloco }}
             </button>
           </div>
         </div>
@@ -328,6 +327,7 @@ interface AddMemberRequest {
 })
 export class TeamDetailComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
   private route = inject(ActivatedRoute);
 
   team = signal<TeamDetail | null>(null);
@@ -375,7 +375,7 @@ export class TeamDetailComponent implements OnInit {
       },
       error: err => {
         this.endSaving.set(false);
-        this.endError.set(err.error?.detail ?? 'Üyelik sonlandırılamadı');
+        this.endError.set(err.error?.detail ?? this.transloco.translate('teamDetail.endErr'));
       }
     });
   }
@@ -436,7 +436,7 @@ export class TeamDetailComponent implements OnInit {
       },
       error: err => {
         this.addSaving.set(false);
-        this.addError.set(err.error?.detail ?? 'Üye eklenemedi');
+        this.addError.set(err.error?.detail ?? this.transloco.translate('teamDetail.addErr'));
       }
     });
   }
