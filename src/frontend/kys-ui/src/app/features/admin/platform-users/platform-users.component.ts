@@ -4,6 +4,13 @@ import { RouterLink } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
+import { NotificationService } from '../../../core/services/notification.service';
+
+interface ProvisionableGroup {
+  teamId: string | null;
+  teamName: string;
+  people: { id: string; fullName: string; email: string; title: string | null }[];
+}
 
 interface PersonItem {
   id: string;
@@ -50,6 +57,7 @@ const ROLE_COLOR: Record<string, string> = {
           <h1 class="page-title">Platform Kullanıcıları</h1>
           <p class="page-subtitle">Platform erişimi olan kişiler ve sistem rolleri</p>
         </div>
+        <button class="btn btn-primary" (click)="openAdd()"><i class="pi pi-user-plus"></i> Kişi Ekle</button>
       </div>
 
       <!-- Search -->
@@ -208,8 +216,64 @@ const ROLE_COLOR: Record<string, string> = {
         </div>
       </div>
     }
+
+    @if (addModal()) {
+      <div class="modal-backdrop" (click)="addModal.set(false)">
+        <div class="modal modal--lg" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Platforma Kişi Ekle</h2>
+            <button class="close-btn" (click)="addModal.set(false)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body add-body">
+            @if (addLoading()) {
+              <div class="empty-state">Yükleniyor...</div>
+            } @else if (!groups().length) {
+              <div class="empty-state">Platforma alınabilecek kişi yok.</div>
+            } @else {
+              <p class="add-hint">Seçilen kişiler platform kullanıcısı yapılır; kullanıcı adı e-postaları olur ve giriş bilgileri e-posta ile gönderilir.</p>
+              @for (g of groups(); track g.teamName) {
+                <div class="group">
+                  <label class="group-head">
+                    <input type="checkbox" [checked]="isGroupAll(g)" (change)="toggleGroup(g)" />
+                    <span class="group-name">{{ g.teamName }}</span>
+                    <span class="group-count">{{ g.people.length }}</span>
+                  </label>
+                  @for (p of g.people; track p.id) {
+                    <label class="person-row">
+                      <input type="checkbox" [checked]="selected().has(p.id)" (change)="toggle(p.id)" />
+                      <span class="pr-name">{{ p.fullName }}</span>
+                      <span class="pr-email">{{ p.email }}</span>
+                    </label>
+                  }
+                </div>
+              }
+            }
+          </div>
+          <div class="modal-footer">
+            <span class="sel-count">{{ selected().size }} kişi seçili</span>
+            <button class="btn btn-secondary" (click)="addModal.set(false)">İptal</button>
+            <button class="btn btn-primary" [disabled]="selected().size === 0 || addSaving()" (click)="submitAdd()">
+              {{ addSaving() ? 'Ekleniyor...' : 'Platforma Ekle' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
+    .modal--lg { max-width: 600px; }
+    .add-body { max-height: 60vh; overflow-y: auto; }
+    .add-hint { font-size: 0.8125rem; color: var(--text-muted); margin: 0 0 1rem; }
+    .group { margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; overflow: hidden; }
+    .group-head { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: var(--surface-2); font-weight: 600; font-size: 0.875rem; color: var(--text-strong); cursor: pointer; }
+    .group-count { margin-left: auto; font-size: 0.75rem; color: var(--text-muted); background: var(--surface-3); padding: 0.1rem 0.5rem; border-radius: 9999px; }
+    .person-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-top: 1px solid var(--border-light); cursor: pointer; font-size: 0.875rem; }
+    .person-row:hover { background: var(--hover); }
+    .pr-name { color: var(--text-strong); }
+    .pr-email { margin-left: auto; color: var(--text-muted); font-size: 0.8125rem; }
+    .sel-count { margin-right: auto; font-size: 0.8125rem; color: var(--text-muted); }
+  `,
+  `
     .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem; }
     .breadcrumb { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.375rem; a { color: var(--primary); text-decoration: none; } span { &:last-child { color: var(--text); } } }
     .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-strong); }
@@ -266,6 +330,7 @@ const ROLE_COLOR: Record<string, string> = {
 })
 export class PlatformUsersComponent implements OnInit {
   private http = inject(HttpClient);
+  private notify = inject(NotificationService);
 
   readonly ALL_SYSTEM_ROLES = ALL_SYSTEM_ROLES;
 
@@ -279,17 +344,68 @@ export class PlatformUsersComponent implements OnInit {
   assigning = signal(false);
   assignError = signal('');
 
-  ngOnInit() {
+  // --- Toplu kişi ekleme ---
+  addModal = signal(false);
+  addLoading = signal(false);
+  addSaving = signal(false);
+  groups = signal<ProvisionableGroup[]>([]);
+  selected = signal<Set<string>>(new Set());
+
+  ngOnInit() { this.loadUsers(); }
+
+  loadUsers() {
+    this.loading.set(true);
     this.http.get<{ items: PersonItem[]; totalCount: number }>(`${environment.apiUrl}/people?pageSize=500`).subscribe({
       next: r => {
         const platform = r.items.filter(p => p.isPlatformUser);
         this.users.set(platform);
-        this.filtered.set(platform);
+        this.filterUsers();
         this.loading.set(false);
-        // Auto-load roles for all platform users
         platform.forEach(p => this.loadRoles(p.id));
       },
       error: () => this.loading.set(false)
+    });
+  }
+
+  openAdd() {
+    this.addModal.set(true);
+    this.selected.set(new Set());
+    this.addLoading.set(true);
+    this.http.get<ProvisionableGroup[]>(`${environment.apiUrl}/admin/users/provisionable`).subscribe({
+      next: g => { this.groups.set(g); this.addLoading.set(false); },
+      error: () => this.addLoading.set(false)
+    });
+  }
+
+  toggle(id: string) {
+    const s = new Set(this.selected());
+    s.has(id) ? s.delete(id) : s.add(id);
+    this.selected.set(s);
+  }
+
+  isGroupAll(g: ProvisionableGroup) {
+    return g.people.length > 0 && g.people.every(p => this.selected().has(p.id));
+  }
+
+  toggleGroup(g: ProvisionableGroup) {
+    const s = new Set(this.selected());
+    const all = this.isGroupAll(g);
+    for (const p of g.people) { all ? s.delete(p.id) : s.add(p.id); }
+    this.selected.set(s);
+  }
+
+  submitAdd() {
+    const ids = [...this.selected()];
+    if (!ids.length) return;
+    this.addSaving.set(true);
+    this.http.post<{ provisioned: number }>(`${environment.apiUrl}/admin/users/make-platform-users`, { personIds: ids }).subscribe({
+      next: r => {
+        this.addSaving.set(false);
+        this.addModal.set(false);
+        this.notify.success(`${r.provisioned} kişi platform kullanıcısı yapıldı. Giriş bilgileri e-posta ile gönderiliyor.`);
+        this.loadUsers();
+      },
+      error: e => { this.addSaving.set(false); this.notify.error(e.error?.detail ?? 'İşlem başarısız.'); }
     });
   }
 
