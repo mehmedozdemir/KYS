@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 
 interface GrantDto {
@@ -27,40 +28,40 @@ const CAPABILITIES = [
 @Component({
   selector: 'app-access-grants',
   standalone: true,
-  imports: [FormsModule, SlicePipe],
+  imports: [FormsModule, SlicePipe, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <h1 class="page-title">Erişim Yetkileri (Grant)</h1>
-          <p class="page-subtitle">{{ grants().length }} açık yetki — kapsam/yetenek istisnaları</p>
+          <h1 class="page-title">{{ 'admin.accessGrants.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.accessGrants.subtitle' | transloco:{ count: grants().length } }}</p>
         </div>
-        <button class="btn btn-primary" (click)="openCreate()"><i class="pi pi-plus"></i> Yeni Yetki</button>
+        <button class="btn btn-primary" (click)="openCreate()"><i class="pi pi-plus"></i> {{ 'admin.accessGrants.newGrant' | transloco }}</button>
       </div>
 
       <div class="table-wrapper">
         @if (loading()) {
-          <div class="loading-row">Yükleniyor...</div>
+          <div class="loading-row">{{ 'common.loading' | transloco }}</div>
         } @else if (!grants().length) {
-          <div class="loading-row">Tanımlı açık yetki yok.</div>
+          <div class="loading-row">{{ 'admin.accessGrants.emptyNone' | transloco }}</div>
         } @else {
           <table class="data-table">
             <thead>
-              <tr><th>Kişi</th><th>Tür</th><th>Hedef / Yetenek</th><th>Seviye</th><th>Bitiş</th><th></th></tr>
+              <tr><th>{{ 'admin.accessGrants.colPerson' | transloco }}</th><th>{{ 'admin.accessGrants.colKind' | transloco }}</th><th>{{ 'admin.accessGrants.colTargetCap' | transloco }}</th><th>{{ 'admin.accessGrants.colLevel' | transloco }}</th><th>{{ 'admin.accessGrants.colExpiry' | transloco }}</th><th></th></tr>
             </thead>
             <tbody>
               @for (g of grants(); track g.id) {
                 <tr>
                   <td>{{ g.personName }}</td>
-                  <td><span class="badge" [class]="g.kind === 'Scope' ? 'badge--saas' : 'badge--custom'">{{ g.kind === 'Scope' ? 'Kapsam' : 'Yetenek' }}</span></td>
+                  <td><span class="badge" [class]="g.kind === 'Scope' ? 'badge--saas' : 'badge--custom'">{{ (g.kind === 'Scope' ? 'admin.accessGrants.kindScope' : 'admin.accessGrants.kindCapability') | transloco }}</span></td>
                   <td>
                     @if (g.kind === 'Capability') { <code class="code-badge">{{ g.capability }}</code> }
                     @else { {{ scopeTypeLabel(g.scopeType) }}: {{ targetName(g) }} }
                   </td>
-                  <td>{{ g.level ? (g.level === 'Write' ? 'Yazma' : 'Okuma') : '—' }}</td>
-                  <td>{{ g.expiresAt ? (g.expiresAt | slice:0:10) : 'Süresiz' }}</td>
+                  <td>{{ g.level ? ((g.level === 'Write' ? 'admin.accessGrants.levelWrite' : 'admin.accessGrants.levelRead') | transloco) : '—' }}</td>
+                  <td>{{ g.expiresAt ? (g.expiresAt | slice:0:10) : ('admin.accessGrants.noExpiry' | transloco) }}</td>
                   <td class="actions-cell">
-                    <button class="kebab-btn" title="Kaldır" (click)="revoke(g)"><i class="pi pi-trash"></i></button>
+                    <button class="kebab-btn" [title]="'admin.accessGrants.removeTitle' | transloco" (click)="revoke(g)"><i class="pi pi-trash"></i></button>
                   </td>
                 </tr>
               }
@@ -74,70 +75,70 @@ const CAPABILITIES = [
       <div class="modal-backdrop" (click)="showModal.set(false)">
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Yeni Erişim Yetkisi</h2>
+            <h2>{{ 'admin.accessGrants.modalTitle' | transloco }}</h2>
             <button class="close-btn" (click)="showModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (error()) { <div class="alert-error">{{ error() }}</div> }
 
             <div class="form-group">
-              <label>Kişi <span class="required">*</span></label>
+              <label>{{ 'admin.accessGrants.person' | transloco }} <span class="required">*</span></label>
               <select [(ngModel)]="form.personId">
-                <option value="">Seçiniz...</option>
+                <option value="">{{ 'common.select' | transloco }}</option>
                 @for (p of people(); track p.id) { <option [value]="p.id">{{ p.label }}</option> }
               </select>
             </div>
 
             <div class="form-group">
-              <label>Tür</label>
+              <label>{{ 'admin.accessGrants.kind' | transloco }}</label>
               <select [(ngModel)]="form.kind">
-                <option value="Scope">Kapsam (kayıt erişimi)</option>
-                <option value="Capability">Yetenek</option>
+                <option value="Scope">{{ 'admin.accessGrants.kindScopeOpt' | transloco }}</option>
+                <option value="Capability">{{ 'admin.accessGrants.kindCapabilityOpt' | transloco }}</option>
               </select>
             </div>
 
             @if (form.kind === 'Scope') {
               <div class="form-group">
-                <label>Kapsam türü</label>
+                <label>{{ 'admin.accessGrants.scopeTypeField' | transloco }}</label>
                 <select [(ngModel)]="form.scopeType">
-                  <option value="Product">Ürün</option>
-                  <option value="Customer">Müşteri</option>
+                  <option value="Product">{{ 'admin.accessGrants.scopeProduct' | transloco }}</option>
+                  <option value="Customer">{{ 'admin.accessGrants.scopeCustomer' | transloco }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Hedef <span class="required">*</span></label>
+                <label>{{ 'admin.accessGrants.target' | transloco }} <span class="required">*</span></label>
                 <select [(ngModel)]="form.scopeId">
-                  <option value="">Seçiniz...</option>
+                  <option value="">{{ 'common.select' | transloco }}</option>
                   @for (o of (form.scopeType === 'Product' ? products() : customers()); track o.id) {
                     <option [value]="o.id">{{ o.label }}</option>
                   }
                 </select>
               </div>
               <div class="form-group">
-                <label>Seviye</label>
+                <label>{{ 'admin.accessGrants.level' | transloco }}</label>
                 <select [(ngModel)]="form.level">
-                  <option value="Read">Okuma</option>
-                  <option value="Write">Yazma</option>
+                  <option value="Read">{{ 'admin.accessGrants.levelRead' | transloco }}</option>
+                  <option value="Write">{{ 'admin.accessGrants.levelWrite' | transloco }}</option>
                 </select>
               </div>
             } @else {
               <div class="form-group">
-                <label>Yetenek <span class="required">*</span></label>
+                <label>{{ 'admin.accessGrants.capability' | transloco }} <span class="required">*</span></label>
                 <select [(ngModel)]="form.capability">
-                  <option value="">Seçiniz...</option>
+                  <option value="">{{ 'common.select' | transloco }}</option>
                   @for (c of capabilities; track c) { <option [value]="c">{{ c }}</option> }
                 </select>
               </div>
             }
 
             <div class="form-group">
-              <label>Bitiş tarihi (opsiyonel — süreli yetki)</label>
+              <label>{{ 'admin.accessGrants.expiryLabel' | transloco }}</label>
               <input type="date" [(ngModel)]="form.expiresAt" />
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="showModal.set(false)">İptal</button>
-            <button class="btn btn-primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'Kaydediliyor...' : 'Kaydet' }}</button>
+            <button class="btn btn-secondary" (click)="showModal.set(false)">{{ 'common.cancel' | transloco }}</button>
+            <button class="btn btn-primary" [disabled]="saving()" (click)="save()">{{ (saving() ? 'common.saving' : 'common.save') | transloco }}</button>
           </div>
         </div>
       </div>
@@ -182,6 +183,7 @@ const CAPABILITIES = [
 })
 export class AccessGrantsComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
   private base = environment.apiUrl;
 
   grants = signal<GrantDto[]>([]);
@@ -214,7 +216,12 @@ export class AccessGrantsComponent implements OnInit {
     });
   }
 
-  scopeTypeLabel(t: string | null) { return t === 'Product' ? 'Ürün' : t === 'Customer' ? 'Müşteri' : t === 'Team' ? 'Ekip' : '—'; }
+  scopeTypeLabel(t: string | null) {
+    if (t === 'Product') return this.transloco.translate('admin.accessGrants.scopeProduct');
+    if (t === 'Customer') return this.transloco.translate('admin.accessGrants.scopeCustomer');
+    if (t === 'Team') return this.transloco.translate('admin.accessGrants.scopeTeam');
+    return '—';
+  }
   targetName(g: GrantDto) {
     const list = g.scopeType === 'Product' ? this.products() : this.customers();
     return list.find(o => o.id === g.scopeId)?.label ?? g.scopeId ?? '—';
@@ -227,9 +234,9 @@ export class AccessGrantsComponent implements OnInit {
   }
 
   save() {
-    if (!this.form.personId) { this.error.set('Kişi seçiniz.'); return; }
-    if (this.form.kind === 'Scope' && !this.form.scopeId) { this.error.set('Hedef seçiniz.'); return; }
-    if (this.form.kind === 'Capability' && !this.form.capability) { this.error.set('Yetenek seçiniz.'); return; }
+    if (!this.form.personId) { this.error.set(this.transloco.translate('admin.accessGrants.selectPerson')); return; }
+    if (this.form.kind === 'Scope' && !this.form.scopeId) { this.error.set(this.transloco.translate('admin.accessGrants.selectTarget')); return; }
+    if (this.form.kind === 'Capability' && !this.form.capability) { this.error.set(this.transloco.translate('admin.accessGrants.selectCapability')); return; }
 
     this.saving.set(true);
     const body = {
@@ -243,12 +250,12 @@ export class AccessGrantsComponent implements OnInit {
     };
     this.http.post(`${this.base}/admin/access-grants`, body).subscribe({
       next: () => { this.saving.set(false); this.showModal.set(false); this.load(); },
-      error: err => { this.saving.set(false); this.error.set(err.error?.detail ?? 'Kayıt başarısız.'); }
+      error: err => { this.saving.set(false); this.error.set(err.error?.detail ?? this.transloco.translate('admin.accessGrants.saveFailed')); }
     });
   }
 
   revoke(g: GrantDto) {
-    if (!confirm(`${g.personName} için bu yetki kaldırılsın mı?`)) return;
+    if (!confirm(this.transloco.translate('admin.accessGrants.revokeConfirm', { name: g.personName }))) return;
     this.http.delete(`${this.base}/admin/access-grants/${g.id}`).subscribe(() => this.load());
   }
 }

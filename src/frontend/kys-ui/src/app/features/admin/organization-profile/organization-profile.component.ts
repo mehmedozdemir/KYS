@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 import { BrandingService, Branding } from '../../../core/services/branding.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -8,79 +9,79 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-organization-profile',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <h1 class="page-title">Kurum Profili</h1>
-          <p class="page-subtitle">Şirket bilgileri ve logo — login, menü, sayfa başlığı ve maillerde kullanılır</p>
+          <h1 class="page-title">{{ 'admin.orgProfile.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.orgProfile.subtitle' | transloco }}</p>
         </div>
       </div>
 
       <div class="profile-grid">
         <!-- Logo kartı -->
         <div class="card">
-          <h3 class="card-title">Logo</h3>
+          <h3 class="card-title">{{ 'admin.orgProfile.logo' | transloco }}</h3>
           <div class="logo-box">
             @if (logoUrl()) {
               <img [src]="logoUrl()" alt="logo" class="logo-preview" />
             } @else {
-              <div class="logo-empty"><i class="pi pi-image"></i><span>Logo yok</span></div>
+              <div class="logo-empty"><i class="pi pi-image"></i><span>{{ 'admin.orgProfile.noLogo' | transloco }}</span></div>
             }
           </div>
           <input type="file" #fileInput accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" (change)="onFile($event)" hidden />
           <div class="logo-actions">
             <button class="btn btn-secondary" [disabled]="uploading()" (click)="fileInput.click()">
-              <i class="pi pi-upload"></i> {{ uploading() ? 'Yükleniyor...' : 'Logo Yükle' }}
+              <i class="pi pi-upload"></i> {{ (uploading() ? 'admin.orgProfile.uploading' : 'admin.orgProfile.uploadLogo') | transloco }}
             </button>
             @if (logoUrl()) {
-              <button class="btn btn-secondary" (click)="removeLogo()"><i class="pi pi-trash"></i> Kaldır</button>
+              <button class="btn btn-secondary" (click)="removeLogo()"><i class="pi pi-trash"></i> {{ 'common.remove' | transloco }}</button>
             }
           </div>
-          <span class="hint">Şeffaf zeminli PNG/SVG önerilir. En fazla 2 MB.</span>
+          <span class="hint">{{ 'admin.orgProfile.logoHint' | transloco }}</span>
         </div>
 
         <!-- Bilgi formu -->
         <div class="card">
-          <h3 class="card-title">Şirket Bilgileri</h3>
+          <h3 class="card-title">{{ 'admin.orgProfile.companyInfo' | transloco }}</h3>
           @if (error()) { <div class="alert-error">{{ error() }}</div> }
           <div class="form-grid">
             <div class="form-group span-2">
-              <label>Şirket Adı <span class="req">*</span></label>
+              <label>{{ 'admin.orgProfile.companyName' | transloco }} <span class="req">*</span></label>
               <input type="text" [(ngModel)]="form.companyName" placeholder="Asis Elektronik A.Ş." />
             </div>
             <div class="form-group">
-              <label>Kısa / Görünen Ad</label>
+              <label>{{ 'admin.orgProfile.shortName' | transloco }}</label>
               <input type="text" [(ngModel)]="form.shortName" placeholder="Asis" />
             </div>
             <div class="form-group">
-              <label>Web Sitesi</label>
+              <label>{{ 'admin.orgProfile.website' | transloco }}</label>
               <input type="text" [(ngModel)]="form.website" placeholder="https://www.sirket.com" />
             </div>
             <div class="form-group span-2">
-              <label>Slogan</label>
-              <input type="text" [(ngModel)]="form.slogan" placeholder="Login ekranında görünür" />
+              <label>{{ 'admin.orgProfile.slogan' | transloco }}</label>
+              <input type="text" [(ngModel)]="form.slogan" [placeholder]="'admin.orgProfile.sloganPh' | transloco" />
             </div>
             <div class="form-group">
-              <label>İletişim E-postası</label>
+              <label>{{ 'admin.orgProfile.contactEmail' | transloco }}</label>
               <input type="email" [(ngModel)]="form.contactEmail" placeholder="info@sirket.com" />
             </div>
             <div class="form-group">
-              <label>Telefon</label>
+              <label>{{ 'admin.orgProfile.contactPhone' | transloco }}</label>
               <input type="text" [(ngModel)]="form.contactPhone" placeholder="+90 ..." />
             </div>
             <div class="form-group span-2">
-              <label>Adres</label>
+              <label>{{ 'admin.orgProfile.address' | transloco }}</label>
               <input type="text" [(ngModel)]="form.address" />
             </div>
             <div class="form-group">
-              <label>Vergi No / MERSİS</label>
+              <label>{{ 'admin.orgProfile.taxNumber' | transloco }}</label>
               <input type="text" [(ngModel)]="form.taxNumber" />
             </div>
           </div>
           <div class="form-footer">
-            <button class="btn btn-primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'Kaydediliyor...' : 'Kaydet' }}</button>
+            <button class="btn btn-primary" [disabled]="saving()" (click)="save()">{{ (saving() ? 'common.saving' : 'common.save') | transloco }}</button>
           </div>
         </div>
       </div>
@@ -114,6 +115,7 @@ export class OrganizationProfileComponent implements OnInit {
   private http = inject(HttpClient);
   private branding = inject(BrandingService);
   private notify = inject(NotificationService);
+  private transloco = inject(TranslocoService);
   private base = environment.apiUrl + '/branding';
 
   saving = signal(false);
@@ -139,12 +141,12 @@ export class OrganizationProfileComponent implements OnInit {
   }
 
   save() {
-    if (!this.form.companyName.trim()) { this.error.set('Şirket adı zorunludur.'); return; }
+    if (!this.form.companyName.trim()) { this.error.set(this.transloco.translate('admin.orgProfile.nameRequired')); return; }
     this.saving.set(true);
     this.error.set('');
     this.http.put(this.base, this.form).subscribe({
-      next: () => { this.saving.set(false); this.notify.success('Kurum profili kaydedildi.'); this.branding.load(); },
-      error: e => { this.saving.set(false); this.error.set(e.error?.detail ?? 'Kayıt başarısız.'); }
+      next: () => { this.saving.set(false); this.notify.success(this.transloco.translate('admin.orgProfile.saved')); this.branding.load(); },
+      error: e => { this.saving.set(false); this.error.set(e.error?.detail ?? this.transloco.translate('admin.orgProfile.saveFailed')); }
     });
   }
 
@@ -160,18 +162,18 @@ export class OrganizationProfileComponent implements OnInit {
         this.uploading.set(false);
         this.hasLogo.set(true);
         this.logoVersion.set(Date.now());
-        this.notify.success('Logo yüklendi.');
+        this.notify.success(this.transloco.translate('admin.orgProfile.logoUploaded'));
         this.branding.load();
       },
-      error: e => { this.uploading.set(false); this.notify.error(e.error?.detail ?? 'Logo yüklenemedi.'); }
+      error: e => { this.uploading.set(false); this.notify.error(e.error?.detail ?? this.transloco.translate('admin.orgProfile.logoUploadFailed')); }
     });
     input.value = '';
   }
 
   removeLogo() {
-    if (!confirm('Logo kaldırılsın mı?')) return;
+    if (!confirm(this.transloco.translate('admin.orgProfile.removeLogoConfirm'))) return;
     this.http.delete(`${this.base}/logo`).subscribe({
-      next: () => { this.hasLogo.set(false); this.notify.success('Logo kaldırıldı.'); this.branding.load(); }
+      next: () => { this.hasLogo.set(false); this.notify.success(this.transloco.translate('admin.orgProfile.logoRemoved')); this.branding.load(); }
     });
   }
 }

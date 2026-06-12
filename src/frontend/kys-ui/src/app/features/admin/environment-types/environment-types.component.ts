@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 
 interface EnvType {
@@ -17,34 +18,34 @@ interface EnvType {
 @Component({
   selector: 'app-environment-types',
   standalone: true,
-  imports: [RouterLink, NgStyle, FormsModule],
+  imports: [RouterLink, NgStyle, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <div class="breadcrumb"><a routerLink="/admin">Admin</a><span>/</span><span>Ortam Tipleri</span></div>
-          <h1 class="page-title">Ortam Tipleri</h1>
-          <p class="page-subtitle">Development, Test, UAT, Production gibi ortam tiplerini tanımlayın</p>
+          <div class="breadcrumb"><a routerLink="/admin">{{ 'admin.crumb' | transloco }}</a><span>/</span><span>{{ 'admin.environmentTypes.title' | transloco }}</span></div>
+          <h1 class="page-title">{{ 'admin.environmentTypes.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.environmentTypes.subtitle' | transloco }}</p>
         </div>
         <button class="btn btn-primary" (click)="openCreate()">
-          <i class="pi pi-plus"></i> Yeni Tip
+          <i class="pi pi-plus"></i> {{ 'admin.environmentTypes.newType' | transloco }}
         </button>
       </div>
 
       @if (loading()) {
-        <div class="empty-state">Yükleniyor...</div>
+        <div class="empty-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!types().length) {
-        <div class="empty-state">Henüz ortam tipi tanımlanmamış.</div>
+        <div class="empty-state">{{ 'admin.environmentTypes.empty' | transloco }}</div>
       } @else {
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Renk</th>
-                <th>Ad</th>
-                <th>Kod</th>
-                <th>Açıklama</th>
-                <th>Sıra</th>
+                <th>{{ 'admin.environmentTypes.colColor' | transloco }}</th>
+                <th>{{ 'admin.environmentTypes.colName' | transloco }}</th>
+                <th>{{ 'admin.environmentTypes.colCode' | transloco }}</th>
+                <th>{{ 'admin.environmentTypes.colDesc' | transloco }}</th>
+                <th>{{ 'admin.environmentTypes.colSort' | transloco }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -59,10 +60,10 @@ interface EnvType {
                   <td class="text-muted">{{ t.description ?? '—' }}</td>
                   <td class="text-muted">{{ t.sortOrder }}</td>
                   <td class="actions-cell">
-                    <button class="btn-icon" title="Düzenle" (click)="openEdit(t)">
+                    <button class="btn-icon" [title]="'admin.environmentTypes.editTitle' | transloco" (click)="openEdit(t)">
                       <i class="pi pi-pencil"></i>
                     </button>
-                    <button class="btn-icon btn-icon--danger" title="Sil" (click)="confirmDelete(t)">
+                    <button class="btn-icon btn-icon--danger" [title]="'admin.environmentTypes.deleteTitle' | transloco" (click)="confirmDelete(t)">
                       <i class="pi pi-trash"></i>
                     </button>
                   </td>
@@ -79,7 +80,7 @@ interface EnvType {
       <div class="modal-backdrop" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ editingId() ? 'Ortam Tipini Düzenle' : 'Yeni Ortam Tipi' }}</h2>
+            <h2>{{ (editingId() ? 'admin.environmentTypes.editModal' : 'admin.environmentTypes.newModal') | transloco }}</h2>
             <button class="close-btn" (click)="closeModal()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -88,45 +89,45 @@ interface EnvType {
             }
             <div class="form-row">
               <div class="form-group">
-                <label>Ad <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="form.name" placeholder="ör. Production"
+                <label>{{ 'admin.environmentTypes.name' | transloco }} <span class="req">*</span></label>
+                <input type="text" [(ngModel)]="form.name" [placeholder]="'admin.environmentTypes.namePh' | transloco"
                   [class.input-error]="submitted() && !form.name.trim()" />
                 @if (submitted() && !form.name.trim()) {
-                  <span class="field-error">Ad zorunludur</span>
+                  <span class="field-error">{{ 'admin.environmentTypes.nameRequired' | transloco }}</span>
                 }
               </div>
               <div class="form-group">
-                <label>Kod <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="form.code" placeholder="ör. PROD" maxlength="20"
+                <label>{{ 'admin.environmentTypes.code' | transloco }} <span class="req">*</span></label>
+                <input type="text" [(ngModel)]="form.code" [placeholder]="'admin.environmentTypes.codePh' | transloco" maxlength="20"
                   (input)="form.code = form.code.toUpperCase()"
                   [class.input-error]="submitted() && !form.code.trim()" />
                 @if (submitted() && !form.code.trim()) {
-                  <span class="field-error">Kod zorunludur</span>
+                  <span class="field-error">{{ 'admin.environmentTypes.codeRequired' | transloco }}</span>
                 }
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Renk</label>
+                <label>{{ 'admin.environmentTypes.color' | transloco }}</label>
                 <div class="color-input-row">
                   <input type="color" [(ngModel)]="form.color" class="color-picker" />
                   <input type="text" [(ngModel)]="form.color" placeholder="#3B82F6" maxlength="7" class="color-text" />
                 </div>
               </div>
               <div class="form-group">
-                <label>Sıra</label>
+                <label>{{ 'admin.environmentTypes.sortOrder' | transloco }}</label>
                 <input type="number" [(ngModel)]="form.sortOrder" min="0" />
               </div>
             </div>
             <div class="form-group">
-              <label>Açıklama</label>
-              <input type="text" [(ngModel)]="form.description" placeholder="İsteğe bağlı" />
+              <label>{{ 'admin.environmentTypes.description' | transloco }}</label>
+              <input type="text" [(ngModel)]="form.description" [placeholder]="'admin.environmentTypes.descriptionPh' | transloco" />
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="closeModal()">İptal</button>
+            <button class="btn btn-secondary" (click)="closeModal()">{{ 'common.cancel' | transloco }}</button>
             <button class="btn btn-primary" [disabled]="saving()" (click)="save()">
-              {{ saving() ? 'Kaydediliyor...' : (editingId() ? 'Güncelle' : 'Oluştur') }}
+              {{ (saving() ? 'common.saving' : (editingId() ? 'common.update' : 'common.create')) | transloco }}
             </button>
           </div>
         </div>
@@ -138,24 +139,21 @@ interface EnvType {
       <div class="modal-backdrop" (click)="deletingType.set(null)">
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Ortam Tipini Sil</h2>
+            <h2>{{ 'admin.environmentTypes.deleteModal' | transloco }}</h2>
             <button class="close-btn" (click)="deletingType.set(null)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (deleteError()) {
               <div class="alert-error">{{ deleteError() }}</div>
             } @else {
-              <p class="confirm-text">
-                <strong>{{ deletingType()!.name }}</strong> ortam tipini silmek istediğinize emin misiniz?
-                Bu işlem geri alınamaz.
-              </p>
+              <p class="confirm-text" [innerHTML]="'admin.environmentTypes.deleteConfirm' | transloco:{ name: deletingType()!.name }"></p>
             }
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="deletingType.set(null)">İptal</button>
+            <button class="btn btn-secondary" (click)="deletingType.set(null)">{{ 'common.cancel' | transloco }}</button>
             @if (!deleteError()) {
               <button class="btn btn-danger" [disabled]="deleting()" (click)="deleteConfirmed()">
-                {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+                {{ (deleting() ? 'common.deleting' : 'common.delete') | transloco }}
               </button>
             }
           </div>
@@ -211,6 +209,7 @@ interface EnvType {
 })
 export class EnvironmentTypesComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
 
   types = signal<EnvType[]>([]);
   loading = signal(true);
@@ -275,7 +274,7 @@ export class EnvironmentTypesComponent implements OnInit {
 
     req.subscribe({
       next: () => { this.saving.set(false); this.closeModal(); this.load(); },
-      error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? 'Kaydedilemedi'); }
+      error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? this.transloco.translate('admin.environmentTypes.saveFailed')); }
     });
   }
 
@@ -290,7 +289,7 @@ export class EnvironmentTypesComponent implements OnInit {
     this.deleting.set(true);
     this.http.delete(`${environment.apiUrl}/admin/environment-types/${t.id}`).subscribe({
       next: () => { this.deleting.set(false); this.deletingType.set(null); this.load(); },
-      error: err => { this.deleting.set(false); this.deleteError.set(err.error?.detail ?? 'Silinemedi'); }
+      error: err => { this.deleting.set(false); this.deleteError.set(err.error?.detail ?? this.transloco.translate('admin.environmentTypes.deleteFailed')); }
     });
   }
 }

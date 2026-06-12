@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -46,27 +47,27 @@ interface SharedResourceDetail {
 @Component({
   selector: 'app-shared-resources',
   standalone: true,
-  imports: [RouterLink, NgClass, FormsModule],
+  imports: [RouterLink, NgClass, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
           <div class="breadcrumb">
-            <a routerLink="/admin">Admin</a>
+            <a routerLink="/admin">{{ 'admin.crumb' | transloco }}</a>
             <span>/</span>
-            <span>Paylaşımlı Kaynaklar</span>
+            <span>{{ 'admin.sharedResources.title' | transloco }}</span>
           </div>
-          <h1 class="page-title">Paylaşımlı Kaynaklar</h1>
-          <p class="page-subtitle">{{ resources().length }} kayıt</p>
+          <h1 class="page-title">{{ 'admin.sharedResources.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.sharedResources.subtitle' | transloco:{ count: resources().length } }}</p>
         </div>
         <button class="btn-primary" (click)="openModal()">
-          <i class="pi pi-plus"></i> Yeni Kaynak
+          <i class="pi pi-plus"></i> {{ 'admin.sharedResources.newResource' | transloco }}
         </button>
       </div>
 
       <div class="filter-bar">
         <select [(ngModel)]="scopeFilter" (ngModelChange)="load()" class="select-input">
-          <option value="">Tüm kapsamlar</option>
+          <option value="">{{ 'admin.sharedResources.allScopes' | transloco }}</option>
           <option value="Production">Production</option>
           <option value="Test">Test</option>
           <option value="Staging">Staging</option>
@@ -75,21 +76,21 @@ interface SharedResourceDetail {
       </div>
 
       @if (loading()) {
-        <div class="loading-state">Yükleniyor...</div>
+        <div class="loading-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!resources().length) {
         <div class="empty-state">
           <i class="pi pi-database"></i>
-          <p>Paylaşımlı kaynak bulunamadı.</p>
+          <p>{{ 'admin.sharedResources.empty' | transloco }}</p>
         </div>
       } @else {
         <div class="table-card">
           <table>
             <thead>
               <tr>
-                <th>Kaynak Adı</th>
-                <th>Tip</th>
-                <th>Kapsam</th>
-                <th>Açıklama</th>
+                <th>{{ 'admin.sharedResources.colName' | transloco }}</th>
+                <th>{{ 'admin.sharedResources.colType' | transloco }}</th>
+                <th>{{ 'admin.sharedResources.colScope' | transloco }}</th>
+                <th>{{ 'admin.sharedResources.colDesc' | transloco }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -114,10 +115,10 @@ interface SharedResourceDetail {
                   </td>
                   <td class="text-muted desc-cell">{{ r.description ?? '—' }}</td>
                   <td class="actions-cell">
-                    <button class="btn-icon" title="Düzenle" (click)="openEdit(r)">
+                    <button class="btn-icon" [title]="'admin.sharedResources.editTitle' | transloco" (click)="openEdit(r)">
                       <i class="pi pi-pencil"></i>
                     </button>
-                    <button class="btn-icon btn-icon--danger" title="Sil" (click)="deleteResource(r)"
+                    <button class="btn-icon btn-icon--danger" [title]="'admin.sharedResources.deleteTitle' | transloco" (click)="deleteResource(r)"
                       [disabled]="deletingId() === r.id">
                       @if (deletingId() === r.id) { <i class="pi pi-spin pi-spinner"></i> }
                       @else { <i class="pi pi-trash"></i> }
@@ -136,34 +137,34 @@ interface SharedResourceDetail {
       <div class="modal-backdrop" (click)="showModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ editingId() ? 'Kaynağı Düzenle' : 'Yeni Paylaşımlı Kaynak' }}</h2>
+            <h2>{{ (editingId() ? 'admin.sharedResources.editModal' : 'admin.sharedResources.newModal') | transloco }}</h2>
             <button class="modal-close" (click)="showModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (detailLoading()) {
-              <div class="loading-state">Yükleniyor...</div>
+              <div class="loading-state">{{ 'common.loading' | transloco }}</div>
             } @else {
               <div class="form-group">
-                <label>Kaynak Adı <span class="required">*</span></label>
-                <input type="text" [(ngModel)]="form.name" placeholder="ör. Prod Redis Cluster" [class.input-error]="submitted() && !form.name.trim()" />
-                @if (submitted() && !form.name.trim()) { <span class="error-msg">Ad zorunludur</span> }
+                <label>{{ 'admin.sharedResources.name' | transloco }} <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="form.name" [placeholder]="'admin.sharedResources.namePh' | transloco" [class.input-error]="submitted() && !form.name.trim()" />
+                @if (submitted() && !form.name.trim()) { <span class="error-msg">{{ 'admin.sharedResources.nameRequired' | transloco }}</span> }
               </div>
               @if (!editingId()) {
                 <div class="form-group">
-                  <label>Kaynak Tipi <span class="required">*</span></label>
+                  <label>{{ 'admin.sharedResources.resourceType' | transloco }} <span class="required">*</span></label>
                   <select [(ngModel)]="form.resourceTypeId" (ngModelChange)="onTypeChange($event)" [class.input-error]="submitted() && !form.resourceTypeId">
-                    <option value="">Tip seçin...</option>
+                    <option value="">{{ 'admin.sharedResources.selectType' | transloco }}</option>
                     @for (t of resourceTypes(); track t.id) {
                       <option [value]="t.id">{{ t.name }}{{ t.category ? ' (' + t.category + ')' : '' }}</option>
                     }
                   </select>
-                  @if (submitted() && !form.resourceTypeId) { <span class="error-msg">Tip zorunludur</span> }
+                  @if (submitted() && !form.resourceTypeId) { <span class="error-msg">{{ 'admin.sharedResources.typeRequired' | transloco }}</span> }
                 </div>
               }
               <div class="form-group">
-                <label>Ortam Kapsamı</label>
+                <label>{{ 'admin.sharedResources.envScope' | transloco }}</label>
                 <select [(ngModel)]="form.environmentScope">
-                  <option value="">Tüm ortamlar</option>
+                  <option value="">{{ 'admin.sharedResources.allEnvs' | transloco }}</option>
                   <option value="Production">Production</option>
                   <option value="Test">Test</option>
                   <option value="Staging">Staging</option>
@@ -171,14 +172,14 @@ interface SharedResourceDetail {
                 </select>
               </div>
               <div class="form-group">
-                <label>Açıklama</label>
-                <textarea [(ngModel)]="form.description" rows="2" placeholder="Kısa açıklama..."></textarea>
+                <label>{{ 'admin.sharedResources.description' | transloco }}</label>
+                <textarea [(ngModel)]="form.description" rows="2" [placeholder]="'admin.sharedResources.descriptionPh' | transloco"></textarea>
               </div>
 
               <!-- Dinamik bağlantı alanları -->
               @if (schemaKeys().length) {
                 <div class="conn-section">
-                  <div class="conn-title"><i class="pi pi-server"></i> Bağlantı Bilgileri</div>
+                  <div class="conn-title"><i class="pi pi-server"></i> {{ 'admin.sharedResources.connInfo' | transloco }}</div>
                   @for (key of schemaKeys(); track key) {
                     @let def = activeSchema()[key];
                     <div class="form-group">
@@ -186,23 +187,23 @@ interface SharedResourceDetail {
                         {{ def.label }}
                         @if (def.required) { <span class="required">*</span> }
                         <code class="field-key-badge">{{ key }}</code>
-                        @if (def.type === 'password') { <span class="secret-tag"><i class="pi pi-lock"></i> şifreli</span> }
+                        @if (def.type === 'password') { <span class="secret-tag"><i class="pi pi-lock"></i> {{ 'admin.sharedResources.encrypted' | transloco }}</span> }
                       </label>
                       @if (def.type === 'password') {
                         <input type="password" autocomplete="new-password"
                           [value]="credFields[key] ?? ''"
                           (input)="credFields[key] = $any($event.target).value"
-                          [placeholder]="existingCredKeys().has(key) ? '•••••• (değiştirmek için yazın)' : (def.required ? 'Zorunlu alan' : 'İsteğe bağlı')" />
+                          [placeholder]="existingCredKeys().has(key) ? ('admin.sharedResources.pwExistingPh' | transloco) : (def.required ? ('admin.sharedResources.requiredFieldPh' | transloco) : ('admin.sharedResources.optionalPh' | transloco))" />
                       } @else if (def.type === 'number') {
                         <input type="number"
                           [value]="connFields[key] ?? ''"
                           (input)="connFields[key] = $any($event.target).value"
-                          [placeholder]="def.default != null ? ('Varsayılan: ' + def.default) : ''" />
+                          [placeholder]="def.default != null ? ('admin.sharedResources.defaultPh' | transloco:{ value: def.default }) : ''" />
                       } @else {
                         <input type="text"
                           [value]="connFields[key] ?? ''"
                           (input)="connFields[key] = $any($event.target).value"
-                          [placeholder]="def.default != null ? ('Varsayılan: ' + def.default) : (def.required ? 'Zorunlu alan' : 'İsteğe bağlı')" />
+                          [placeholder]="def.default != null ? ('admin.sharedResources.defaultPh' | transloco:{ value: def.default }) : (def.required ? ('admin.sharedResources.requiredFieldPh' | transloco) : ('admin.sharedResources.optionalPh' | transloco))" />
                       }
                     </div>
                   }
@@ -213,9 +214,9 @@ interface SharedResourceDetail {
             }
           </div>
           <div class="modal-footer">
-            <button class="btn-cancel" (click)="showModal.set(false)">İptal</button>
+            <button class="btn-cancel" (click)="showModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button class="btn-save" [disabled]="saving() || detailLoading()" (click)="save()">
-              {{ saving() ? 'Kaydediliyor...' : (editingId() ? 'Güncelle' : 'Oluştur') }}
+              {{ (saving() ? 'common.saving' : (editingId() ? 'common.update' : 'common.create')) | transloco }}
             </button>
           </div>
         </div>
@@ -270,6 +271,7 @@ interface SharedResourceDetail {
 })
 export class SharedResourcesComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
 
   resources = signal<SharedResource[]>([]);
   resourceTypes = signal<ResourceType[]>([]);
@@ -355,7 +357,7 @@ export class SharedResourcesComponent implements OnInit {
         this.connFields = conn;
         this.detailLoading.set(false);
       },
-      error: () => { this.detailLoading.set(false); this.saveError.set('Detay yüklenemedi'); }
+      error: () => { this.detailLoading.set(false); this.saveError.set(this.transloco.translate('admin.sharedResources.detailLoadFailed')); }
     });
   }
 
@@ -396,7 +398,7 @@ export class SharedResourcesComponent implements OnInit {
       },
       error: err => {
         this.saving.set(false);
-        this.saveError.set(err.error?.detail ?? 'Kaynak kaydedilemedi');
+        this.saveError.set(err.error?.detail ?? this.transloco.translate('admin.sharedResources.saveFailed'));
       }
     });
   }
@@ -422,7 +424,7 @@ export class SharedResourcesComponent implements OnInit {
       next: () => this.finish(),
       error: err => {
         this.saving.set(false);
-        this.saveError.set(err.error?.detail ?? 'Şifre kaydedilemedi');
+        this.saveError.set(err.error?.detail ?? this.transloco.translate('admin.sharedResources.credSaveFailed'));
       }
     });
   }
@@ -434,7 +436,7 @@ export class SharedResourcesComponent implements OnInit {
   }
 
   deleteResource(r: SharedResource) {
-    if (!confirm(`"${r.name}" kaynağı silinecek. Emin misiniz?`)) return;
+    if (!confirm(this.transloco.translate('admin.sharedResources.deleteConfirm', { name: r.name }))) return;
     this.deletingId.set(r.id);
     this.http.delete(`${environment.apiUrl}/resources/shared/${r.id}`).subscribe({
       next: () => { this.deletingId.set(null); this.load(); },

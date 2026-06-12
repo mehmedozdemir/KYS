@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, NgClass, SlicePipe } from '@angular/common';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 
 interface AuditLogEntry {
@@ -32,73 +33,63 @@ const ACTION_CSS: Record<string, string> = {
   CredentialRevealed: 'action--credential'
 };
 
-const ACTION_LABEL: Record<string, string> = {
-  Created: 'Oluşturuldu',
-  Updated: 'Güncellendi',
-  Deleted: 'Silindi',
-  Restored: 'Geri Yüklendi',
-  CredentialRevealed: 'Şifre Görüntülendi'
-};
-
-const ENTITY_TYPE_LABELS: Record<string, string> = {
-  Customer: 'Müşteri', Product: 'Ürün', Team: 'Ekip', Person: 'Kişi',
-  CustomerEnvironment: 'Ortam', EnvironmentResource: 'Ortam Kaynağı',
-  KbArticle: 'KB Makalesi', TeamMembership: 'Ekip Üyeliği',
-  CustomerProduct: 'Müşteri Ürünü', SystemRole: 'Sistem Rolü'
-};
+const ENTITY_TYPE_KEYS = [
+  'Customer', 'Product', 'Team', 'Person', 'CustomerEnvironment',
+  'EnvironmentResource', 'KbArticle', 'TeamMembership', 'CustomerProduct', 'SystemRole'
+];
 
 @Component({
   selector: 'app-audit-log',
   standalone: true,
-  imports: [RouterLink, FormsModule, DatePipe, NgClass, SlicePipe],
+  imports: [RouterLink, FormsModule, DatePipe, NgClass, SlicePipe, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <div class="breadcrumb"><a routerLink="/admin">Admin</a><span>/</span><span>Audit Log</span></div>
-          <h1 class="page-title">Audit Log</h1>
-          <p class="page-subtitle">Sistemdeki tüm create / update / delete işlemleri</p>
+          <div class="breadcrumb"><a routerLink="/admin">{{ 'admin.auditLog.crumb' | transloco }}</a><span>/</span><span>{{ 'admin.auditLog.title' | transloco }}</span></div>
+          <h1 class="page-title">{{ 'admin.auditLog.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.auditLog.subtitle' | transloco }}</p>
         </div>
       </div>
 
       <!-- Filters -->
       <div class="filter-bar">
         <select [(ngModel)]="filterEntityType" (ngModelChange)="onFilter()">
-          <option value="">Tüm varlıklar</option>
-          @for (et of entityTypes; track et.value) {
-            <option [value]="et.value">{{ et.label }}</option>
+          <option value="">{{ 'admin.auditLog.allEntities' | transloco }}</option>
+          @for (et of entityTypeKeys; track et) {
+            <option [value]="et">{{ 'admin.auditLog.entity.' + et | transloco }}</option>
           }
         </select>
         <select [(ngModel)]="filterAction" (ngModelChange)="onFilter()">
-          <option value="">Tüm aksiyonlar</option>
-          <option value="Created">Oluşturuldu</option>
-          <option value="Updated">Güncellendi</option>
-          <option value="Deleted">Silindi</option>
-          <option value="Restored">Geri Yüklendi</option>
-          <option value="CredentialRevealed">Şifre Görüntülendi</option>
+          <option value="">{{ 'admin.auditLog.allActions' | transloco }}</option>
+          <option value="Created">{{ 'admin.auditLog.action.Created' | transloco }}</option>
+          <option value="Updated">{{ 'admin.auditLog.action.Updated' | transloco }}</option>
+          <option value="Deleted">{{ 'admin.auditLog.action.Deleted' | transloco }}</option>
+          <option value="Restored">{{ 'admin.auditLog.action.Restored' | transloco }}</option>
+          <option value="CredentialRevealed">{{ 'admin.auditLog.action.CredentialRevealed' | transloco }}</option>
         </select>
         <input type="date" [(ngModel)]="filterFrom" (ngModelChange)="onFilter()" class="date-input" />
         <input type="date" [(ngModel)]="filterTo" (ngModelChange)="onFilter()" class="date-input" />
         <button type="button" class="btn-clear" (click)="clearFilters()">
-          <i class="pi pi-times"></i> Temizle
+          <i class="pi pi-times"></i> {{ 'admin.auditLog.clear' | transloco }}
         </button>
       </div>
 
       <div class="table-wrapper">
         @if (loading()) {
-          <div class="empty-state">Yükleniyor...</div>
+          <div class="empty-state">{{ 'common.loading' | transloco }}</div>
         } @else if (!logs().length) {
-          <div class="empty-state">Kayıt bulunamadı.</div>
+          <div class="empty-state">{{ 'common.recordNotFound' | transloco }}</div>
         } @else {
           <table class="data-table">
             <thead>
               <tr>
-                <th>Zaman</th>
-                <th>Aksiyon</th>
-                <th>Varlık Tipi</th>
-                <th>Varlık</th>
-                <th>Kullanıcı</th>
-                <th>IP</th>
+                <th>{{ 'admin.auditLog.colTime' | transloco }}</th>
+                <th>{{ 'admin.auditLog.colAction' | transloco }}</th>
+                <th>{{ 'admin.auditLog.colEntityType' | transloco }}</th>
+                <th>{{ 'admin.auditLog.colEntity' | transloco }}</th>
+                <th>{{ 'admin.auditLog.colUser' | transloco }}</th>
+                <th>{{ 'admin.auditLog.colIp' | transloco }}</th>
               </tr>
             </thead>
             <tbody>
@@ -128,7 +119,7 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
               <button type="button" class="page-btn" [disabled]="page() === 1" (click)="goToPage(page() - 1)">
                 <i class="pi pi-chevron-left"></i>
               </button>
-              <span class="page-info">{{ page() }} / {{ totalPages() }} ({{ totalCount() }} kayıt)</span>
+              <span class="page-info">{{ page() }} / {{ totalPages() }} ({{ 'admin.auditLog.recordCount' | transloco:{ count: totalCount() } }})</span>
               <button type="button" class="page-btn" [disabled]="page() === totalPages()" (click)="goToPage(page() + 1)">
                 <i class="pi pi-chevron-right"></i>
               </button>
@@ -177,6 +168,7 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
 })
 export class AuditLogComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
 
   logs = signal<AuditLogEntry[]>([]);
   loading = signal(true);
@@ -190,7 +182,7 @@ export class AuditLogComponent implements OnInit {
   filterFrom = '';
   filterTo = '';
 
-  readonly entityTypes = Object.entries(ENTITY_TYPE_LABELS).map(([value, label]) => ({ value, label }));
+  readonly entityTypeKeys = ENTITY_TYPE_KEYS;
 
   ngOnInit() { this.load(); }
 
@@ -227,6 +219,14 @@ export class AuditLogComponent implements OnInit {
   }
 
   actionCss(action: string) { return ACTION_CSS[action] ?? 'action--updated'; }
-  actionLabel(action: string) { return ACTION_LABEL[action] ?? action; }
-  entityTypeLabel(et: string) { return ENTITY_TYPE_LABELS[et] ?? et; }
+  actionLabel(action: string) {
+    const key = `admin.auditLog.action.${action}`;
+    const label = this.transloco.translate(key);
+    return label === key ? action : label;
+  }
+  entityTypeLabel(et: string) {
+    const key = `admin.auditLog.entity.${et}`;
+    const label = this.transloco.translate(key);
+    return label === key ? et : label;
+  }
 }
