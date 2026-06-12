@@ -12,9 +12,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   const token = tokenService.getAccessToken();
 
-  const authReq = token
-    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-    : req;
+  // Tell the backend which language to localize messages in (tr default).
+  const lang = localStorage.getItem('kys-lang') ?? 'tr';
+  const headers: Record<string, string> = { 'Accept-Language': lang };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const authReq = req.clone({ setHeaders: headers });
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
