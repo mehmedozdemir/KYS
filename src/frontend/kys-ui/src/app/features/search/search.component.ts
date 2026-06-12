@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule } from '@jsverse/transloco';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -29,12 +30,12 @@ const CATEGORY_ROUTE: Record<string, string> = {
   Article: '/knowledge-base'
 };
 
-const CATEGORY_LABEL: Record<string, string> = {
-  Customer: 'Müşteri',
-  Product: 'Ürün',
-  Person: 'Kişi',
-  Team: 'Ekip',
-  Article: 'KB Makalesi'
+const CATEGORY_LABEL_KEY: Record<string, string> = {
+  Customer: 'search.catCustomer',
+  Product: 'search.catProduct',
+  Person: 'search.catPerson',
+  Team: 'search.catTeam',
+  Article: 'search.catArticle'
 };
 
 const CATEGORY_ICON: Record<string, string> = {
@@ -48,7 +49,7 @@ const CATEGORY_ICON: Record<string, string> = {
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="search-header">
@@ -58,14 +59,14 @@ const CATEGORY_ICON: Record<string, string> = {
             type="text"
             [(ngModel)]="query"
             (ngModelChange)="onQueryChange($event)"
-            placeholder="Müşteri, ürün, kişi veya ekip ara..."
+            [placeholder]="'search.placeholder' | transloco"
             class="search-input"
             autofocus />
         </div>
         @if (query.length >= 2) {
           <p class="result-summary">
-            @if (loading()) { Aranıyor... }
-            @else { {{ totalCount() }} sonuç bulundu }
+            @if (loading()) { {{ 'search.searching' | transloco }} }
+            @else { {{ 'search.resultCount' | transloco:{ count: totalCount() } }} }
           </p>
         }
       </div>
@@ -74,16 +75,16 @@ const CATEGORY_ICON: Record<string, string> = {
         @if (totalCount() === 0) {
           <div class="empty-state">
             <i class="pi pi-search" style="font-size:2rem;color:var(--border-strong)"></i>
-            <p>"{{ query }}" için sonuç bulunamadı.</p>
+            <p>{{ 'search.noResults' | transloco:{ query: query } }}</p>
           </div>
         } @else {
           <div class="results-container">
-            @for (group of resultGroups(); track group.label) {
+            @for (group of resultGroups(); track group.labelKey) {
               @if (group.items.length) {
                 <div class="result-group">
                   <div class="group-header">
                     <i class="pi" [class]="group.icon"></i>
-                    <span>{{ group.label }}</span>
+                    <span>{{ group.labelKey | transloco }}</span>
                     <span class="count">{{ group.items.length }}</span>
                   </div>
                   <div class="result-list">
@@ -107,7 +108,7 @@ const CATEGORY_ICON: Record<string, string> = {
       } @else if (query.length === 0) {
         <div class="empty-state">
           <i class="pi pi-search" style="font-size:2rem;color:var(--border-strong)"></i>
-          <p>Aramak istediğiniz terimi yazın.</p>
+          <p>{{ 'search.prompt' | transloco }}</p>
         </div>
       }
     </div>
@@ -168,11 +169,11 @@ export class SearchComponent implements OnInit {
     const r = this.result();
     if (!r) return [];
     return [
-      { label: CATEGORY_LABEL['Customer'], icon: 'pi-' + CATEGORY_ICON['Customer'], route: CATEGORY_ROUTE['Customer'], items: r.customers },
-      { label: CATEGORY_LABEL['Product'], icon: 'pi-' + CATEGORY_ICON['Product'], route: CATEGORY_ROUTE['Product'], items: r.products },
-      { label: CATEGORY_LABEL['Person'], icon: 'pi-' + CATEGORY_ICON['Person'], route: CATEGORY_ROUTE['Person'], items: r.people },
-      { label: CATEGORY_LABEL['Team'], icon: 'pi-' + CATEGORY_ICON['Team'], route: CATEGORY_ROUTE['Team'], items: r.teams },
-      { label: CATEGORY_LABEL['Article'], icon: 'pi-' + CATEGORY_ICON['Article'], route: CATEGORY_ROUTE['Article'], items: r.articles },
+      { labelKey: CATEGORY_LABEL_KEY['Customer'], icon: 'pi-' + CATEGORY_ICON['Customer'], route: CATEGORY_ROUTE['Customer'], items: r.customers },
+      { labelKey: CATEGORY_LABEL_KEY['Product'], icon: 'pi-' + CATEGORY_ICON['Product'], route: CATEGORY_ROUTE['Product'], items: r.products },
+      { labelKey: CATEGORY_LABEL_KEY['Person'], icon: 'pi-' + CATEGORY_ICON['Person'], route: CATEGORY_ROUTE['Person'], items: r.people },
+      { labelKey: CATEGORY_LABEL_KEY['Team'], icon: 'pi-' + CATEGORY_ICON['Team'], route: CATEGORY_ROUTE['Team'], items: r.teams },
+      { labelKey: CATEGORY_LABEL_KEY['Article'], icon: 'pi-' + CATEGORY_ICON['Article'], route: CATEGORY_ROUTE['Article'], items: r.articles },
     ].filter(g => g.items.length > 0);
   }
 
