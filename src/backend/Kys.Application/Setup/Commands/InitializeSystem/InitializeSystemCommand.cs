@@ -23,8 +23,8 @@ public sealed class InitializeSystemCommandValidator : AbstractValidator<Initial
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(200);
         RuleFor(x => x.Password).NotEmpty().MinimumLength(8)
-            .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
-            .Matches("[0-9]").WithMessage("Password must contain at least one number.");
+            .Matches("[A-Z]").WithMessage("val.password.uppercase")
+            .Matches("[0-9]").WithMessage("val.password.number");
     }
 }
 
@@ -40,7 +40,7 @@ public sealed class InitializeSystemCommandHandler(
     {
         var alreadyInitialized = await personRepository.HasAnyPlatformUserAsync(cancellationToken);
         if (alreadyInitialized)
-            throw new ConflictException("System is already initialized.");
+            throw new ConflictException("err.setup.alreadyInitialized");
 
         var person = new Person
         {

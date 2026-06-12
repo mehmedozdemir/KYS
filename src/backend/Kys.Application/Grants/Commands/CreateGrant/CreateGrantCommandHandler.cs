@@ -17,11 +17,11 @@ public sealed class CreateGrantCommandHandler(
         if (request.Kind == GrantKind.Scope)
         {
             if (request.ScopeType is null || request.ScopeId is null || request.Level is null)
-                throw new DomainException("Scope grant için ScopeType, ScopeId ve Level zorunludur.");
+                throw new DomainException("err.grant.scopeFieldsRequired");
         }
         else if (string.IsNullOrWhiteSpace(request.Capability))
         {
-            throw new DomainException("Capability grant için Capability zorunludur.");
+            throw new DomainException("err.grant.capabilityRequired");
         }
 
         var grant = new AccessGrant

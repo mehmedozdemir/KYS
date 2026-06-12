@@ -15,7 +15,7 @@ public sealed class RestoreCustomerCommandHandler(
             ?? throw new NotFoundException(nameof(Domain.Entities.Customer), request.Id);
 
         if (!customer.IsArchived)
-            throw new DomainException("Müşteri arşivlenmiş değil.");
+            throw new DomainException("err.customer.notArchived");
 
         customer.Restore();
         customerRepository.Update(customer);

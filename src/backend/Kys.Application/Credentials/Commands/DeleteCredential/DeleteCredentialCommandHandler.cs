@@ -21,7 +21,7 @@ public sealed class DeleteCredentialCommandHandler(
             credential.EndpointUrlId.HasValue ? await authorization.CanAccessEndpointUrlAsync(credential.EndpointUrlId.Value, ct) :
             credential.SharedResourceId.HasValue && await authorization.CanAccessSharedResourceAsync(credential.SharedResourceId.Value, ct);
         if (!canWrite)
-            throw new ForbiddenException("Bu kaynağın bilgilerini silme yetkiniz yok.");
+            throw new ForbiddenException("err.credential.forbiddenDelete");
 
         repository.DeleteCredential(credential);
         await unitOfWork.SaveChangesAsync(ct);

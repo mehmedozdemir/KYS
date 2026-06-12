@@ -18,7 +18,7 @@ public sealed class UpdateEmploymentStatusCommandHandler(
         if (request.NewStatus is EmploymentStatus.Terminated or EmploymentStatus.Resigned)
         {
             if (request.TerminationDate is null)
-                throw new DomainException("Termination date is required when status is Terminated or Resigned.");
+                throw new DomainException("err.person.terminationDateRequired");
 
             person.Terminate(request.TerminationDate.Value, request.TerminationReason);
         }

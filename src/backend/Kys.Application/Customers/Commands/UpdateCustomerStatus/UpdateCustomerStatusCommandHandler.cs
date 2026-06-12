@@ -18,7 +18,7 @@ public sealed class UpdateCustomerStatusCommandHandler(
         if (request.NewStatus == CustomerStatus.Churned)
         {
             if (request.ServiceEndedAt is null)
-                throw new DomainException("Churned durumu için service_ended_at zorunludur.");
+                throw new DomainException("err.customer.churnedDateRequired");
 
             customer.Churn(request.ServiceEndedAt.Value, request.ChurnReason);
         }

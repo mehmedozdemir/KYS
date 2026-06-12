@@ -12,7 +12,7 @@ public sealed class CreateSharedResourceCommandHandler(
     public async Task<Guid> Handle(CreateSharedResourceCommand request, CancellationToken ct)
     {
         var resourceType = await repository.GetResourceTypeByIdAsync(request.ResourceTypeId, ct)
-            ?? throw new DomainException($"ResourceType {request.ResourceTypeId} not found.");
+            ?? throw new NotFoundException(nameof(Domain.Entities.ResourceType), request.ResourceTypeId);
 
         var sharedResource = new SharedResource
         {

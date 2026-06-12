@@ -21,7 +21,7 @@ public sealed class AssignTeamToProductCommandHandler(
 
         var existing = await productRepository.GetTeamAssignmentAsync(request.ProductId, request.TeamId, cancellationToken);
         if (existing is not null)
-            throw new DomainException("Team is already assigned to this product.");
+            throw new DomainException("err.product.teamAlreadyAssigned");
 
         var assignment = new ProductTeam
         {

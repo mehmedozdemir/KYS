@@ -13,12 +13,12 @@ public sealed class AddResourceToEnvironmentCommandHandler(
     public async Task<Guid> Handle(AddResourceToEnvironmentCommand request, CancellationToken ct)
     {
         var env = await envRepository.GetEnvironmentByIdAsync(request.CustomerEnvironmentId, ct)
-            ?? throw new DomainException($"CustomerEnvironment {request.CustomerEnvironmentId} not found.");
+            ?? throw new NotFoundException("CustomerEnvironment", request.CustomerEnvironmentId);
 
         if (request.IsShared && request.SharedResourceId.HasValue)
         {
             var sharedResource = await resourceRepository.GetSharedResourceByIdAsync(request.SharedResourceId.Value, ct)
-                ?? throw new DomainException($"SharedResource {request.SharedResourceId} not found.");
+                ?? throw new NotFoundException("SharedResource", request.SharedResourceId);
             _ = sharedResource;
         }
 

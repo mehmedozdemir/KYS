@@ -12,12 +12,13 @@ namespace Kys.Infrastructure.Services;
 public sealed class SmtpEmailSender(
     IEmailAccountRepository accountRepository,
     IOrganizationProfileRepository orgRepository,
-    IEncryptionService encryption) : IEmailSender
+    IEncryptionService encryption,
+    ILocalizer localizer) : IEmailSender
 {
     public async Task SendAsync(string toEmail, string? toName, string subject, string htmlBody, CancellationToken ct = default)
     {
         var account = await accountRepository.GetActiveAsync(ct)
-            ?? throw new DomainException("Aktif bir e-posta hesabı tanımlı değil. Mail Ayarları'ndan ekleyin.");
+            ?? throw new DomainException(localizer["err.smtp.noActiveAccount"]);
         await SendCoreAsync(account, toEmail, toName, subject, htmlBody, ct);
     }
 
@@ -94,37 +95,31 @@ public sealed class SmtpEmailSender(
         }
         catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested)
         {
-            throw new DomainException(
-                $"SMTP bağlantısı zaman aşımına uğradı ({account.Host}:{account.Port}). " +
-                "Sunucu/port yanlış olabilir (SMTP için genelde 587/STARTTLS ya da 465/SSL — 443 SMTP değildir) veya erişim engelli.");
+            throw new DomainException(localizer.Get("err.smtp.timeout", account.Host, account.Port));
         }
         catch (System.Net.Sockets.SocketException ex)
         {
-            throw new DomainException(
-                $"SMTP sunucusuna bağlanılamadı ({account.Host}:{account.Port}). " +
-                $"Sunucu adresi/port hatalı olabilir veya erişim engelli. ({ex.Message})");
+            throw new DomainException(localizer.Get("err.smtp.connectFailed", account.Host, account.Port, ex.Message));
         }
         catch (MailKit.Security.SslHandshakeException)
         {
-            throw new DomainException(
-                $"TLS/SSL el sıkışma hatası ({account.Host}:{account.Port}). " +
-                "Güvenlik ayarını ve portu kontrol edin (STARTTLS→587, SSL→465).");
+            throw new DomainException(localizer.Get("err.smtp.tlsError", account.Host, account.Port));
         }
         catch (MailKit.Security.AuthenticationException)
         {
-            throw new DomainException("Kimlik doğrulama başarısız: kullanıcı adı veya parola hatalı (O365'te SMTP AUTH kapalı olabilir / MFA varsa uygulama şifresi gerekir).");
+            throw new DomainException(localizer["err.smtp.authFailed"]);
         }
         catch (MailKit.Net.Smtp.SmtpCommandException ex)
         {
-            throw new DomainException($"SMTP sunucusu reddetti: {ex.Message}");
+            throw new DomainException(localizer.Get("err.smtp.rejected", ex.Message));
         }
         catch (MailKit.Net.Smtp.SmtpProtocolException ex)
         {
-            throw new DomainException($"SMTP protokol hatası: {ex.Message} (yanlış porta bağlanıyor olabilirsiniz).");
+            throw new DomainException(localizer.Get("err.smtp.protocolError", ex.Message));
         }
         catch (Exception ex)
         {
-            throw new DomainException($"E-posta gönderilemedi ({account.Host}:{account.Port}): {ex.Message}");
+            throw new DomainException(localizer.Get("err.smtp.sendFailed", account.Host, account.Port, ex.Message));
         }
     }
 }

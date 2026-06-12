@@ -17,7 +17,7 @@ public sealed class RevealCredentialCommandHandler(
     public async Task<string> Handle(RevealCredentialCommand request, CancellationToken ct)
     {
         var credential = await envRepository.GetCredentialByIdAsync(request.CredentialId, ct)
-            ?? throw new DomainException($"Credential {request.CredentialId} not found.");
+            ?? throw new NotFoundException("ResourceCredential", request.CredentialId);
 
         bool canAccess = false;
 
@@ -29,7 +29,7 @@ public sealed class RevealCredentialCommandHandler(
             canAccess = await authorizationService.CanAccessEndpointUrlAsync(credential.EndpointUrlId.Value, ct);
 
         if (!canAccess)
-            throw new ForbiddenException("You do not have permission to view this credential.");
+            throw new ForbiddenException("err.credential.forbiddenView");
 
         var plainValue = encryption.DecryptWithIv(credential.EncryptedValue, credential.Iv);
 

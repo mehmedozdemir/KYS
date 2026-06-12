@@ -14,7 +14,7 @@ public sealed class GetCustomerDetailQueryHandler(ICustomerRepository customerRe
             ?? throw new NotFoundException(nameof(Domain.Entities.Customer), request.Id);
 
         if (!await scope.CanReadAsync(new ScopeTarget(ScopeKind.Customer, customer.Id), cancellationToken))
-            throw new ForbiddenException("Bu müşteriyi görme yetkiniz yok.");
+            throw new ForbiddenException("err.forbidden.customer");
 
         return new CustomerDetailDto(
             customer.Id, customer.Name, customer.Code, customer.ShortName,

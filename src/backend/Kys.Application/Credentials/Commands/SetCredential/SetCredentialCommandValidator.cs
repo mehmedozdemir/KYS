@@ -11,6 +11,6 @@ public sealed class SetCredentialCommandValidator : AbstractValidator<SetCredent
         RuleFor(x => x)
             .Must(x => x.EnvironmentResourceId.HasValue || x.SharedResourceId.HasValue || x.EndpointUrlId.HasValue)
             .WithName("ResourceId")
-            .WithMessage("Either EnvironmentResourceId, SharedResourceId or EndpointUrlId must be provided.");
+            .WithMessage("val.credential.targetRequired");
     }
 }

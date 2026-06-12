@@ -1,20 +1,22 @@
 using Kys.Domain.Entities;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
+using Kys.Domain.Interfaces.Services;
 using MediatR;
 
 namespace Kys.Application.CustomFields.Commands.CreateCustomFieldDefinition;
 
 public sealed class CreateCustomFieldDefinitionCommandHandler(
     ICustomFieldDefinitionRepository repository,
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    ILocalizer localizer
 ) : IRequestHandler<CreateCustomFieldDefinitionCommand, Guid>
 {
     public async Task<Guid> Handle(CreateCustomFieldDefinitionCommand request, CancellationToken cancellationToken)
     {
         var exists = await repository.ExistsAsync(request.EntityType, request.FieldKey, cancellationToken);
         if (exists)
-            throw new DomainException($"'{request.FieldKey}' anahtarıyla '{request.EntityType}' için alan zaten tanımlı.");
+            throw new DomainException(localizer.Get("err.customField.alreadyDefined", request.FieldKey, request.EntityType));
 
         var definition = new CustomFieldDefinition
         {

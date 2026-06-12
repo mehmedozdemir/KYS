@@ -1,12 +1,14 @@
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
+using Kys.Domain.Interfaces.Services;
 using MediatR;
 
 namespace Kys.Application.Products.Commands.DeleteProductResourceTemplate;
 
 public sealed class DeleteProductResourceTemplateCommandHandler(
     IProductRepository repository,
-    IUnitOfWork unitOfWork) : IRequestHandler<DeleteProductResourceTemplateCommand>
+    IUnitOfWork unitOfWork,
+    ILocalizer localizer) : IRequestHandler<DeleteProductResourceTemplateCommand>
 {
     public async Task Handle(DeleteProductResourceTemplateCommand request, CancellationToken ct)
     {
@@ -15,8 +17,7 @@ public sealed class DeleteProductResourceTemplateCommandHandler(
 
         var usageCount = await repository.CountEnvironmentResourcesByTemplateAsync(request.TemplateId, ct);
         if (usageCount > 0)
-            throw new ConflictException(
-                $"Bu kaynak şablonu {usageCount} ortamda kullanılmaktadır. Önce ortamlardaki kaynakları kaldırın.");
+            throw new ConflictException(localizer.Get("err.resourceTemplate.inUse", usageCount));
 
         repository.DeleteResourceTemplate(template);
         await unitOfWork.SaveChangesAsync(ct);

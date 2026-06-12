@@ -79,6 +79,7 @@ public static class DependencyInjection
         services.AddSingleton<IEmailQueue>(sp => sp.GetRequiredService<EmailQueue>());
         services.AddHostedService<EmailBackgroundService>();
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
+        services.AddSingleton<ILocalizer, Localization.JsonLocalizer>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<IJwtService, JwtService>();
 

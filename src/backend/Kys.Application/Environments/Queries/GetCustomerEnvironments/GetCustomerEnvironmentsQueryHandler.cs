@@ -11,7 +11,7 @@ public sealed class GetCustomerEnvironmentsQueryHandler(IEnvironmentRepository r
     public async Task<IReadOnlyList<CustomerEnvironmentSummaryDto>> Handle(GetCustomerEnvironmentsQuery request, CancellationToken ct)
     {
         if (!await scope.CanReadAsync(new ScopeTarget(ScopeKind.CustomerProduct, request.CustomerProductId), ct))
-            throw new ForbiddenException("Bu ürünün ortamlarını görme yetkiniz yok.");
+            throw new ForbiddenException("err.forbidden.productEnvironments");
 
         var envs = await repository.GetByCustomerProductAsync(request.CustomerProductId, ct);
         return envs.Select(e => new CustomerEnvironmentSummaryDto(

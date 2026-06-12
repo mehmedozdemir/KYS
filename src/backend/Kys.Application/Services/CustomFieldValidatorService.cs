@@ -6,7 +6,9 @@ using Kys.Domain.Interfaces.Services;
 
 namespace Kys.Application.Services;
 
-public sealed class CustomFieldValidatorService(ICustomFieldDefinitionRepository repository)
+public sealed class CustomFieldValidatorService(
+    ICustomFieldDefinitionRepository repository,
+    ILocalizer localizer)
     : ICustomFieldValidatorService
 {
     public async Task<IReadOnlyList<CustomFieldValidationError>> ValidateAsync(
@@ -24,7 +26,7 @@ public sealed class CustomFieldValidatorService(ICustomFieldDefinitionRepository
             // Required check
             if (def.IsRequired && IsEmpty(value))
             {
-                errors.Add(new CustomFieldValidationError(def.FieldKey, $"'{def.DisplayName}' alanı zorunludur."));
+                errors.Add(new CustomFieldValidationError(def.FieldKey, localizer.Get("val.cf.required", def.DisplayName)));
                 continue;
             }
 
@@ -38,46 +40,46 @@ public sealed class CustomFieldValidatorService(ICustomFieldDefinitionRepository
                 case CustomFieldType.Select:
                     if (def.SelectOptions is not null && !def.SelectOptions.Contains(strValue, StringComparer.OrdinalIgnoreCase))
                         errors.Add(new CustomFieldValidationError(def.FieldKey,
-                            $"'{def.DisplayName}' için geçersiz seçenek: '{strValue}'. Geçerli seçenekler: {string.Join(", ", def.SelectOptions)}."));
+                            localizer.Get("val.cf.invalidOption", def.DisplayName, strValue, string.Join(", ", def.SelectOptions))));
                     break;
 
                 case CustomFieldType.Number:
                     if (!double.TryParse(strValue, out var numVal))
                     {
-                        errors.Add(new CustomFieldValidationError(def.FieldKey, $"'{def.DisplayName}' sayısal bir değer olmalıdır."));
+                        errors.Add(new CustomFieldValidationError(def.FieldKey, localizer.Get("val.cf.number", def.DisplayName)));
                     }
                     else
                     {
                         if (TryGetRule<double>(def.ValidationRules, "min", out var min) && numVal < min)
-                            errors.Add(new CustomFieldValidationError(def.FieldKey, $"'{def.DisplayName}' en az {min} olmalıdır."));
+                            errors.Add(new CustomFieldValidationError(def.FieldKey, localizer.Get("val.cf.min", def.DisplayName, min)));
                         if (TryGetRule<double>(def.ValidationRules, "max", out var max) && numVal > max)
-                            errors.Add(new CustomFieldValidationError(def.FieldKey, $"'{def.DisplayName}' en fazla {max} olabilir."));
+                            errors.Add(new CustomFieldValidationError(def.FieldKey, localizer.Get("val.cf.max", def.DisplayName, max)));
                     }
                     break;
 
                 case CustomFieldType.Date:
                     if (!DateOnly.TryParse(strValue, out _))
-                        errors.Add(new CustomFieldValidationError(def.FieldKey, $"'{def.DisplayName}' geçerli bir tarih olmalıdır (yyyy-MM-dd)."));
+                        errors.Add(new CustomFieldValidationError(def.FieldKey, localizer.Get("val.cf.date", def.DisplayName)));
                     break;
 
                 case CustomFieldType.Boolean:
                     if (!bool.TryParse(strValue, out _))
-                        errors.Add(new CustomFieldValidationError(def.FieldKey, $"'{def.DisplayName}' true veya false olmalıdır."));
+                        errors.Add(new CustomFieldValidationError(def.FieldKey, localizer.Get("val.cf.boolean", def.DisplayName)));
                     break;
 
                 case CustomFieldType.Email:
                     if (!strValue.Contains('@') || !strValue.Contains('.'))
-                        errors.Add(new CustomFieldValidationError(def.FieldKey, $"'{def.DisplayName}' geçerli bir e-posta adresi olmalıdır."));
+                        errors.Add(new CustomFieldValidationError(def.FieldKey, localizer.Get("val.cf.email", def.DisplayName)));
                     break;
 
                 case CustomFieldType.Text:
                 case CustomFieldType.Url:
                     if (TryGetRule<int>(def.ValidationRules, "min_length", out var minLen) && strValue.Length < minLen)
-                        errors.Add(new CustomFieldValidationError(def.FieldKey, $"'{def.DisplayName}' en az {minLen} karakter olmalıdır."));
+                        errors.Add(new CustomFieldValidationError(def.FieldKey, localizer.Get("val.cf.minLength", def.DisplayName, minLen)));
                     if (TryGetRule<int>(def.ValidationRules, "max_length", out var maxLen) && strValue.Length > maxLen)
-                        errors.Add(new CustomFieldValidationError(def.FieldKey, $"'{def.DisplayName}' en fazla {maxLen} karakter olabilir."));
+                        errors.Add(new CustomFieldValidationError(def.FieldKey, localizer.Get("val.cf.maxLength", def.DisplayName, maxLen)));
                     if (TryGetRule<string>(def.ValidationRules, "regex", out var pattern) && !Regex.IsMatch(strValue, pattern))
-                        errors.Add(new CustomFieldValidationError(def.FieldKey, $"'{def.DisplayName}' beklenen formata uymuyor."));
+                        errors.Add(new CustomFieldValidationError(def.FieldKey, localizer.Get("val.cf.regex", def.DisplayName)));
                     break;
             }
         }

@@ -14,7 +14,7 @@ public sealed class GetProductDetailQueryHandler(IProductRepository productRepos
             ?? throw new NotFoundException(nameof(Domain.Entities.Product), request.Id);
 
         if (!await scope.CanReadAsync(new ScopeTarget(ScopeKind.Product, product.Id), cancellationToken))
-            throw new ForbiddenException("Bu ürünü görme yetkiniz yok.");
+            throw new ForbiddenException("err.forbidden.product");
 
         return new ProductDetailDto(
             product.Id,

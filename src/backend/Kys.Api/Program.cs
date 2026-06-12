@@ -1,8 +1,10 @@
+using System.Globalization;
 using Kys.Api.Extensions;
 using Kys.Api.Middleware;
 using Kys.Application;
 using Kys.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Localization;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -35,6 +37,15 @@ try
         .AddPresentation(builder.Configuration);
 
     var app = builder.Build();
+
+    // Localization: tr (default) / en, resolved from the Accept-Language header.
+    var supportedCultures = new[] { new CultureInfo("tr"), new CultureInfo("en") };
+    app.UseRequestLocalization(new RequestLocalizationOptions
+    {
+        DefaultRequestCulture = new RequestCulture("tr"),
+        SupportedCultures = supportedCultures,
+        SupportedUICultures = supportedCultures
+    });
 
     app.UseExceptionHandler();
     app.UseMiddleware<CorrelationIdMiddleware>();
