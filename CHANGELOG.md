@@ -34,10 +34,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 - **Modül modül TR/EN metin çevirisi** (`TranslocoModule` + dinamik enum anahtarları, label fonksiyonları kaldırıldı):
   - Dashboard, Müşteriler (liste+detay), Ürünler (liste+detay), Ekipler (liste+detay), Kişiler (liste+detay), Bilgi Bankası (liste+detay+editör)
   - **Ortam detayı** (`environment-detail`): başlık/breadcrumb, barındırma platformu seçici, kaynak kartları + dinamik şema alanları, endpoint URL kartları, "Kaynak Ekle"/"Endpoint URL"/"Credential Yönetimi" modalları, auth tipi seçenekleri, alan etiketleri (TS `fieldLabel`/`authTypeLabel`), tüm onay/hata mesajları
-- Yeni sözlük namespace'leri: `environments.*` (~90 anahtar); `common`'a paylaşılan terimler
+  - **Hesabım** (`account`): profil özeti, izinler, şifre değiştirme formu + validasyon/başarı/hata mesajları
+  - **Arama** (`search`): arama kutusu, sonuç özeti, kategori başlıkları (CATEGORY_LABEL → dinamik anahtar), boş/bilgi durumları
+- Yeni sözlük namespace'leri: `environments.*` (~90 anahtar), `account.*`, `search.*`; `common`'a paylaşılan terimler
 
 ### Notlar
-- Kalan: Hesap/Arama → admin ekranları (~10) → ortak modallar/toast
+- Kalan: admin ekranları (~10) → ortak modallar/toast
 
 ---
 

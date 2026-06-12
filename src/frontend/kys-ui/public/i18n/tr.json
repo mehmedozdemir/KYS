@@ -624,5 +624,32 @@
     "credDeleteError": "Credential silinemedi.",
     "credRevealError": "Credential gösterilemedi. Yetkiniz olmayabilir.",
     "credSaveError": "Credential kaydedilemedi."
+  },
+  "account": {
+    "title": "Hesabım",
+    "subtitle": "Profil bilgileriniz ve şifre yönetimi",
+    "permissions": "İzinler",
+    "changePassword": "Şifre Değiştir",
+    "success": "Şifreniz başarıyla değiştirildi.",
+    "currentPassword": "Mevcut Şifre",
+    "currentRequired": "Mevcut şifre zorunludur",
+    "newPassword": "Yeni Şifre",
+    "newMinLength": "Yeni şifre en az 8 karakter olmalı",
+    "confirmPassword": "Yeni Şifre (Tekrar)",
+    "passwordsMismatch": "Şifreler eşleşmiyor",
+    "changeButton": "Şifreyi Değiştir",
+    "changeError": "Şifre değiştirilemedi."
+  },
+  "search": {
+    "placeholder": "Müşteri, ürün, kişi veya ekip ara...",
+    "searching": "Aranıyor...",
+    "resultCount": "{{count}} sonuç bulundu",
+    "noResults": "\"{{query}}\" için sonuç bulunamadı.",
+    "prompt": "Aramak istediğiniz terimi yazın.",
+    "catCustomer": "Müşteri",
+    "catProduct": "Ürün",
+    "catPerson": "Kişi",
+    "catTeam": "Ekip",
+    "catArticle": "KB Makalesi"
   }
 }

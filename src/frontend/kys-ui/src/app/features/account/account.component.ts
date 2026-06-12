@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { selectCurrentUser } from '../../core/store/auth/auth.selectors';
 import { TokenService } from '../../core/services/token.service';
 import { environment } from '../../../environments/environment';
@@ -10,12 +11,12 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-account',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslocoModule],
   template: `
     <div class="page-content account">
       <div class="page-header">
-        <h1 class="page-title">Hesabım</h1>
-        <p class="page-subtitle">Profil bilgileriniz ve şifre yönetimi</p>
+        <h1 class="page-title">{{ 'account.title' | transloco }}</h1>
+        <p class="page-subtitle">{{ 'account.subtitle' | transloco }}</p>
       </div>
 
       <!-- Profil özeti -->
@@ -29,7 +30,7 @@ import { environment } from '../../../environments/environment';
         </div>
         @if (permissions().length) {
           <div class="perm-section">
-            <span class="perm-label">İzinler</span>
+            <span class="perm-label">{{ 'account.permissions' | transloco }}</span>
             <div class="perm-chips">
               @for (p of permissions(); track p) {
                 <span class="perm-chip">{{ p }}</span>
@@ -41,36 +42,36 @@ import { environment } from '../../../environments/environment';
 
       <!-- Şifre değiştir -->
       <div class="card">
-        <h2 class="card-title">Şifre Değiştir</h2>
+        <h2 class="card-title">{{ 'account.changePassword' | transloco }}</h2>
 
         @if (success()) {
-          <div class="alert-success"><i class="pi pi-check-circle"></i> Şifreniz başarıyla değiştirildi.</div>
+          <div class="alert-success"><i class="pi pi-check-circle"></i> {{ 'account.success' | transloco }}</div>
         }
         @if (error()) {
           <div class="alert-error">{{ error() }}</div>
         }
 
         <div class="form-group">
-          <label>Mevcut Şifre <span class="req">*</span></label>
+          <label>{{ 'account.currentPassword' | transloco }} <span class="req">*</span></label>
           <input type="password" autocomplete="current-password" [(ngModel)]="form.current"
             [class.input-error]="submitted() && !form.current" />
-          @if (submitted() && !form.current) { <span class="field-error">Mevcut şifre zorunludur</span> }
+          @if (submitted() && !form.current) { <span class="field-error">{{ 'account.currentRequired' | transloco }}</span> }
         </div>
         <div class="form-group">
-          <label>Yeni Şifre <span class="req">*</span></label>
+          <label>{{ 'account.newPassword' | transloco }} <span class="req">*</span></label>
           <input type="password" autocomplete="new-password" [(ngModel)]="form.next"
             [class.input-error]="submitted() && form.next.length < 8" />
-          @if (submitted() && form.next.length < 8) { <span class="field-error">Yeni şifre en az 8 karakter olmalı</span> }
+          @if (submitted() && form.next.length < 8) { <span class="field-error">{{ 'account.newMinLength' | transloco }}</span> }
         </div>
         <div class="form-group">
-          <label>Yeni Şifre (Tekrar) <span class="req">*</span></label>
+          <label>{{ 'account.confirmPassword' | transloco }} <span class="req">*</span></label>
           <input type="password" autocomplete="new-password" [(ngModel)]="form.confirm"
             [class.input-error]="submitted() && form.confirm !== form.next" />
-          @if (submitted() && form.confirm !== form.next) { <span class="field-error">Şifreler eşleşmiyor</span> }
+          @if (submitted() && form.confirm !== form.next) { <span class="field-error">{{ 'account.passwordsMismatch' | transloco }}</span> }
         </div>
 
         <button class="btn-primary" [disabled]="saving()" (click)="changePassword()">
-          {{ saving() ? 'Kaydediliyor...' : 'Şifreyi Değiştir' }}
+          {{ (saving() ? 'common.saving' : 'account.changeButton') | transloco }}
         </button>
       </div>
     </div>
@@ -107,6 +108,7 @@ export class AccountComponent {
   private http = inject(HttpClient);
   private store = inject(Store);
   private token = inject(TokenService);
+  private transloco = inject(TranslocoService);
 
   user = toSignal(this.store.select(selectCurrentUser));
   permissions = computed(() => this.user()?.permissions ?? []);
@@ -155,7 +157,7 @@ export class AccountComponent {
       },
       error: err => {
         this.saving.set(false);
-        this.error.set(err.error?.detail ?? 'Şifre değiştirilemedi.');
+        this.error.set(err.error?.detail ?? this.transloco.translate('account.changeError'));
       }
     });
   }

@@ -624,5 +624,32 @@
     "credDeleteError": "Could not delete the credential.",
     "credRevealError": "Could not reveal the credential. You may not have permission.",
     "credSaveError": "Could not save the credential."
+  },
+  "account": {
+    "title": "My Account",
+    "subtitle": "Your profile information and password management",
+    "permissions": "Permissions",
+    "changePassword": "Change Password",
+    "success": "Your password has been changed successfully.",
+    "currentPassword": "Current Password",
+    "currentRequired": "Current password is required",
+    "newPassword": "New Password",
+    "newMinLength": "New password must be at least 8 characters",
+    "confirmPassword": "New Password (Confirm)",
+    "passwordsMismatch": "Passwords do not match",
+    "changeButton": "Change Password",
+    "changeError": "Could not change the password."
+  },
+  "search": {
+    "placeholder": "Search customers, products, people or teams...",
+    "searching": "Searching...",
+    "resultCount": "{{count}} results found",
+    "noResults": "No results found for \"{{query}}\".",
+    "prompt": "Type the term you want to search for.",
+    "catCustomer": "Customer",
+    "catProduct": "Product",
+    "catPerson": "Person",
+    "catTeam": "Team",
+    "catArticle": "KB Article"
   }
 }
