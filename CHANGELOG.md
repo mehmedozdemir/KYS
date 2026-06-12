@@ -28,6 +28,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.39.0] — 2026-06-12 (Lokalizasyon Faz 1 — Modül Çevirileri)
+
+### Eklendi
+- **Modül modül TR/EN metin çevirisi** (`TranslocoModule` + dinamik enum anahtarları, label fonksiyonları kaldırıldı):
+  - Dashboard, Müşteriler (liste+detay), Ürünler (liste+detay), Ekipler (liste+detay), Kişiler (liste+detay), Bilgi Bankası (liste+detay+editör)
+  - **Ortam detayı** (`environment-detail`): başlık/breadcrumb, barındırma platformu seçici, kaynak kartları + dinamik şema alanları, endpoint URL kartları, "Kaynak Ekle"/"Endpoint URL"/"Credential Yönetimi" modalları, auth tipi seçenekleri, alan etiketleri (TS `fieldLabel`/`authTypeLabel`), tüm onay/hata mesajları
+- Yeni sözlük namespace'leri: `environments.*` (~90 anahtar); `common`'a paylaşılan terimler
+
+### Notlar
+- Kalan: Hesap/Arama → admin ekranları (~10) → ortak modallar/toast
+
+---
+
 ## [0.38.0] — 2026-06-11 (Lokalizasyon Faz 0 — TR/EN Altyapı)
 
 ### Eklendi

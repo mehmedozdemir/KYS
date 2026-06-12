@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 
 interface CredentialStub {
@@ -118,16 +119,16 @@ interface HostingPlatformOption {
 @Component({
   selector: 'app-environment-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, FormsModule, DatePipe],
+  imports: [RouterLink, NgClass, FormsModule, DatePipe, TranslocoModule],
   template: `
     <div class="page-content">
       @if (loading()) {
-        <div class="loading-state">Yükleniyor...</div>
+        <div class="loading-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!env()) {
-        <div class="loading-state">Ortam bulunamadı. <a routerLink="/customers">← Müşterilere dön</a></div>
+        <div class="loading-state">{{ 'environments.notFound' | transloco }} <a routerLink="/customers">{{ 'environments.backToCustomers' | transloco }}</a></div>
       } @else {
         <div class="breadcrumb">
-          <a routerLink="/customers">Müşteriler</a>
+          <a routerLink="/customers">{{ 'environments.breadcrumbCustomers' | transloco }}</a>
           <span>/</span>
           <a [routerLink]="['/customers', env()!.customerId]">{{ env()!.customerName }}</a>
           <span>/</span>
@@ -153,7 +154,7 @@ interface HostingPlatformOption {
                     <button type="button" class="plat-badge plat-badge--btn"
                       [style.background]="hexAlpha(env()!.hostingPlatformColor, 0.15)"
                       [style.color]="env()!.hostingPlatformColor ?? '#6B7280'"
-                      (click)="togglePlatformMenu($event)" title="Barındırma platformunu değiştir">
+                      (click)="togglePlatformMenu($event)" [title]="'environments.changePlatform' | transloco">
                       <i class="pi" [ngClass]="env()!.hostingPlatformIcon ?? 'pi-server'"></i>
                       {{ env()!.hostingPlatformName }}
                       @if (platformSaving()) { <i class="pi pi-spin pi-spinner"></i> }
@@ -161,7 +162,7 @@ interface HostingPlatformOption {
                     </button>
                   } @else {
                     <button type="button" class="plat-add-btn" (click)="togglePlatformMenu($event)">
-                      <i class="pi pi-cloud"></i> Barındırma platformu seç
+                      <i class="pi pi-cloud"></i> {{ 'environments.selectPlatform' | transloco }}
                       @if (platformSaving()) { <i class="pi pi-spin pi-spinner"></i> }
                     </button>
                   }
@@ -185,14 +186,14 @@ interface HostingPlatformOption {
                       @if (env()!.hostingPlatformId) {
                         <button type="button" class="plat-menu-item plat-menu-clear" (click)="selectPlatform('')">
                           <span class="plat-menu-icon plat-menu-icon--clear"><i class="pi pi-times"></i></span>
-                          <span class="plat-menu-name">Kaldır</span>
+                          <span class="plat-menu-name">{{ 'environments.clearPlatform' | transloco }}</span>
                         </button>
                       }
                     </div>
                   }
                 </div>
                 @if (!env()!.isActive) {
-                  <span class="badge badge--inactive">Pasif</span>
+                  <span class="badge badge--inactive">{{ 'environments.inactive' | transloco }}</span>
                 }
               </div>
               @if (env()!.notes) {
@@ -214,7 +215,7 @@ interface HostingPlatformOption {
                       </span>
                       {{ s.name }}
                       @if (!s.isActive) {
-                        <span class="env-pill-inactive">pasif</span>
+                        <span class="env-pill-inactive">{{ 'environments.inactive' | transloco }}</span>
                       }
                     </button>
                   }
@@ -225,15 +226,15 @@ interface HostingPlatformOption {
           <div class="header-stats">
             <div class="stat">
               <span class="stat-val">{{ env()!.resources.length }}</span>
-              <span class="stat-lbl">Kaynak</span>
+              <span class="stat-lbl">{{ 'environments.statResources' | transloco }}</span>
             </div>
             <div class="stat">
               <span class="stat-val">{{ env()!.endpoints.length }}</span>
-              <span class="stat-lbl">Endpoint</span>
+              <span class="stat-lbl">{{ 'environments.statEndpoints' | transloco }}</span>
             </div>
             <div class="stat">
               <span class="stat-val">{{ totalCredentialCount() }}</span>
-              <span class="stat-lbl">Credential</span>
+              <span class="stat-lbl">{{ 'environments.statCredentials' | transloco }}</span>
             </div>
           </div>
         </div>
@@ -241,17 +242,17 @@ interface HostingPlatformOption {
         <!-- Resources -->
         <div class="section">
           <div class="section-header">
-            <h2 class="section-title">Kaynaklar</h2>
+            <h2 class="section-title">{{ 'environments.resources' | transloco }}</h2>
             @if (env()!.availableTemplates.length) {
               <button type="button" class="btn-add-resource" (click)="openAddResource()">
-                <i class="pi pi-plus"></i> Kaynak Ekle
+                <i class="pi pi-plus"></i> {{ 'environments.addResource' | transloco }}
               </button>
             }
           </div>
           @if (!env()!.resources.length) {
             <div class="empty-card">
               <i class="pi pi-database"></i>
-              <p>Henüz kaynak tanımlanmamış.</p>
+              <p>{{ 'environments.noResources' | transloco }}</p>
             </div>
           } @else {
             <div class="resource-list">
@@ -263,23 +264,23 @@ interface HostingPlatformOption {
                       <span class="resource-name">{{ r.templateName }}</span>
                       <span class="resource-type-label">{{ r.resourceTypeName }}</span>
                       @if (r.isShared) {
-                        <span class="badge badge--shared"><i class="pi pi-share-alt"></i> Paylaşımlı</span>
+                        <span class="badge badge--shared"><i class="pi pi-share-alt"></i> {{ 'environments.shared' | transloco }}</span>
                         @if (r.sharedResourceName) {
                           <span class="shared-name">{{ r.sharedResourceName }}</span>
                         }
                       }
                       @if (!r.isActive) {
-                        <span class="badge badge--inactive">Pasif</span>
+                        <span class="badge badge--inactive">{{ 'environments.inactive' | transloco }}</span>
                       }
                     </div>
                     <div class="resource-actions">
                       @if (r.credentials.length) {
-                        <span class="cred-count">{{ r.credentials.length }} credential</span>
+                        <span class="cred-count">{{ 'environments.credentialCount' | transloco:{ count: r.credentials.length } }}</span>
                       }
                       <button type="button" class="btn-cred" (click)="openCredModal(r)">
-                        <i class="pi pi-key"></i> Credential Yönet
+                        <i class="pi pi-key"></i> {{ 'environments.manageCredential' | transloco }}
                       </button>
-                      <button type="button" class="btn-remove-resource" title="Kaynağı Kaldır"
+                      <button type="button" class="btn-remove-resource" [title]="'environments.removeResourceTitle' | transloco"
                         [disabled]="removingResourceId() === r.id"
                         (click)="removeResource(r)">
                         @if (removingResourceId() === r.id) {
@@ -299,7 +300,7 @@ interface HostingPlatformOption {
                     @let inheritedConn = sharedConnEntries(r);
                     @if (inheritedConn.length || r.sharedCredentials.length) {
                       <div class="inherited-box">
-                        <div class="inherited-title"><i class="pi pi-share-alt"></i> Paylaşılan değerler ({{ r.sharedResourceName }})</div>
+                        <div class="inherited-title"><i class="pi pi-share-alt"></i> {{ 'environments.sharedValues' | transloco:{ name: r.sharedResourceName } }}</div>
                         <div class="cred-kv-grid">
                           @for (entry of inheritedConn; track entry.key) {
                             <div class="cred-kv-item">
@@ -367,12 +368,12 @@ interface HostingPlatformOption {
         <!-- Endpoint URLs -->
         <div class="section">
           <div class="section-header">
-            <h2 class="section-title">Endpoint URL'leri</h2>
+            <h2 class="section-title">{{ 'environments.endpointUrls' | transloco }}</h2>
           </div>
           @if (!env()!.endpoints.length) {
             <div class="empty-card">
               <i class="pi pi-link"></i>
-              <p>Bu ürün için henüz endpoint tanımlanmamış. Endpoint tanımları ürün yönetiminden eklenir.</p>
+              <p>{{ 'environments.noEndpoints' | transloco }}</p>
             </div>
           } @else {
             <div class="endpoint-grid">
@@ -388,7 +389,7 @@ interface HostingPlatformOption {
                     </div>
                     <div class="ep-badges">
                       @if (!ep.isActive) {
-                        <span class="badge badge--inactive">Pasif</span>
+                        <span class="badge badge--inactive">{{ 'environments.inactive' | transloco }}</span>
                       }
                       @if (ep.authTypeName && ep.authTypeName !== 'None') {
                         <span class="badge badge--auth">
@@ -396,22 +397,22 @@ interface HostingPlatformOption {
                         </span>
                       }
                       @if (ep.credentials.length) {
-                        <span class="ep-cred-count">{{ ep.credentials.length }} cred</span>
+                        <span class="ep-cred-count">{{ 'environments.credShort' | transloco:{ count: ep.credentials.length } }}</span>
                       }
                     </div>
                     <div class="ep-actions">
                       @if (ep.id) {
-                        <button type="button" class="btn-ep-auth" (click)="openEpCredModal(ep)" title="Auth Yönet">
+                        <button type="button" class="btn-ep-auth" (click)="openEpCredModal(ep)" [title]="'environments.manageAuth' | transloco">
                           <i class="pi pi-key"></i>
                         </button>
                       }
-                      <button type="button" class="btn-ep-edit" (click)="openEndpointEdit(ep)" title="URL Düzenle">
+                      <button type="button" class="btn-ep-edit" (click)="openEndpointEdit(ep)" [title]="'environments.editUrl' | transloco">
                         <i class="pi pi-pencil"></i>
                       </button>
                       @if (ep.id) {
                         <button type="button" class="btn-ep-delete"
                           [disabled]="deletingEndpointId() === ep.productEndpointId"
-                          (click)="deleteEndpoint(ep)" title="Bu ortamdaki URL kaydını kaldır">
+                          (click)="deleteEndpoint(ep)" [title]="'environments.deleteUrlTitle' | transloco">
                           @if (deletingEndpointId() === ep.productEndpointId) {
                             <i class="pi pi-spin pi-spinner"></i>
                           } @else {
@@ -428,7 +429,7 @@ interface HostingPlatformOption {
                         <a [href]="ep.baseUrl" target="_blank" class="url-link" title="{{ ep.baseUrl }}">
                           {{ ep.baseUrl }}<i class="pi pi-external-link"></i>
                         </a>
-                        <button type="button" class="copy-btn" (click)="copy(ep.baseUrl)" title="Kopyala">
+                        <button type="button" class="copy-btn" (click)="copy(ep.baseUrl)" [title]="'common.copy' | transloco">
                           <i class="pi pi-copy"></i>
                         </button>
                       </div>
@@ -438,7 +439,7 @@ interface HostingPlatformOption {
                           <a [href]="ep.swaggerUrl" target="_blank" class="url-link">
                             {{ ep.swaggerUrl }}<i class="pi pi-external-link"></i>
                           </a>
-                          <button type="button" class="copy-btn" (click)="copy(ep.swaggerUrl!)" title="Kopyala">
+                          <button type="button" class="copy-btn" (click)="copy(ep.swaggerUrl!)" [title]="'common.copy' | transloco">
                             <i class="pi pi-copy"></i>
                           </button>
                         </div>
@@ -454,8 +455,8 @@ interface HostingPlatformOption {
                     </div>
                   } @else {
                     <div class="ep-no-url-hint">
-                      <i class="pi pi-info-circle"></i> URL henüz girilmemiş
-                      <button type="button" class="btn-set-url" (click)="openEndpointEdit(ep)">URL Belirle</button>
+                      <i class="pi pi-info-circle"></i> {{ 'environments.urlNotSet' | transloco }}
+                      <button type="button" class="btn-set-url" (click)="openEndpointEdit(ep)">{{ 'environments.setUrl' | transloco }}</button>
                     </div>
                   }
                 </div>
@@ -471,7 +472,7 @@ interface HostingPlatformOption {
       <div class="modal-backdrop" (click)="closeAddResource()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Kaynak Ekle</h2>
+            <h2>{{ 'environments.addResource' | transloco }}</h2>
             <button type="button" class="modal-close" (click)="closeAddResource()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -479,24 +480,24 @@ interface HostingPlatformOption {
               <div class="alert-error">{{ addResourceError() }}</div>
             }
             <div class="form-group">
-              <label>Kaynak Şablonu <span class="required">*</span></label>
+              <label>{{ 'environments.resourceTemplate' | transloco }} <span class="required">*</span></label>
               <select [(ngModel)]="addResourceForm.templateId"
                 (ngModelChange)="onTemplateChange($event)"
                 [class.input-error]="addResourceSubmitted() && !addResourceForm.templateId">
-                <option value="">Şablon seçin</option>
+                <option value="">{{ 'environments.selectTemplate' | transloco }}</option>
                 @for (t of env()!.availableTemplates; track t.id) {
                   <option [value]="t.id">{{ t.name }} ({{ t.resourceTypeName }})</option>
                 }
               </select>
               @if (addResourceSubmitted() && !addResourceForm.templateId) {
-                <span class="error-msg">Şablon seçimi zorunludur</span>
+                <span class="error-msg">{{ 'environments.templateRequired' | transloco }}</span>
               }
             </div>
             @if (templateBoundShared()) {
               <!-- Şablon belirli bir paylaşımlı kaynağa bağlı — otomatik kullanılır -->
               <div class="shared-bound-note">
                 <i class="pi pi-share-alt"></i>
-                Bu şablon <strong>{{ selectedTemplate()?.sharedResourceName }}</strong> paylaşımlı kaynağına bağlı. Bilgiler otomatik kullanılır.
+                <span [innerHTML]="'environments.templateBoundNote' | transloco:{ name: selectedTemplate()?.sharedResourceName }"></span>
               </div>
 
               <!-- Paylaşımlı kaynaktan kalıtılan bilgiler (salt okunur) -->
@@ -505,8 +506,8 @@ interface HostingPlatformOption {
                   <div class="cred-fields-section cred-fields-section--readonly">
                     <div class="cred-fields-title">
                       <i class="pi pi-lock"></i>
-                      Paylaşılan Bilgiler (otomatik)
-                      <span class="cred-fields-hint">{{ sr.name }} üzerinden</span>
+                      {{ 'environments.sharedInfoAuto' | transloco }}
+                      <span class="cred-fields-hint">{{ 'environments.viaResource' | transloco:{ name: sr.name } }}</span>
                     </div>
                     @for (key of sharedFieldKeys(); track key) {
                       @let def = sr.fieldSchema[key];
@@ -524,9 +525,9 @@ interface HostingPlatformOption {
                         <label>
                           {{ def?.label ?? key }}
                           <code class="field-key-badge">{{ key }}</code>
-                          <span class="secret-tag"><i class="pi pi-lock"></i> şifreli</span>
+                          <span class="secret-tag"><i class="pi pi-lock"></i> {{ 'environments.encrypted' | transloco }}</span>
                         </label>
-                        <input type="text" value="•••••••• (paylaşılan şifre)" readonly class="input-readonly" />
+                        <input type="text" [value]="'environments.sharedPasswordPlaceholder' | transloco" readonly class="input-readonly" />
                       </div>
                     }
                   </div>
@@ -534,7 +535,7 @@ interface HostingPlatformOption {
                 <div class="form-group">
                   <label class="checkbox-label-inline">
                     <input type="checkbox" [(ngModel)]="addResourceForm.override" />
-                    Bu ortam için bazı bilgileri override et
+                    {{ 'environments.overrideToggle' | transloco }}
                   </label>
                 </div>
               }
@@ -542,22 +543,22 @@ interface HostingPlatformOption {
               <div class="form-group">
                 <label class="checkbox-label-inline">
                   <input type="checkbox" [(ngModel)]="addResourceForm.isShared" (ngModelChange)="onSharedChange()" />
-                  Paylaşımlı kaynak kullan
+                  {{ 'environments.useSharedResource' | transloco }}
                 </label>
               </div>
               @if (addResourceForm.isShared) {
                 <div class="form-group">
-                  <label>Paylaşımlı Kaynak <span class="required">*</span></label>
+                  <label>{{ 'environments.sharedResource' | transloco }} <span class="required">*</span></label>
                   <select [(ngModel)]="addResourceForm.sharedResourceId"
                     (ngModelChange)="onSharedResourceSelect($event)"
                     [class.input-error]="addResourceSubmitted() && addResourceForm.isShared && !addResourceForm.sharedResourceId">
-                    <option value="">Seçin</option>
+                    <option value="">{{ 'common.select' | transloco }}</option>
                     @for (sr of sharedResources(); track sr.id) {
                       <option [value]="sr.id">{{ sr.name }} ({{ sr.resourceTypeName }})</option>
                     }
                   </select>
                   @if (addResourceSubmitted() && addResourceForm.isShared && !addResourceForm.sharedResourceId) {
-                    <span class="error-msg">Paylaşımlı kaynak seçimi zorunludur</span>
+                    <span class="error-msg">{{ 'environments.sharedResourceRequired' | transloco }}</span>
                   }
                 </div>
 
@@ -567,8 +568,8 @@ interface HostingPlatformOption {
                     <div class="cred-fields-section cred-fields-section--readonly">
                       <div class="cred-fields-title">
                         <i class="pi pi-lock"></i>
-                        Paylaşılan Bilgiler (otomatik)
-                        <span class="cred-fields-hint">{{ sr.name }} üzerinden</span>
+                        {{ 'environments.sharedInfoAuto' | transloco }}
+                        <span class="cred-fields-hint">{{ 'environments.viaResource' | transloco:{ name: sr.name } }}</span>
                       </div>
                       @for (key of sharedFieldKeys(); track key) {
                         @let def = sr.fieldSchema[key];
@@ -586,9 +587,9 @@ interface HostingPlatformOption {
                           <label>
                             {{ def?.label ?? key }}
                             <code class="field-key-badge">{{ key }}</code>
-                            <span class="secret-tag"><i class="pi pi-lock"></i> şifreli</span>
+                            <span class="secret-tag"><i class="pi pi-lock"></i> {{ 'environments.encrypted' | transloco }}</span>
                           </label>
-                          <input type="text" value="•••••••• (paylaşılan şifre)" readonly class="input-readonly" />
+                          <input type="text" [value]="'environments.sharedPasswordPlaceholder' | transloco" readonly class="input-readonly" />
                         </div>
                       }
                     </div>
@@ -598,15 +599,15 @@ interface HostingPlatformOption {
                   <div class="form-group">
                     <label class="checkbox-label-inline">
                       <input type="checkbox" [(ngModel)]="addResourceForm.override" />
-                      Bu ortam için bazı bilgileri override et
+                      {{ 'environments.overrideToggle' | transloco }}
                     </label>
                   </div>
                 }
               }
             }
             <div class="form-group">
-              <label>Notlar</label>
-              <input type="text" [(ngModel)]="addResourceForm.notes" placeholder="İsteğe bağlı..." />
+              <label>{{ 'environments.notes' | transloco }}</label>
+              <input type="text" [(ngModel)]="addResourceForm.notes" [placeholder]="'environments.notesPlaceholder' | transloco" />
             </div>
 
             <!-- Dinamik credential alanları -->
@@ -621,11 +622,11 @@ interface HostingPlatformOption {
                   <div class="cred-fields-title">
                     <i class="pi pi-key"></i>
                     @if (useShared) {
-                      Ortama Özgü Bilgiler
+                      {{ 'environments.envSpecificInfo' | transloco }}
                     } @else {
-                      Bağlantı Bilgileri
+                      {{ 'environments.connectionInfo' | transloco }}
                     }
-                    <span class="cred-fields-hint">(kaynak tipi: {{ tpl.resourceTypeName }})</span>
+                    <span class="cred-fields-hint">{{ 'environments.resourceTypeHint' | transloco:{ name: tpl.resourceTypeName } }}</span>
                   </div>
                   @for (key of fieldKeys; track key) {
                     @let def = tpl.fieldSchema[key];
@@ -639,17 +640,17 @@ interface HostingPlatformOption {
                         <input type="password" autocomplete="new-password"
                           [value]="addResourceCreds[key] ?? ''"
                           (input)="addResourceCreds[key] = $any($event.target).value"
-                          [placeholder]="def.required ? 'Zorunlu alan' : 'İsteğe bağlı'" />
+                          [placeholder]="def.required ? ('environments.requiredFieldPlaceholder' | transloco) : ('environments.optionalPlaceholder' | transloco)" />
                       } @else if (def.type === 'number') {
                         <input type="number"
                           [value]="addResourceCreds[key] ?? ''"
                           (input)="addResourceCreds[key] = $any($event.target).value"
-                          [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : ''" />
+                          [placeholder]="def['default'] != null ? ('environments.defaultPlaceholder' | transloco:{ value: def['default'] }) : ''" />
                       } @else {
                         <input type="text"
                           [value]="addResourceCreds[key] ?? ''"
                           (input)="addResourceCreds[key] = $any($event.target).value"
-                          [placeholder]="def['default'] != null ? ('Varsayılan: ' + def['default']) : (def.required ? 'Zorunlu alan' : 'İsteğe bağlı')" />
+                          [placeholder]="def['default'] != null ? ('environments.defaultPlaceholder' | transloco:{ value: def['default'] }) : (def.required ? ('environments.requiredFieldPlaceholder' | transloco) : ('environments.optionalPlaceholder' | transloco))" />
                       }
                     </div>
                   }
@@ -658,9 +659,9 @@ interface HostingPlatformOption {
             }
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeAddResource()">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="closeAddResource()">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="addResourceSaving()" (click)="saveResource()">
-              @if (addResourceSaving()) { <i class="pi pi-spin pi-spinner"></i> Ekleniyor... } @else { Ekle }
+              @if (addResourceSaving()) { <i class="pi pi-spin pi-spinner"></i> {{ 'common.adding' | transloco }} } @else { {{ 'common.add' | transloco }} }
             </button>
           </div>
         </div>
@@ -673,7 +674,7 @@ interface HostingPlatformOption {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <div>
-              <h2>{{ editingEp()!.baseUrl ? 'Endpoint URL Düzenle' : 'Endpoint URL Belirle' }}</h2>
+              <h2>{{ (editingEp()!.baseUrl ? 'environments.editEndpointUrl' : 'environments.setEndpointUrl') | transloco }}</h2>
               <p class="modal-subtitle">{{ editingEp()!.endpointName }} · {{ editingEp()!.endpointType }}</p>
             </div>
             <button type="button" class="modal-close" (click)="closeEpModal()"><i class="pi pi-times"></i></button>
@@ -687,7 +688,7 @@ interface HostingPlatformOption {
               <input type="url" [(ngModel)]="epForm.baseUrl" placeholder="https://api.example.com"
                 [class.input-error]="epSubmitted() && !epForm.baseUrl.trim()" />
               @if (epSubmitted() && !epForm.baseUrl.trim()) {
-                <span class="error-msg">Base URL zorunludur</span>
+                <span class="error-msg">{{ 'environments.baseUrlRequired' | transloco }}</span>
               }
             </div>
             <div class="form-group">
@@ -699,20 +700,20 @@ interface HostingPlatformOption {
               <input type="url" [(ngModel)]="epForm.healthCheckUrl" placeholder="https://api.example.com/health" />
             </div>
             <div class="form-group">
-              <label>Auth Tipi</label>
+              <label>{{ 'environments.authType' | transloco }}</label>
               <select [(ngModel)]="epForm.authType">
-                <option value="None">Yok</option>
-                <option value="BasicAuth">Basic Auth (kullanıcı adı + şifre)</option>
+                <option value="None">{{ 'environments.authNone' | transloco }}</option>
+                <option value="BasicAuth">{{ 'environments.authBasic' | transloco }}</option>
                 <option value="BearerToken">Bearer Token</option>
                 <option value="ApiKey">API Key</option>
-                <option value="OAuth2">OAuth2 (client credentials)</option>
+                <option value="OAuth2">{{ 'environments.authOAuth2' | transloco }}</option>
               </select>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeEpModal()">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="closeEpModal()">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="epSaving()" (click)="saveEndpointUrl()">
-              @if (epSaving()) { Kaydediliyor... } @else { Kaydet }
+              @if (epSaving()) { {{ 'common.saving' | transloco }} } @else { {{ 'common.save' | transloco }} }
             </button>
           </div>
         </div>
@@ -725,7 +726,7 @@ interface HostingPlatformOption {
         <div class="modal modal--wide" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <div>
-              <h2>{{ credEndpoint() ? 'Auth Credential Yönetimi' : 'Credential Yönetimi' }}</h2>
+              <h2>{{ (credEndpoint() ? 'environments.authCredMgmt' : 'environments.credMgmt') | transloco }}</h2>
               <p class="modal-subtitle">
                 {{ credResource() ? (credResource()!.templateName + ' · ' + credResource()!.resourceTypeName)
                                   : (credEndpoint()!.endpointName + ' · ' + authTypeLabel(credEndpoint()!.authTypeName)) }}
@@ -737,7 +738,7 @@ interface HostingPlatformOption {
 
             <!-- Mevcut Credential'lar -->
             @if (activeCredentials().length) {
-              <div class="cred-section-title">Kayıtlı Credential'lar</div>
+              <div class="cred-section-title">{{ 'environments.savedCredentials' | transloco }}</div>
               <div class="cred-table">
                 @for (c of activeCredentials(); track c.id) {
                   <div class="cred-row">
@@ -749,13 +750,13 @@ interface HostingPlatformOption {
                     <div class="cred-value-cell">
                       @if (revealedValues()[c.id]; as val) {
                         <span class="cred-revealed">{{ val }}</span>
-                        <button type="button" class="copy-btn" (click)="copy(val)" title="Kopyala"><i class="pi pi-copy"></i></button>
-                        <button type="button" class="btn-hide" (click)="hideValue(c.id)"><i class="pi pi-eye-slash"></i> Gizle</button>
+                        <button type="button" class="copy-btn" (click)="copy(val)" [title]="'common.copy' | transloco"><i class="pi pi-copy"></i></button>
+                        <button type="button" class="btn-hide" (click)="hideValue(c.id)"><i class="pi pi-eye-slash"></i> {{ 'environments.hide' | transloco }}</button>
                       } @else {
                         <span class="cred-masked-lg">••••••••</span>
                         <button type="button" class="btn-reveal" [disabled]="revealLoading()[c.id]" (click)="reveal(c.id)">
                           @if (revealLoading()[c.id]) { <i class="pi pi-spin pi-spinner"></i> }
-                          @else { <i class="pi pi-eye"></i> Göster }
+                          @else { <i class="pi pi-eye"></i> {{ 'environments.reveal' | transloco }} }
                         </button>
                       }
                     </div>
@@ -763,10 +764,10 @@ interface HostingPlatformOption {
                       @if (c.lastRotatedAt) {
                         <span class="cred-rotated">{{ c.lastRotatedAt | date:'dd.MM.yyyy HH:mm' }}</span>
                       }
-                      <button type="button" class="btn-edit-cred" (click)="startEdit(c)" title="Güncelle">
+                      <button type="button" class="btn-edit-cred" (click)="startEdit(c)" [title]="'common.update' | transloco">
                         <i class="pi pi-pencil"></i>
                       </button>
-                      <button type="button" class="btn-del-cred" (click)="deleteCredential(c.id)" title="Sil"
+                      <button type="button" class="btn-del-cred" (click)="deleteCredential(c.id)" [title]="'common.delete' | transloco"
                         [disabled]="deletingCredId() === c.id">
                         @if (deletingCredId() === c.id) { <i class="pi pi-spin pi-spinner"></i> }
                         @else { <i class="pi pi-trash"></i> }
@@ -776,14 +777,14 @@ interface HostingPlatformOption {
                 }
               </div>
             } @else {
-              <p class="empty-creds">{{ credEndpoint() ? 'Bu endpoint için henüz auth credential tanımlanmamış.' : 'Bu kaynak için henüz credential tanımlanmamış.' }}</p>
+              <p class="empty-creds">{{ (credEndpoint() ? 'environments.noAuthCreds' : 'environments.noResourceCreds') | transloco }}</p>
             }
 
             <!-- FieldSchema'dan gelen tanımsız alanlar için hızlı ekleme -->
             @if (undefinedSchemaFields().length && !editingCredKey) {
               <div class="schema-hint">
                 <i class="pi pi-info-circle"></i>
-                Eksik alanlar:
+                {{ 'environments.missingFields' | transloco }}
                 @for (fk of undefinedSchemaFields(); track fk) {
                   <button type="button" class="schema-field-chip" (click)="prefillField(fk)">
                     + {{ fieldLabel(fk) }}
@@ -794,42 +795,42 @@ interface HostingPlatformOption {
 
             <!-- Yeni / Güncelleme Formu -->
             <div class="cred-form-divider">
-              <span>{{ editingCredKey ? (fieldLabel(editingCredKey) + ' güncelle') : 'Credential Ekle' }}</span>
+              <span>{{ editingCredKey ? ('environments.updateField' | transloco:{ field: fieldLabel(editingCredKey) }) : ('environments.addCredential' | transloco) }}</span>
               @if (editingCredKey) {
-                <button type="button" class="btn-cancel-edit" (click)="cancelEdit()">İptal</button>
+                <button type="button" class="btn-cancel-edit" (click)="cancelEdit()">{{ 'common.cancel' | transloco }}</button>
               }
             </div>
             <div class="cred-form">
               <div class="form-group">
-                <label>Alan Adı <span class="required">*</span></label>
+                <label>{{ 'environments.fieldName' | transloco }} <span class="required">*</span></label>
                 @if (schemaKeys().length && !editingCredKey) {
                   <select [(ngModel)]="credForm.fieldKey"
                     [class.input-error]="credSubmitted() && !credForm.fieldKey.trim()">
-                    <option value="">Alan seçin</option>
+                    <option value="">{{ 'environments.selectField' | transloco }}</option>
                     @for (fk of schemaKeys(); track fk) {
                       <option [value]="fk">{{ fieldLabel(fk) }} ({{ fk }})</option>
                     }
-                    <option value="__custom__">Özel alan...</option>
+                    <option value="__custom__">{{ 'environments.customField' | transloco }}</option>
                   </select>
                 } @else {
                   <input type="text" [(ngModel)]="credForm.fieldKey"
-                    placeholder="ör. password, connectionString, apiKey"
+                    [placeholder]="'environments.fieldKeyPlaceholder' | transloco"
                     [disabled]="!!editingCredKey"
                     [class.input-error]="credSubmitted() && !credForm.fieldKey.trim()" />
                 }
                 @if (credSubmitted() && !credForm.fieldKey.trim()) {
-                  <span class="error-msg">Alan adı zorunludur</span>
+                  <span class="error-msg">{{ 'environments.fieldNameRequired' | transloco }}</span>
                 }
                 @if (credForm.fieldKey === '__custom__') {
-                  <input type="text" [(ngModel)]="credForm.customFieldKey" placeholder="Alan adını girin"
+                  <input type="text" [(ngModel)]="credForm.customFieldKey" [placeholder]="'environments.enterFieldName' | transloco"
                     style="margin-top:0.375rem" />
                 }
               </div>
               <div class="form-group">
-                <label>Değer <span class="required">*</span></label>
+                <label>{{ 'environments.value' | transloco }} <span class="required">*</span></label>
                 <div class="password-input-wrap">
                   <input [type]="isValueHidden() ? 'password' : 'text'" [(ngModel)]="credForm.value"
-                    placeholder="Değer giriniz"
+                    [placeholder]="'environments.enterValue' | transloco"
                     [class.input-error]="credSubmitted() && !credForm.value.trim()" />
                   @if (isSecretField(activeFieldKey())) {
                     <button type="button" class="pw-toggle" (click)="showNewValue = !showNewValue">
@@ -838,15 +839,15 @@ interface HostingPlatformOption {
                   }
                 </div>
                 @if (credSubmitted() && !credForm.value.trim()) {
-                  <span class="error-msg">Değer zorunludur</span>
+                  <span class="error-msg">{{ 'environments.valueRequired' | transloco }}</span>
                 }
               </div>
               @if (credError()) {
                 <div class="alert-error">{{ credError() }}</div>
               }
               <button type="button" class="btn-save-cred" [disabled]="credSaving()" (click)="saveCredential()">
-                @if (credSaving()) { <i class="pi pi-spin pi-spinner"></i> Kaydediliyor... }
-                @else { <i class="pi pi-check"></i> {{ editingCredKey ? 'Güncelle' : 'Ekle' }} }
+                @if (credSaving()) { <i class="pi pi-spin pi-spinner"></i> {{ 'common.saving' | transloco }} }
+                @else { <i class="pi pi-check"></i> {{ (editingCredKey ? 'common.update' : 'common.add') | transloco }} }
               </button>
             </div>
 
@@ -1012,6 +1013,7 @@ export class EnvironmentDetailComponent implements OnInit {
   private http = inject(HttpClient);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private transloco = inject(TranslocoService);
 
   env = signal<EnvironmentDetail | null>(null);
   loading = signal(true);
@@ -1241,7 +1243,7 @@ export class EnvironmentDetailComponent implements OnInit {
       },
       error: err => {
         this.addResourceSaving.set(false);
-        this.addResourceError.set(err.error?.detail ?? 'Kaynak eklenemedi.');
+        this.addResourceError.set(err.error?.detail ?? this.transloco.translate('environments.resourceAddError'));
       }
     });
   }
@@ -1249,7 +1251,7 @@ export class EnvironmentDetailComponent implements OnInit {
   removingResourceId = signal<string | null>(null);
 
   removeResource(r: EnvironmentResource) {
-    if (!confirm(`"${r.templateName}" kaynağını ortamdan kaldırmak istediğinizden emin misiniz?`)) return;
+    if (!confirm(this.transloco.translate('environments.removeResourceConfirm', { name: r.templateName }))) return;
     this.removingResourceId.set(r.id);
     const envId = this.env()!.id;
     this.http.delete(`${environment.apiUrl}/environments/${envId}/resources/${r.id}`).subscribe({
@@ -1272,7 +1274,7 @@ export class EnvironmentDetailComponent implements OnInit {
   deletingEndpointId = signal<string | null>(null);
 
   deleteEndpoint(ep: EndpointUrl) {
-    if (!confirm(`"${ep.endpointName}" için bu ortamdaki URL kaydını kaldırmak istediğinizden emin misiniz?\n\nEndpoint tanımı ürün üzerinde kalır; sadece bu ortamın URL bilgisi silinir.`)) return;
+    if (!confirm(this.transloco.translate('environments.deleteEndpointConfirm', { name: ep.endpointName }))) return;
     this.deletingEndpointId.set(ep.productEndpointId);
     const envId = this.env()!.id;
     this.http.delete(`${environment.apiUrl}/environments/${envId}/endpoints/${ep.productEndpointId}`).subscribe({
@@ -1326,7 +1328,7 @@ export class EnvironmentDetailComponent implements OnInit {
       },
       error: err => {
         this.epSaving.set(false);
-        this.epSaveError.set(err.error?.detail ?? 'URL kaydedilemedi.');
+        this.epSaveError.set(err.error?.detail ?? this.transloco.translate('environments.urlSaveError'));
       }
     });
   }
@@ -1334,9 +1336,9 @@ export class EnvironmentDetailComponent implements OnInit {
   authTypeLabel(name: string | null): string {
     const labels: Record<string, string> = {
       BasicAuth: 'Basic Auth', BearerToken: 'Bearer Token',
-      ApiKey: 'API Key', OAuth2: 'OAuth2', None: 'Auth Yok'
+      ApiKey: 'API Key', OAuth2: 'OAuth2', None: this.transloco.translate('environments.authNoneLabel')
     };
-    return name ? (labels[name] ?? name) : 'Auth Yok';
+    return name ? (labels[name] ?? name) : this.transloco.translate('environments.authNoneLabel');
   }
 
   // Credential modal state
@@ -1441,15 +1443,15 @@ export class EnvironmentDetailComponent implements OnInit {
     const schema = this.credResource()?.fieldSchema;
     if (schema?.[fieldKey]?.label) return schema[fieldKey].label;
     const commonLabels: Record<string, string> = {
-      username: 'Kullanıcı Adı',
-      password: 'Şifre',
-      token: 'Token (statik)',
-      tokenUrl: 'Token URL',
-      apiKey: 'API Anahtarı',
-      apiKeyHeader: 'API Key Header Adı',
+      username: this.transloco.translate('environments.fieldUsername'),
+      password: this.transloco.translate('environments.fieldPassword'),
+      token: this.transloco.translate('environments.fieldToken'),
+      tokenUrl: this.transloco.translate('environments.fieldTokenUrl'),
+      apiKey: this.transloco.translate('environments.fieldApiKey'),
+      apiKeyHeader: this.transloco.translate('environments.fieldApiKeyHeader'),
       clientId: 'Client ID',
       clientSecret: 'Client Secret',
-      scope: 'Scope',
+      scope: this.transloco.translate('environments.fieldScope'),
     };
     return commonLabels[fieldKey] ?? fieldKey;
   }
@@ -1484,7 +1486,7 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   deleteCredential(credId: string) {
-    if (!confirm('Bu credential silinecek. Emin misiniz?')) return;
+    if (!confirm(this.transloco.translate('environments.deleteCredConfirm'))) return;
     this.deletingCredId.set(credId);
     const resourceId = this.credResource()?.id ?? null;
     const endpointId = this.credEndpoint()?.id ?? null;
@@ -1503,7 +1505,7 @@ export class EnvironmentDetailComponent implements OnInit {
       },
       error: () => {
         this.deletingCredId.set(null);
-        this.credError.set('Credential silinemedi.');
+        this.credError.set(this.transloco.translate('environments.credDeleteError'));
       }
     });
   }
@@ -1525,7 +1527,7 @@ export class EnvironmentDetailComponent implements OnInit {
       },
       error: () => {
         this.revealLoading.update(m => ({ ...m, [credId]: false }));
-        this.credError.set('Credential gösterilemedi. Yetkiniz olmayabilir.');
+        this.credError.set(this.transloco.translate('environments.credRevealError'));
       }
     });
   }
@@ -1588,7 +1590,7 @@ export class EnvironmentDetailComponent implements OnInit {
       },
       error: err => {
         this.credSaving.set(false);
-        this.credError.set(err.error?.detail ?? 'Credential kaydedilemedi.');
+        this.credError.set(err.error?.detail ?? this.transloco.translate('environments.credSaveError'));
       }
     });
   }
