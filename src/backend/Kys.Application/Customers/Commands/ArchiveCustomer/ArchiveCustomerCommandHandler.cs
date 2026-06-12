@@ -15,7 +15,7 @@ public sealed class ArchiveCustomerCommandHandler(
             ?? throw new NotFoundException(nameof(Domain.Entities.Customer), request.Id);
 
         if (customer.IsArchived)
-            throw new DomainException("Müşteri zaten arşivlenmiş.");
+            throw new DomainException("err.customer.alreadyArchived");
 
         customer.Archive();
         customerRepository.Update(customer);

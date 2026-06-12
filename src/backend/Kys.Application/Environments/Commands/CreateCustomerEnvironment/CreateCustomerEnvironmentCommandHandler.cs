@@ -1,6 +1,7 @@
 using Kys.Domain.Entities;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
+using Kys.Domain.Interfaces.Services;
 using MediatR;
 
 namespace Kys.Application.Environments.Commands.CreateCustomerEnvironment;
@@ -8,18 +9,19 @@ namespace Kys.Application.Environments.Commands.CreateCustomerEnvironment;
 public sealed class CreateCustomerEnvironmentCommandHandler(
     IEnvironmentRepository envRepository,
     ICustomerRepository customerRepository,
-    IUnitOfWork unitOfWork) : IRequestHandler<CreateCustomerEnvironmentCommand, Guid>
+    IUnitOfWork unitOfWork,
+    ILocalizer localizer) : IRequestHandler<CreateCustomerEnvironmentCommand, Guid>
 {
     public async Task<Guid> Handle(CreateCustomerEnvironmentCommand request, CancellationToken ct)
     {
         var customerProduct = await customerRepository.GetCustomerProductByIdAsync(request.CustomerProductId, ct)
-            ?? throw new DomainException($"CustomerProduct {request.CustomerProductId} not found.");
+            ?? throw new NotFoundException("CustomerProduct", request.CustomerProductId);
 
         var envType = await envRepository.GetEnvironmentTypeByIdAsync(request.EnvironmentTypeId, ct)
-            ?? throw new DomainException($"EnvironmentType {request.EnvironmentTypeId} not found.");
+            ?? throw new NotFoundException(nameof(Domain.Entities.EnvironmentType), request.EnvironmentTypeId);
 
         if (!envType.IsActive)
-            throw new DomainException($"EnvironmentType '{envType.Name}' is not active.");
+            throw new DomainException(localizer.Get("err.environmentType.notActive", envType.Name));
 
         var environment = new CustomerEnvironment
         {

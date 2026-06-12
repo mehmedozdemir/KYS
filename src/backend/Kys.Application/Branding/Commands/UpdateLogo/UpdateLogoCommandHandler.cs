@@ -17,9 +17,9 @@ public sealed class UpdateLogoCommandHandler(
         if (request.Bytes is { Length: > 0 } bytes)
         {
             if (bytes.Length > 2 * 1024 * 1024)
-                throw new DomainException("Logo en fazla 2 MB olabilir.");
+                throw new DomainException("err.branding.logoTooLarge");
             if (request.ContentType is null || !Allowed.Contains(request.ContentType))
-                throw new DomainException("Desteklenmeyen dosya türü. PNG, JPEG, SVG, WEBP veya GIF yükleyin.");
+                throw new DomainException("err.branding.unsupportedFileType");
 
             p.LogoBytes = bytes;
             p.LogoContentType = request.ContentType;

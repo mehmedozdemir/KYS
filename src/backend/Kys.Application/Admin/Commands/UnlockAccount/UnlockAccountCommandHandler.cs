@@ -16,7 +16,7 @@ public sealed class UnlockAccountCommandHandler(
             ?? throw new NotFoundException(nameof(Person), request.PersonId);
 
         if (!person.IsLocked)
-            throw new DomainException("Account is not locked.");
+            throw new DomainException("err.account.notLocked");
 
         person.IsLocked = false;
         person.FailedLoginCount = 0;

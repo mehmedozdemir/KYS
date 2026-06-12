@@ -23,7 +23,7 @@ public sealed class AddProductToCustomerCommandHandler(
         var existing = await customerRepository.GetCustomerProductAsync(
             request.CustomerId, request.ProductId, cancellationToken);
         if (existing is not null)
-            throw new DomainException("Ürün bu müşteriye zaten eklenmiş.");
+            throw new DomainException("err.customer.productAlreadyAdded");
 
         var customerProduct = new CustomerProduct
         {

@@ -16,16 +16,16 @@ public sealed class RefreshTokenCommandHandler(
     public async Task<RefreshTokenResult> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
         var person = await personRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken)
-            ?? throw new UnauthorizedException("Invalid refresh token.");
+            ?? throw new UnauthorizedException("err.auth.invalidRefreshToken");
 
         if (!person.IsPlatformUser)
-            throw new UnauthorizedException("Account does not have platform access.");
+            throw new UnauthorizedException("err.auth.noPlatformAccess");
 
         if (person.IsLocked)
-            throw new ForbiddenException("Account is locked. Contact an administrator.");
+            throw new ForbiddenException("err.auth.accountLocked");
 
         if (person.RefreshTokenExpiresAt is null || person.RefreshTokenExpiresAt < DateTime.UtcNow)
-            throw new UnauthorizedException("Refresh token has expired.");
+            throw new UnauthorizedException("err.auth.refreshExpired");
 
         var permissions = person.SystemRoles
             .SelectMany(psr => psr.SystemRole.Permissions)

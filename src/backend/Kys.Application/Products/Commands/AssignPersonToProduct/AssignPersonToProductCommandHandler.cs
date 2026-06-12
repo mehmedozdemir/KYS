@@ -21,7 +21,7 @@ public sealed class AssignPersonToProductCommandHandler(
 
         var existing = await productRepository.GetPersonAssignmentAsync(request.ProductId, request.PersonId, cancellationToken);
         if (existing is not null)
-            throw new DomainException("Person already has an active assignment on this product.");
+            throw new DomainException("err.product.personAlreadyAssigned");
 
         var assignment = new ProductAssignment
         {

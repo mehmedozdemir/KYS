@@ -20,10 +20,10 @@ public sealed class MakePlatformUserCommandHandler(
             ?? throw new NotFoundException(nameof(Person), request.PersonId);
 
         if (person.IsPlatformUser)
-            throw new DomainException("Bu kişi zaten platform kullanıcısı.");
+            throw new DomainException("err.person.alreadyPlatformUser");
 
         if (string.IsNullOrWhiteSpace(person.Email))
-            throw new DomainException("Platform kullanıcısı için kişinin e-posta adresi olmalıdır.");
+            throw new DomainException("err.person.emailRequiredForPlatform");
 
         person.IsPlatformUser = true;
         person.Username = person.Email;

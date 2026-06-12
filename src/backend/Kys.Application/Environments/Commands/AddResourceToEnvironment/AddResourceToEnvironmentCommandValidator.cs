@@ -12,6 +12,6 @@ public sealed class AddResourceToEnvironmentCommandValidator : AbstractValidator
         RuleFor(x => x.SharedResourceId)
             .NotEmpty()
             .When(x => x.IsShared)
-            .WithMessage("SharedResourceId is required when IsShared is true.");
+            .WithMessage("val.resource.sharedRequired");
     }
 }

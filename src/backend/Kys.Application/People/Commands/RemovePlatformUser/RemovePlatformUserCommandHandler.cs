@@ -15,7 +15,7 @@ public sealed class RemovePlatformUserCommandHandler(
             ?? throw new NotFoundException(nameof(Person), request.PersonId);
 
         if (!person.IsPlatformUser)
-            throw new DomainException("Bu kişi zaten platform kullanıcısı değil.");
+            throw new DomainException("err.person.notPlatformUserAlready");
 
         person.IsPlatformUser = false;
         person.Username = null;

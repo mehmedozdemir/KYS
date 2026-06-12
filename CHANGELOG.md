@@ -28,6 +28,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
 
 ---
 
+## [0.40.0] — 2026-06-12 (Lokalizasyon Faz 2 — Backend Mesajları TR/EN)
+
+### Eklendi
+- **Backend mesaj lokalizasyonu (JSON sözlük + hafif localizer)**:
+  - `ILocalizer` (Domain.Interfaces.Services) + `JsonLocalizer` (Infrastructure) — `Localization/Resources/backend.{tr,en}.json`'dan `CultureInfo.CurrentUICulture`'a göre çözer; bilinmeyen anahtar literal olarak döner (fallback)
+  - `UseRequestLocalization` (tr varsayılan, en) — dil `Accept-Language` başlığından belirlenir
+  - **Anahtar merkezli çözümleme**: handler/validator mesajları `err.*` / `val.*` anahtarları taşır; `GlobalExceptionHandler` ProblemDetails `detail`, `errors` sözlüğü ve `title`'ları güncel kültüre çevirir
+  - **Çevrilen**: ~45 domain/exception mesajı, ~18 explicit FluentValidation `.WithMessage`, özel alan doğrulama servisi (11 mesaj), SMTP hata mesajları, e-posta şablonları (karşılama / şifre sıfırlama / test) — TR/EN (108 anahtar, çift dilde eşit)
+  - FluentValidation varsayılan mesajları kültüre göre otomatik TR/EN
+  - "{Varlık} bulunamadı" tipi mesajlar `NotFoundException` üzerinden tek bir genel 404 mesajına toplandı
+- **Not**: e-posta dili istek anındaki kültürle render edilir (alıcı dil tercihi saklanmıyor)
+
+---
+
 ## [0.39.0] — 2026-06-12 (Lokalizasyon Faz 1 — Modül Çevirileri)
 
 ### Eklendi

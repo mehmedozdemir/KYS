@@ -11,14 +11,15 @@ public sealed class CreatePersonCommandHandler(
     IPersonRepository personRepository,
     IUnitOfWork unitOfWork,
     IPasswordHasher<Person> passwordHasher,
-    IAccountEmailService accountEmail
+    IAccountEmailService accountEmail,
+    ILocalizer localizer
 ) : IRequestHandler<CreatePersonCommand, Guid>
 {
     public async Task<Guid> Handle(CreatePersonCommand request, CancellationToken cancellationToken)
     {
         var existing = await personRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (existing is not null)
-            throw new DomainException($"Email '{request.Email}' is already in use.");
+            throw new DomainException(localizer.Get("err.person.emailInUse", request.Email));
 
         var person = new Person
         {

@@ -1,12 +1,14 @@
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
+using Kys.Domain.Interfaces.Services;
 using MediatR;
 
 namespace Kys.Application.Environments.Commands.DeleteEnvironmentType;
 
 public sealed class DeleteEnvironmentTypeCommandHandler(
     IEnvironmentRepository repository,
-    IUnitOfWork unitOfWork) : IRequestHandler<DeleteEnvironmentTypeCommand>
+    IUnitOfWork unitOfWork,
+    ILocalizer localizer) : IRequestHandler<DeleteEnvironmentTypeCommand>
 {
     public async Task Handle(DeleteEnvironmentTypeCommand request, CancellationToken ct)
     {
@@ -15,7 +17,7 @@ public sealed class DeleteEnvironmentTypeCommandHandler(
 
         var usageCount = await repository.CountEnvironmentsByTypeAsync(request.Id, ct);
         if (usageCount > 0)
-            throw new ConflictException($"Bu ortam tipine bağlı {usageCount} ortam kaydı var. Önce ortamları silin.");
+            throw new ConflictException(localizer.Get("err.environmentType.inUse", usageCount));
 
         repository.DeleteEnvironmentType(envType);
         await unitOfWork.SaveChangesAsync(ct);

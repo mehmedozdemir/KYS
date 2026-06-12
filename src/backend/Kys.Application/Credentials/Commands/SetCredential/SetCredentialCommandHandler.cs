@@ -15,7 +15,7 @@ public sealed class SetCredentialCommandHandler(
     public async Task<Guid> Handle(SetCredentialCommand request, CancellationToken ct)
     {
         if (request.EnvironmentResourceId is null && request.SharedResourceId is null && request.EndpointUrlId is null)
-            throw new DomainException("EnvironmentResourceId, SharedResourceId or EndpointUrlId must be provided.");
+            throw new DomainException("err.credential.targetRequired");
 
         // Katman B — kaynağın sahiplik kapsamı kontrolü
         var canWrite =
@@ -23,7 +23,7 @@ public sealed class SetCredentialCommandHandler(
             request.EndpointUrlId.HasValue ? await authorization.CanAccessEndpointUrlAsync(request.EndpointUrlId.Value, ct) :
             await authorization.CanAccessSharedResourceAsync(request.SharedResourceId!.Value, ct);
         if (!canWrite)
-            throw new ForbiddenException("Bu kaynağın bilgilerini düzenleme yetkiniz yok.");
+            throw new ForbiddenException("err.credential.forbiddenEdit");
 
         var (encryptedValue, iv) = encryption.EncryptWithRandomIv(request.PlainValue);
 

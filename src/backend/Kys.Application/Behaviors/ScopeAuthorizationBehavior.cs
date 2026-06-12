@@ -22,7 +22,7 @@ public sealed class ScopeAuthorizationBehavior<TRequest, TResponse>(IScopeServic
         {
             var allowed = await scopeService.CanWriteAsync(scoped.ScopeTarget, cancellationToken);
             if (!allowed)
-                throw new ForbiddenException("Bu kayıt üzerinde işlem yapma yetkiniz yok.");
+                throw new ForbiddenException("err.forbidden.record");
         }
 
         return await next(cancellationToken);

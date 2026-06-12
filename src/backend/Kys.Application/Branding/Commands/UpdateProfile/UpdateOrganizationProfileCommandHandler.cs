@@ -11,7 +11,7 @@ public sealed class UpdateOrganizationProfileCommandHandler(
     public async Task Handle(UpdateOrganizationProfileCommand request, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.CompanyName))
-            throw new DomainException("Şirket adı zorunludur.");
+            throw new DomainException("err.branding.companyNameRequired");
 
         var p = await repository.GetAsync(ct);
         p.CompanyName = request.CompanyName.Trim();

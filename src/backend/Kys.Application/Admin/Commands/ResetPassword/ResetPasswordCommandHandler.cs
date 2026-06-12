@@ -20,7 +20,7 @@ public sealed class ResetPasswordCommandHandler(
             ?? throw new NotFoundException(nameof(Person), request.PersonId);
 
         if (!person.IsPlatformUser)
-            throw new DomainException("Person is not a platform user.");
+            throw new DomainException("err.person.notPlatformUser");
 
         person.PasswordHash = passwordHasher.HashPassword(person, request.NewPassword);
         person.FailedLoginCount = 0;

@@ -1,19 +1,21 @@
 using Kys.Domain.Entities;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
+using Kys.Domain.Interfaces.Services;
 using MediatR;
 
 namespace Kys.Application.Customers.Commands.CreateCustomer;
 
 public sealed class CreateCustomerCommandHandler(
     ICustomerRepository customerRepository,
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    ILocalizer localizer
 ) : IRequestHandler<CreateCustomerCommand, Guid>
 {
     public async Task<Guid> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
     {
         if (await customerRepository.ExistsByCodeAsync(request.Code, cancellationToken))
-            throw new DomainException($"'{request.Code}' kodu ile müşteri zaten mevcut.");
+            throw new DomainException(localizer.Get("err.customer.codeExists", request.Code));
 
         var customer = new Customer
         {

@@ -1,6 +1,7 @@
 using Kys.Domain.Entities;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
+using Kys.Domain.Interfaces.Services;
 using MediatR;
 
 namespace Kys.Application.Admin.Commands.AssignSystemRole;
@@ -8,7 +9,8 @@ namespace Kys.Application.Admin.Commands.AssignSystemRole;
 public sealed class AssignSystemRoleCommandHandler(
     IPersonRepository personRepository,
     ISystemRoleRepository systemRoleRepository,
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    ILocalizer localizer
 ) : IRequestHandler<AssignSystemRoleCommand>
 {
     public async Task Handle(AssignSystemRoleCommand request, CancellationToken cancellationToken)
@@ -23,7 +25,7 @@ public sealed class AssignSystemRoleCommandHandler(
             request.PersonId, request.SystemRoleId, cancellationToken);
 
         if (existing is not null)
-            throw new DomainException($"Person already has role '{role.Code}'.");
+            throw new DomainException(localizer.Get("err.role.alreadyAssigned", role.Code));
 
         var assignment = new PersonSystemRole
         {

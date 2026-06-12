@@ -14,7 +14,7 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
         if (env is null) return null;
 
         if (!await scope.CanReadAsync(new ScopeTarget(ScopeKind.Environment, env.Id), ct))
-            throw new ForbiddenException("Bu ortamı görme yetkiniz yok.");
+            throw new ForbiddenException("err.forbidden.environment");
 
         // Paylaşımlı kaynakların ortak credential'larını (şifreli alanlar) yükle
         var sharedCredentialMap = new Dictionary<Guid, IReadOnlyList<CredentialStubDto>>();

@@ -19,16 +19,16 @@ public sealed class LoginCommandHandler(
     public async Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var person = await personRepository.GetByEmailAsync(request.Email, cancellationToken)
-            ?? throw new ForbiddenException("Invalid credentials.");
+            ?? throw new ForbiddenException("err.auth.invalidCredentials");
 
         if (!person.IsPlatformUser)
-            throw new ForbiddenException("Account does not have platform access.");
+            throw new ForbiddenException("err.auth.noPlatformAccess");
 
         if (person.IsLocked)
-            throw new ForbiddenException("Account is locked. Contact an administrator.");
+            throw new ForbiddenException("err.auth.accountLocked");
 
         if (person.PasswordHash is null)
-            throw new ForbiddenException("Invalid credentials.");
+            throw new ForbiddenException("err.auth.invalidCredentials");
 
         var result = passwordHasher.VerifyHashedPassword(person, person.PasswordHash, request.Password);
         if (result == PasswordVerificationResult.Failed)
@@ -36,7 +36,7 @@ public sealed class LoginCommandHandler(
             person.RecordFailedLogin();
             personRepository.Update(person);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            throw new ForbiddenException("Invalid credentials.");
+            throw new ForbiddenException("err.auth.invalidCredentials");
         }
 
         person.RecordSuccessfulLogin();
