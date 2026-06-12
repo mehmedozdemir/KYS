@@ -3,12 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { DatePipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 
-const ACTION_LABEL: Record<string, string> = {
-  Created: 'Oluşturuldu', Updated: 'Güncellendi', Deleted: 'Silindi',
-  Restored: 'Geri Alındı', CredentialRevealed: 'Credential Görüntülendi'
-};
 const ACTION_CSS: Record<string, string> = {
   Created: 'action--created', Updated: 'action--updated', Deleted: 'action--deleted',
   Restored: 'action--restored', CredentialRevealed: 'action--credential'
@@ -45,131 +42,131 @@ interface AuditLogList {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [RouterLink, DatePipe, NgClass, FormsModule],
+  imports: [RouterLink, DatePipe, NgClass, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <h1 class="page-title">Admin Paneli</h1>
-          <p class="page-subtitle">Platform yönetimi ve izleme</p>
+          <h1 class="page-title">{{ 'admin.dashboard.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.dashboard.subtitle' | transloco }}</p>
         </div>
       </div>
 
       <!-- Tabs -->
       <div class="tabs">
         <button class="tab-btn" [class.active]="activeTab() === 'stats'" (click)="activeTab.set('stats')">
-          Platform İstatistikleri
+          {{ 'admin.dashboard.tabStats' | transloco }}
         </button>
         <button class="tab-btn" [class.active]="activeTab() === 'audit'" (click)="onAuditTab()">
-          Audit Log
+          {{ 'admin.dashboard.tabAudit' | transloco }}
         </button>
       </div>
 
       <!-- Stats Tab -->
       @if (activeTab() === 'stats') {
         @if (!stats()) {
-          <div class="loading-state">Yükleniyor...</div>
+          <div class="loading-state">{{ 'common.loading' | transloco }}</div>
         } @else {
           <div class="stats-grid">
             <div class="stat-card" routerLink="/people">
               <div class="stat-icon si--blue"><i class="pi pi-users"></i></div>
               <div>
                 <div class="stat-val">{{ stats()!.totalPeople }}</div>
-                <div class="stat-lbl">Toplam Personel</div>
-                <div class="stat-sub">{{ stats()!.activePeople }} aktif</div>
+                <div class="stat-lbl">{{ 'admin.dashboard.statTotalPeople' | transloco }}</div>
+                <div class="stat-sub">{{ 'admin.dashboard.peopleActive' | transloco:{ count: stats()!.activePeople } }}</div>
               </div>
             </div>
             <div class="stat-card" routerLink="/teams">
               <div class="stat-icon si--green"><i class="pi pi-sitemap"></i></div>
               <div>
                 <div class="stat-val">{{ stats()!.totalTeams }}</div>
-                <div class="stat-lbl">Ekip</div>
+                <div class="stat-lbl">{{ 'admin.dashboard.statTeams' | transloco }}</div>
               </div>
             </div>
             <div class="stat-card" routerLink="/products">
               <div class="stat-icon si--violet"><i class="pi pi-box"></i></div>
               <div>
                 <div class="stat-val">{{ stats()!.totalProducts }}</div>
-                <div class="stat-lbl">Ürün</div>
+                <div class="stat-lbl">{{ 'admin.dashboard.statProducts' | transloco }}</div>
               </div>
             </div>
             <div class="stat-card" routerLink="/customers">
               <div class="stat-icon si--orange"><i class="pi pi-building"></i></div>
               <div>
                 <div class="stat-val">{{ stats()!.totalCustomers }}</div>
-                <div class="stat-lbl">Müşteri</div>
+                <div class="stat-lbl">{{ 'admin.dashboard.statCustomers' | transloco }}</div>
               </div>
             </div>
             <div class="stat-card" routerLink="/knowledge-base">
               <div class="stat-icon si--teal"><i class="pi pi-book"></i></div>
               <div>
                 <div class="stat-val">{{ stats()!.totalKbArticles }}</div>
-                <div class="stat-lbl">KB Makalesi</div>
+                <div class="stat-lbl">{{ 'admin.dashboard.statKb' | transloco }}</div>
               </div>
             </div>
             <div class="stat-card">
               <div class="stat-icon si--red"><i class="pi pi-history"></i></div>
               <div>
                 <div class="stat-val">{{ stats()!.auditLogsLast30Days }}</div>
-                <div class="stat-lbl">Audit Log (30 gün)</div>
+                <div class="stat-lbl">{{ 'admin.dashboard.statAudit' | transloco }}</div>
               </div>
             </div>
           </div>
 
           <div class="quick-links">
-            <h2>Hızlı İşlemler</h2>
+            <h2>{{ 'admin.dashboard.quickActions' | transloco }}</h2>
             <div class="link-grid">
               <a routerLink="/people" class="link-card">
                 <i class="pi pi-user-plus"></i>
-                <span>Yeni Personel Ekle</span>
+                <span>{{ 'admin.dashboard.qlAddPerson' | transloco }}</span>
               </a>
               <a routerLink="/teams" class="link-card">
                 <i class="pi pi-users"></i>
-                <span>Ekip Yönetimi</span>
+                <span>{{ 'admin.dashboard.qlTeams' | transloco }}</span>
               </a>
               <a routerLink="/products" class="link-card">
                 <i class="pi pi-box"></i>
-                <span>Ürün Yönetimi</span>
+                <span>{{ 'admin.dashboard.qlProducts' | transloco }}</span>
               </a>
               <a routerLink="/customers" class="link-card">
                 <i class="pi pi-building"></i>
-                <span>Müşteri Yönetimi</span>
+                <span>{{ 'admin.dashboard.qlCustomers' | transloco }}</span>
               </a>
               <a routerLink="/admin/platform-users" class="link-card">
                 <i class="pi pi-shield"></i>
-                <span>Platform Kullanıcıları</span>
+                <span>{{ 'admin.dashboard.qlPlatformUsers' | transloco }}</span>
               </a>
               <a routerLink="/admin/custom-fields" class="link-card">
                 <i class="pi pi-sliders-h"></i>
-                <span>Özel Alanlar</span>
+                <span>{{ 'admin.dashboard.qlCustomFields' | transloco }}</span>
               </a>
               <a routerLink="/admin/environment-types" class="link-card">
                 <i class="pi pi-server"></i>
-                <span>Ortam Tipleri</span>
+                <span>{{ 'admin.dashboard.qlEnvTypes' | transloco }}</span>
               </a>
               <a routerLink="/admin/shared-resources" class="link-card">
                 <i class="pi pi-share-alt"></i>
-                <span>Paylaşımlı Kaynaklar</span>
+                <span>{{ 'admin.dashboard.qlSharedResources' | transloco }}</span>
               </a>
               <a routerLink="/admin/resource-types" class="link-card">
                 <i class="pi pi-database"></i>
-                <span>Kaynak Tipleri</span>
+                <span>{{ 'admin.dashboard.qlResourceTypes' | transloco }}</span>
               </a>
               <a routerLink="/admin/organization" class="link-card">
                 <i class="pi pi-building"></i>
-                <span>Kurum Profili</span>
+                <span>{{ 'admin.dashboard.qlOrgProfile' | transloco }}</span>
               </a>
               <a routerLink="/admin/access-grants" class="link-card">
                 <i class="pi pi-key"></i>
-                <span>Erişim Yetkileri</span>
+                <span>{{ 'admin.dashboard.qlAccessGrants' | transloco }}</span>
               </a>
               <a routerLink="/admin/email-accounts" class="link-card">
                 <i class="pi pi-envelope"></i>
-                <span>Mail Ayarları</span>
+                <span>{{ 'admin.dashboard.qlEmail' | transloco }}</span>
               </a>
               <a routerLink="/admin/audit-log" class="link-card">
                 <i class="pi pi-history"></i>
-                <span>Audit Log</span>
+                <span>{{ 'admin.dashboard.qlAudit' | transloco }}</span>
               </a>
             </div>
           </div>
@@ -180,7 +177,7 @@ interface AuditLogList {
       @if (activeTab() === 'audit') {
         <div class="audit-toolbar">
           <select [(ngModel)]="auditEntityType" (ngModelChange)="loadAudit()">
-            <option value="">Tüm entity'ler</option>
+            <option value="">{{ 'admin.dashboard.allEntities' | transloco }}</option>
             <option value="Person">Person</option>
             <option value="Team">Team</option>
             <option value="Product">Product</option>
@@ -188,28 +185,28 @@ interface AuditLogList {
             <option value="ResourceCredential">Credential</option>
           </select>
           <select [(ngModel)]="auditAction" (ngModelChange)="loadAudit()">
-            <option value="">Tüm aksiyonlar</option>
-            <option value="Created">Oluşturuldu</option>
-            <option value="Updated">Güncellendi</option>
-            <option value="Deleted">Silindi</option>
-            <option value="CredentialRevealed">Credential Görüntülendi</option>
+            <option value="">{{ 'admin.dashboard.allActions' | transloco }}</option>
+            <option value="Created">{{ 'admin.auditLog.action.Created' | transloco }}</option>
+            <option value="Updated">{{ 'admin.auditLog.action.Updated' | transloco }}</option>
+            <option value="Deleted">{{ 'admin.auditLog.action.Deleted' | transloco }}</option>
+            <option value="CredentialRevealed">{{ 'admin.auditLog.action.CredentialRevealed' | transloco }}</option>
           </select>
         </div>
 
         <div class="table-wrapper">
           @if (auditLoading()) {
-            <div class="loading-row">Yükleniyor...</div>
+            <div class="loading-row">{{ 'common.loading' | transloco }}</div>
           } @else if (!auditItems().length) {
-            <div class="loading-row">Kayıt bulunamadı.</div>
+            <div class="loading-row">{{ 'common.recordNotFound' | transloco }}</div>
           } @else {
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Zaman</th>
-                  <th>Aksiyon</th>
-                  <th>Entity</th>
-                  <th>Kayıt</th>
-                  <th>IP</th>
+                  <th>{{ 'admin.dashboard.colTime' | transloco }}</th>
+                  <th>{{ 'admin.dashboard.colAction' | transloco }}</th>
+                  <th>{{ 'admin.dashboard.colEntity' | transloco }}</th>
+                  <th>{{ 'admin.dashboard.colRecord' | transloco }}</th>
+                  <th>{{ 'admin.dashboard.colIp' | transloco }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -295,6 +292,7 @@ interface AuditLogList {
 })
 export class AdminDashboardComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
 
   activeTab = signal<'stats' | 'audit'>('stats');
   stats = signal<PlatformStats | null>(null);
@@ -308,7 +306,11 @@ export class AdminDashboardComponent implements OnInit {
   auditEntityType = '';
   auditAction = '';
 
-  actionLabel(a: string) { return ACTION_LABEL[a] ?? a; }
+  actionLabel(a: string) {
+    const key = `admin.auditLog.action.${a}`;
+    const label = this.transloco.translate(key);
+    return label === key ? a : label;
+  }
   actionCss(a: string) { return ACTION_CSS[a] ?? ''; }
 
   ngOnInit() {

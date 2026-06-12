@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { NgClass, NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 
 interface CustomFieldDef {
@@ -19,9 +20,6 @@ interface CustomFieldDef {
   isActive: boolean;
 }
 
-const FIELD_TYPE_LABEL: Record<string, string> = {
-  Text: 'Metin', Number: 'Sayı', Date: 'Tarih', Boolean: 'Evet/Hayır', Select: 'Seçim Listesi', Url: 'URL', Email: 'E-posta'
-};
 // Form select'leri sayısal index kullanır; enum adı <-> index dönüşümü için
 const FIELD_TYPE_NAMES = ['Text', 'Number', 'Date', 'Boolean', 'Select', 'Url', 'Email'];
 const ENTITY_TYPE_NAMES = ['Customer', 'Product'];
@@ -29,27 +27,27 @@ const ENTITY_TYPE_NAMES = ['Customer', 'Product'];
 @Component({
   selector: 'app-custom-fields',
   standalone: true,
-  imports: [RouterLink, NgClass, NgStyle, FormsModule],
+  imports: [RouterLink, NgClass, NgStyle, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <div class="breadcrumb"><a routerLink="/admin">Admin</a><span>/</span><span>Özel Alanlar</span></div>
-          <h1 class="page-title">Özel Alanlar</h1>
-          <p class="page-subtitle">Müşteri ve ürün kayıtlarına ek alan tanımlayın</p>
+          <div class="breadcrumb"><a routerLink="/admin">{{ 'admin.crumb' | transloco }}</a><span>/</span><span>{{ 'admin.customFields.title' | transloco }}</span></div>
+          <h1 class="page-title">{{ 'admin.customFields.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.customFields.subtitle' | transloco }}</p>
         </div>
         <button class="btn btn-primary" (click)="openCreate()">
-          <i class="pi pi-plus"></i> Yeni Alan
+          <i class="pi pi-plus"></i> {{ 'admin.customFields.newField' | transloco }}
         </button>
       </div>
 
       <!-- Tabs -->
       <div class="tabs">
         <button class="tab-btn" [class.active]="entityTab() === 0" (click)="switchTab(0)">
-          Müşteri Alanları <span class="tab-count">{{ customerFields().length }}</span>
+          {{ 'admin.customFields.tabCustomer' | transloco }} <span class="tab-count">{{ customerFields().length }}</span>
         </button>
         <button class="tab-btn" [class.active]="entityTab() === 1" (click)="switchTab(1)">
-          Ürün Alanları <span class="tab-count">{{ productFields().length }}</span>
+          {{ 'admin.customFields.tabProduct' | transloco }} <span class="tab-count">{{ productFields().length }}</span>
         </button>
       </div>
 
@@ -57,28 +55,28 @@ const ENTITY_TYPE_NAMES = ['Customer', 'Product'];
       <div class="toolbar">
         <label class="toggle-row">
           <input type="checkbox" [(ngModel)]="showInactive" (change)="load()" />
-          <span>Pasif alanları da göster</span>
+          <span>{{ 'admin.customFields.showInactive' | transloco }}</span>
         </label>
       </div>
 
       @if (loading()) {
-        <div class="empty-state">Yükleniyor...</div>
+        <div class="empty-state">{{ 'common.loading' | transloco }}</div>
       } @else {
         @let fields = entityTab() === 0 ? customerFields() : productFields();
         @if (!fields.length) {
-          <div class="empty-state">Bu kategoride alan tanımlanmamış.</div>
+          <div class="empty-state">{{ 'admin.customFields.emptyCategory' | transloco }}</div>
         } @else {
           <div class="table-wrapper">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Alan Adı</th>
-                  <th>Anahtar</th>
-                  <th>Tip</th>
-                  <th>Grup</th>
-                  <th>Zorunlu</th>
-                  <th>Sıra</th>
-                  <th>Durum</th>
+                  <th>{{ 'admin.customFields.colFieldName' | transloco }}</th>
+                  <th>{{ 'admin.customFields.colKey' | transloco }}</th>
+                  <th>{{ 'admin.customFields.colType' | transloco }}</th>
+                  <th>{{ 'admin.customFields.colGroup' | transloco }}</th>
+                  <th>{{ 'admin.customFields.colRequired' | transloco }}</th>
+                  <th>{{ 'admin.customFields.colOrder' | transloco }}</th>
+                  <th>{{ 'admin.customFields.colStatus' | transloco }}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -88,25 +86,25 @@ const ENTITY_TYPE_NAMES = ['Customer', 'Product'];
                     <td class="field-name">{{ f.displayName }}</td>
                     <td><code class="mono">{{ f.fieldKey }}</code></td>
                     <td>
-                      <span class="type-badge">{{ fieldTypeLabel(f.fieldType) }}</span>
+                      <span class="type-badge">{{ 'admin.customFields.type.' + f.fieldType | transloco }}</span>
                     </td>
                     <td class="text-muted">{{ f.groupName ?? '—' }}</td>
                     <td>
                       @if (f.isRequired) {
-                        <span class="badge badge--required">Evet</span>
+                        <span class="badge badge--required">{{ 'common.yes' | transloco }}</span>
                       } @else {
-                        <span class="text-muted">Hayır</span>
+                        <span class="text-muted">{{ 'common.no' | transloco }}</span>
                       }
                     </td>
                     <td class="text-muted">{{ f.displayOrder }}</td>
                     <td>
                       <span class="badge" [ngClass]="f.isActive ? 'badge--active' : 'badge--inactive'">
-                        {{ f.isActive ? 'Aktif' : 'Pasif' }}
+                        {{ (f.isActive ? 'admin.customFields.active' : 'admin.customFields.inactive') | transloco }}
                       </span>
                     </td>
                     <td class="action-cell">
-                      <button class="icon-btn" title="Düzenle" (click)="openEdit(f)"><i class="pi pi-pencil"></i></button>
-                      <button class="icon-btn" [title]="f.isActive ? 'Pasife Al' : 'Aktife Al'" (click)="toggle(f)">
+                      <button class="icon-btn" [title]="'admin.customFields.editTitle' | transloco" (click)="openEdit(f)"><i class="pi pi-pencil"></i></button>
+                      <button class="icon-btn" [title]="(f.isActive ? 'admin.customFields.deactivate' : 'admin.customFields.activate') | transloco" (click)="toggle(f)">
                         <i class="pi" [ngClass]="f.isActive ? 'pi-eye-slash' : 'pi-eye'"></i>
                       </button>
                     </td>
@@ -124,7 +122,7 @@ const ENTITY_TYPE_NAMES = ['Customer', 'Product'];
       <div class="modal-backdrop" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ editingId ? 'Alanı Düzenle' : 'Yeni Alan' }}</h2>
+            <h2>{{ (editingId ? 'admin.customFields.editModal' : 'admin.customFields.newModal') | transloco }}</h2>
             <button class="close-btn" (click)="closeModal()"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -135,84 +133,84 @@ const ENTITY_TYPE_NAMES = ['Customer', 'Product'];
             @if (!editingId) {
               <div class="form-row">
                 <div class="form-group">
-                  <label>Entity Tipi <span class="req">*</span></label>
+                  <label>{{ 'admin.customFields.entityType' | transloco }} <span class="req">*</span></label>
                   <select [(ngModel)]="form.entityType">
-                    <option value="0">Müşteri</option>
-                    <option value="1">Ürün</option>
+                    <option value="0">{{ 'admin.customFields.customer' | transloco }}</option>
+                    <option value="1">{{ 'admin.customFields.product' | transloco }}</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>Alan Tipi <span class="req">*</span></label>
+                  <label>{{ 'admin.customFields.fieldType' | transloco }} <span class="req">*</span></label>
                   <select [(ngModel)]="form.fieldType">
-                    <option value="0">Metin</option>
-                    <option value="1">Sayı</option>
-                    <option value="2">Tarih</option>
-                    <option value="3">Evet/Hayır</option>
-                    <option value="4">Seçim Listesi</option>
-                    <option value="5">URL</option>
-                    <option value="6">E-posta</option>
+                    <option value="0">{{ 'admin.customFields.type.Text' | transloco }}</option>
+                    <option value="1">{{ 'admin.customFields.type.Number' | transloco }}</option>
+                    <option value="2">{{ 'admin.customFields.type.Date' | transloco }}</option>
+                    <option value="3">{{ 'admin.customFields.type.Boolean' | transloco }}</option>
+                    <option value="4">{{ 'admin.customFields.type.Select' | transloco }}</option>
+                    <option value="5">{{ 'admin.customFields.type.Url' | transloco }}</option>
+                    <option value="6">{{ 'admin.customFields.type.Email' | transloco }}</option>
                   </select>
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label>Alan Anahtarı <span class="req">*</span></label>
-                  <input type="text" [(ngModel)]="form.fieldKey" placeholder="ör. erp_code" (input)="form.fieldKey = slugify(form.fieldKey)" />
-                  <span class="hint">Küçük harf, alt çizgi. Kaydedildikten sonra değiştirilemez.</span>
+                  <label>{{ 'admin.customFields.fieldKey' | transloco }} <span class="req">*</span></label>
+                  <input type="text" [(ngModel)]="form.fieldKey" [placeholder]="'admin.customFields.fieldKeyPh' | transloco" (input)="form.fieldKey = slugify(form.fieldKey)" />
+                  <span class="hint">{{ 'admin.customFields.fieldKeyHint' | transloco }}</span>
                 </div>
                 <div class="form-group">
-                  <label>Görünen Ad <span class="req">*</span></label>
-                  <input type="text" [(ngModel)]="form.displayName" placeholder="ör. ERP Kodu" />
+                  <label>{{ 'admin.customFields.displayName' | transloco }} <span class="req">*</span></label>
+                  <input type="text" [(ngModel)]="form.displayName" [placeholder]="'admin.customFields.displayNamePh' | transloco" />
                 </div>
               </div>
             } @else {
               <div class="form-group">
-                <label>Görünen Ad <span class="req">*</span></label>
+                <label>{{ 'admin.customFields.displayName' | transloco }} <span class="req">*</span></label>
                 <input type="text" [(ngModel)]="form.displayName" />
               </div>
             }
 
             <div class="form-row">
               <div class="form-group">
-                <label>Grup</label>
-                <input type="text" [(ngModel)]="form.groupName" placeholder="ör. Sözleşme Bilgileri" />
+                <label>{{ 'admin.customFields.group' | transloco }}</label>
+                <input type="text" [(ngModel)]="form.groupName" [placeholder]="'admin.customFields.groupPh' | transloco" />
               </div>
               <div class="form-group">
-                <label>Görüntüleme Sırası</label>
+                <label>{{ 'admin.customFields.displayOrder' | transloco }}</label>
                 <input type="number" [(ngModel)]="form.displayOrder" min="0" />
               </div>
             </div>
 
             <div class="form-group">
-              <label>Varsayılan Değer</label>
-              <input type="text" [(ngModel)]="form.defaultValue" placeholder="İsteğe bağlı" />
+              <label>{{ 'admin.customFields.defaultValue' | transloco }}</label>
+              <input type="text" [(ngModel)]="form.defaultValue" [placeholder]="'admin.customFields.defaultValuePh' | transloco" />
             </div>
 
             @if (Number(form.fieldType) === 4) {
               <div class="form-group">
-                <label>Seçenek Listesi <span class="req">*</span></label>
+                <label>{{ 'admin.customFields.selectOptions' | transloco }} <span class="req">*</span></label>
                 <textarea [(ngModel)]="form.selectOptionsText" rows="3"
-                  placeholder="Her satıra bir seçenek yazın..."></textarea>
-                <span class="hint">Her satır ayrı bir seçenek olur</span>
+                  [placeholder]="'admin.customFields.selectOptionsPh' | transloco"></textarea>
+                <span class="hint">{{ 'admin.customFields.selectOptionsHint' | transloco }}</span>
               </div>
             }
 
             <label class="checkbox-row">
               <input type="checkbox" [(ngModel)]="form.isRequired" />
-              <span>Bu alan zorunlu</span>
+              <span>{{ 'admin.customFields.requiredToggle' | transloco }}</span>
             </label>
 
             @if (submitted() && !form.displayName.trim()) {
-              <span class="field-error">Görünen ad zorunludur</span>
+              <span class="field-error">{{ 'admin.customFields.displayNameRequired' | transloco }}</span>
             }
             @if (submitted() && !editingId && !form.fieldKey.trim()) {
-              <span class="field-error">Alan anahtarı zorunludur</span>
+              <span class="field-error">{{ 'admin.customFields.fieldKeyRequired' | transloco }}</span>
             }
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="closeModal()">İptal</button>
+            <button class="btn btn-secondary" (click)="closeModal()">{{ 'common.cancel' | transloco }}</button>
             <button class="btn btn-primary" [disabled]="saving()" (click)="save()">
-              {{ saving() ? 'Kaydediliyor...' : 'Kaydet' }}
+              {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
             </button>
           </div>
         </div>
@@ -272,6 +270,7 @@ const ENTITY_TYPE_NAMES = ['Customer', 'Product'];
 })
 export class CustomFieldsComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
 
   entityTab = signal(0);
   loading = signal(true);
@@ -313,8 +312,6 @@ export class CustomFieldsComponent implements OnInit {
   }
 
   switchTab(t: number) { this.entityTab.set(t); }
-
-  fieldTypeLabel(t: string) { return FIELD_TYPE_LABEL[t] ?? t; }
 
   slugify(v: string) { return v.toLowerCase().replace(/[^a-z0-9_]/g, '_'); }
 
@@ -370,7 +367,7 @@ export class CustomFieldsComponent implements OnInit {
         groupName: this.form.groupName.trim() || null
       }).subscribe({
         next: () => { this.saving.set(false); this.closeModal(); this.load(); },
-        error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? 'Kaydedilemedi'); }
+        error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? this.transloco.translate('admin.customFields.saveFailed')); }
       });
     } else {
       this.http.post(`${environment.apiUrl}/admin/custom-fields`, {
@@ -386,7 +383,7 @@ export class CustomFieldsComponent implements OnInit {
         groupName: this.form.groupName.trim() || null
       }).subscribe({
         next: () => { this.saving.set(false); this.closeModal(); this.load(); },
-        error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? 'Kaydedilemedi'); }
+        error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? this.transloco.translate('admin.customFields.saveFailed')); }
       });
     }
   }

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { NgStyle, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 
 interface HostingPlatform {
@@ -23,34 +24,34 @@ const CATEGORY_OPTIONS = ['Konteyner', 'Sunucu', 'Bulut', 'Diğer'];
 @Component({
   selector: 'app-hosting-platforms',
   standalone: true,
-  imports: [RouterLink, NgStyle, NgClass, FormsModule],
+  imports: [RouterLink, NgStyle, NgClass, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <div class="breadcrumb"><a routerLink="/admin">Admin</a><span>/</span><span>Barındırma Platformları</span></div>
-          <h1 class="page-title">Barındırma Platformları</h1>
-          <p class="page-subtitle">Ortamların üzerinde çalıştığı platformları tanımlayın (Kubernetes, Linux, Windows, AWS, Azure...)</p>
+          <div class="breadcrumb"><a routerLink="/admin">{{ 'admin.crumb' | transloco }}</a><span>/</span><span>{{ 'admin.hostingPlatforms.title' | transloco }}</span></div>
+          <h1 class="page-title">{{ 'admin.hostingPlatforms.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.hostingPlatforms.subtitle' | transloco }}</p>
         </div>
         <button class="btn btn-primary" (click)="openCreate()">
-          <i class="pi pi-plus"></i> Yeni Platform
+          <i class="pi pi-plus"></i> {{ 'admin.hostingPlatforms.newPlatform' | transloco }}
         </button>
       </div>
 
       @if (loading()) {
-        <div class="empty-state">Yükleniyor...</div>
+        <div class="empty-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!platforms().length) {
-        <div class="empty-state">Henüz platform tanımlanmamış.</div>
+        <div class="empty-state">{{ 'admin.hostingPlatforms.empty' | transloco }}</div>
       } @else {
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Platform</th>
-                <th>Kod</th>
-                <th>Kategori</th>
-                <th>Sıra</th>
-                <th>Durum</th>
+                <th>{{ 'admin.hostingPlatforms.colPlatform' | transloco }}</th>
+                <th>{{ 'admin.hostingPlatforms.colCode' | transloco }}</th>
+                <th>{{ 'admin.hostingPlatforms.colCategory' | transloco }}</th>
+                <th>{{ 'admin.hostingPlatforms.colSort' | transloco }}</th>
+                <th>{{ 'admin.hostingPlatforms.colStatus' | transloco }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -66,15 +67,15 @@ const CATEGORY_OPTIONS = ['Konteyner', 'Sunucu', 'Bulut', 'Diğer'];
                     </div>
                   </td>
                   <td><code class="mono">{{ p.code }}</code></td>
-                  <td class="text-muted">{{ p.category ?? '—' }}</td>
+                  <td class="text-muted">{{ categoryLabel(p.category) }}</td>
                   <td class="text-muted">{{ p.sortOrder }}</td>
                   <td>
-                    @if (p.isActive) { <span class="status-on">Aktif</span> }
-                    @else { <span class="status-off">Pasif</span> }
+                    @if (p.isActive) { <span class="status-on">{{ 'admin.hostingPlatforms.active' | transloco }}</span> }
+                    @else { <span class="status-off">{{ 'admin.hostingPlatforms.inactive' | transloco }}</span> }
                   </td>
                   <td class="actions-cell">
-                    <button class="btn-icon" title="Düzenle" (click)="openEdit(p)"><i class="pi pi-pencil"></i></button>
-                    <button class="btn-icon btn-icon--danger" title="Sil" (click)="confirmDelete(p)"><i class="pi pi-trash"></i></button>
+                    <button class="btn-icon" [title]="'admin.hostingPlatforms.editTitle' | transloco" (click)="openEdit(p)"><i class="pi pi-pencil"></i></button>
+                    <button class="btn-icon btn-icon--danger" [title]="'admin.hostingPlatforms.deleteTitle' | transloco" (click)="confirmDelete(p)"><i class="pi pi-trash"></i></button>
                   </td>
                 </tr>
               }
@@ -89,36 +90,36 @@ const CATEGORY_OPTIONS = ['Konteyner', 'Sunucu', 'Bulut', 'Diğer'];
       <div class="modal-backdrop" (click)="showModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ editingId() ? 'Platformu Düzenle' : 'Yeni Barındırma Platformu' }}</h2>
+            <h2>{{ (editingId() ? 'admin.hostingPlatforms.editModal' : 'admin.hostingPlatforms.newModal') | transloco }}</h2>
             <button class="close-btn" (click)="showModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (saveError()) { <div class="alert-error">{{ saveError() }}</div> }
             <div class="form-row">
               <div class="form-group">
-                <label>Ad <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="form.name" placeholder="ör. Kubernetes"
+                <label>{{ 'admin.hostingPlatforms.name' | transloco }} <span class="req">*</span></label>
+                <input type="text" [(ngModel)]="form.name" [placeholder]="'admin.hostingPlatforms.namePh' | transloco"
                   [class.input-error]="submitted() && !form.name.trim()" />
-                @if (submitted() && !form.name.trim()) { <span class="field-error">Ad zorunludur</span> }
+                @if (submitted() && !form.name.trim()) { <span class="field-error">{{ 'admin.hostingPlatforms.nameRequired' | transloco }}</span> }
               </div>
               <div class="form-group">
-                <label>Kod <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="form.code" placeholder="ör. K8S" maxlength="30"
+                <label>{{ 'admin.hostingPlatforms.code' | transloco }} <span class="req">*</span></label>
+                <input type="text" [(ngModel)]="form.code" [placeholder]="'admin.hostingPlatforms.codePh' | transloco" maxlength="30"
                   (input)="form.code = form.code.toUpperCase()"
                   [class.input-error]="submitted() && !form.code.trim()" />
-                @if (submitted() && !form.code.trim()) { <span class="field-error">Kod zorunludur</span> }
+                @if (submitted() && !form.code.trim()) { <span class="field-error">{{ 'admin.hostingPlatforms.codeRequired' | transloco }}</span> }
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Kategori</label>
+                <label>{{ 'admin.hostingPlatforms.category' | transloco }}</label>
                 <select [(ngModel)]="form.category">
                   <option [ngValue]="null">—</option>
-                  @for (c of categoryOptions; track c) { <option [ngValue]="c">{{ c }}</option> }
+                  @for (c of categoryOptions; track c) { <option [ngValue]="c">{{ categoryLabel(c) }}</option> }
                 </select>
               </div>
               <div class="form-group">
-                <label>İkon</label>
+                <label>{{ 'admin.hostingPlatforms.icon' | transloco }}</label>
                 <select [(ngModel)]="form.icon">
                   @for (ic of iconOptions; track ic) { <option [ngValue]="ic">{{ ic }}</option> }
                 </select>
@@ -126,38 +127,38 @@ const CATEGORY_OPTIONS = ['Konteyner', 'Sunucu', 'Bulut', 'Diğer'];
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Renk</label>
+                <label>{{ 'admin.hostingPlatforms.color' | transloco }}</label>
                 <div class="color-input-row">
                   <input type="color" [(ngModel)]="form.color" class="color-picker" />
                   <input type="text" [(ngModel)]="form.color" placeholder="#326CE5" maxlength="7" class="color-text" />
                 </div>
               </div>
               <div class="form-group">
-                <label>Sıra</label>
+                <label>{{ 'admin.hostingPlatforms.sortOrder' | transloco }}</label>
                 <input type="number" [(ngModel)]="form.sortOrder" min="0" />
               </div>
             </div>
             <div class="form-group">
-              <label>Açıklama</label>
-              <input type="text" [(ngModel)]="form.description" placeholder="İsteğe bağlı" />
+              <label>{{ 'admin.hostingPlatforms.description' | transloco }}</label>
+              <input type="text" [(ngModel)]="form.description" [placeholder]="'admin.hostingPlatforms.descriptionPh' | transloco" />
             </div>
             <div class="preview-row">
-              <span class="preview-label">Önizleme:</span>
+              <span class="preview-label">{{ 'admin.hostingPlatforms.preview' | transloco }}</span>
               <span class="plat-badge" [ngStyle]="{ background: softBg(form.color), color: form.color }">
                 <i class="pi" [ngClass]="form.icon"></i>
               </span>
               <span class="plat-chip" [ngStyle]="{ background: softBg(form.color), color: form.color }">
-                <i class="pi" [ngClass]="form.icon"></i> {{ form.name || 'Platform' }}
+                <i class="pi" [ngClass]="form.icon"></i> {{ form.name || ('admin.hostingPlatforms.platformFallback' | transloco) }}
               </span>
             </div>
             @if (editingId()) {
-              <label class="checkbox-label"><input type="checkbox" [(ngModel)]="form.isActive" /> Aktif</label>
+              <label class="checkbox-label"><input type="checkbox" [(ngModel)]="form.isActive" /> {{ 'admin.hostingPlatforms.activeToggle' | transloco }}</label>
             }
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="showModal.set(false)">İptal</button>
+            <button class="btn btn-secondary" (click)="showModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button class="btn btn-primary" [disabled]="saving()" (click)="save()">
-              {{ saving() ? 'Kaydediliyor...' : (editingId() ? 'Güncelle' : 'Oluştur') }}
+              {{ (saving() ? 'common.saving' : (editingId() ? 'common.update' : 'common.create')) | transloco }}
             </button>
           </div>
         </div>
@@ -168,20 +169,20 @@ const CATEGORY_OPTIONS = ['Konteyner', 'Sunucu', 'Bulut', 'Diğer'];
       <div class="modal-backdrop" (click)="deletingPlatform.set(null)">
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Platformu Sil</h2>
+            <h2>{{ 'admin.hostingPlatforms.deleteModal' | transloco }}</h2>
             <button class="close-btn" (click)="deletingPlatform.set(null)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (deleteError()) { <div class="alert-error">{{ deleteError() }}</div> }
             @else {
-              <p class="confirm-text"><strong>{{ deletingPlatform()!.name }}</strong> platformunu silmek istediğinize emin misiniz?</p>
+              <p class="confirm-text" [innerHTML]="'admin.hostingPlatforms.deleteConfirm' | transloco:{ name: deletingPlatform()!.name }"></p>
             }
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="deletingPlatform.set(null)">İptal</button>
+            <button class="btn btn-secondary" (click)="deletingPlatform.set(null)">{{ 'common.cancel' | transloco }}</button>
             @if (!deleteError()) {
               <button class="btn btn-danger" [disabled]="deleting()" (click)="deleteConfirmed()">
-                {{ deleting() ? 'Siliniyor...' : 'Sil' }}
+                {{ (deleting() ? 'common.deleting' : 'common.delete') | transloco }}
               </button>
             }
           </div>
@@ -245,11 +246,25 @@ const CATEGORY_OPTIONS = ['Konteyner', 'Sunucu', 'Bulut', 'Diğer'];
 })
 export class HostingPlatformsComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
 
   platforms = signal<HostingPlatform[]>([]);
   loading = signal(true);
   readonly iconOptions = ICON_OPTIONS;
   readonly categoryOptions = CATEGORY_OPTIONS;
+
+  private readonly categoryKeys: Record<string, string> = {
+    'Konteyner': 'admin.hostingPlatforms.catContainer',
+    'Sunucu': 'admin.hostingPlatforms.catServer',
+    'Bulut': 'admin.hostingPlatforms.catCloud',
+    'Diğer': 'admin.hostingPlatforms.catOther'
+  };
+
+  categoryLabel(c: string | null): string {
+    if (!c) return '—';
+    const key = this.categoryKeys[c];
+    return key ? this.transloco.translate(key) : c;
+  }
 
   showModal = signal(false);
   editingId = signal<string | null>(null);
@@ -318,7 +333,7 @@ export class HostingPlatformsComponent implements OnInit {
 
     req.subscribe({
       next: () => { this.saving.set(false); this.showModal.set(false); this.load(); },
-      error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? 'Kaydedilemedi'); }
+      error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? this.transloco.translate('admin.hostingPlatforms.saveFailed')); }
     });
   }
 
@@ -330,7 +345,7 @@ export class HostingPlatformsComponent implements OnInit {
     this.deleting.set(true);
     this.http.delete(`${environment.apiUrl}/admin/hosting-platforms/${p.id}`).subscribe({
       next: () => { this.deleting.set(false); this.deletingPlatform.set(null); this.load(); },
-      error: err => { this.deleting.set(false); this.deleteError.set(err.error?.detail ?? 'Silinemedi'); }
+      error: err => { this.deleting.set(false); this.deleteError.set(err.error?.detail ?? this.transloco.translate('admin.hostingPlatforms.deleteFailed')); }
     });
   }
 }

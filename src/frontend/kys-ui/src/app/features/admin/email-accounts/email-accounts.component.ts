@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 import { NotificationService } from '../../../core/services/notification.service';
 
@@ -27,26 +28,26 @@ const PRESETS: Record<string, { host: string; port: number; security: string }> 
 @Component({
   selector: 'app-email-accounts',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <h1 class="page-title">Mail Ayarları</h1>
-          <p class="page-subtitle">{{ accounts().length }} hesap — giden e-posta (SMTP) yapılandırması</p>
+          <h1 class="page-title">{{ 'admin.emailAccounts.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.emailAccounts.subtitle' | transloco:{ count: accounts().length } }}</p>
         </div>
-        <button class="btn btn-primary" (click)="openCreate()"><i class="pi pi-plus"></i> Yeni Hesap</button>
+        <button class="btn btn-primary" (click)="openCreate()"><i class="pi pi-plus"></i> {{ 'admin.emailAccounts.newAccount' | transloco }}</button>
       </div>
 
       <div class="table-wrapper">
         @if (loading()) {
-          <div class="loading-row">Yükleniyor...</div>
+          <div class="loading-row">{{ 'common.loading' | transloco }}</div>
         } @else if (!accounts().length) {
-          <div class="loading-row">Tanımlı mail hesabı yok. "Yeni Hesap" ile ekleyin.</div>
+          <div class="loading-row">{{ 'admin.emailAccounts.emptyNone' | transloco }}</div>
         } @else {
           <table class="data-table">
             <thead>
-              <tr><th>Ad</th><th>Sağlayıcı</th><th>Sunucu</th><th>Gönderen</th><th>Durum</th><th></th></tr>
+              <tr><th>{{ 'admin.emailAccounts.colName' | transloco }}</th><th>{{ 'admin.emailAccounts.colProvider' | transloco }}</th><th>{{ 'admin.emailAccounts.colServer' | transloco }}</th><th>{{ 'admin.emailAccounts.colSender' | transloco }}</th><th>{{ 'admin.emailAccounts.colStatus' | transloco }}</th><th></th></tr>
             </thead>
             <tbody>
               @for (a of accounts(); track a.id) {
@@ -56,13 +57,13 @@ const PRESETS: Record<string, { host: string; port: number; security: string }> 
                   <td class="mono">{{ a.host }}:{{ a.port }} ({{ a.security }})</td>
                   <td>{{ a.fromName ? a.fromName + ' · ' : '' }}{{ a.fromAddress }}</td>
                   <td>
-                    @if (a.isActive) { <span class="badge badge--active">Aktif</span> }
-                    @else { <button class="link-btn" (click)="activate(a)">Aktif yap</button> }
+                    @if (a.isActive) { <span class="badge badge--active">{{ 'admin.emailAccounts.active' | transloco }}</span> }
+                    @else { <button class="link-btn" (click)="activate(a)">{{ 'admin.emailAccounts.makeActive' | transloco }}</button> }
                   </td>
                   <td class="actions-cell">
-                    <button class="icon-btn" title="Test maili" (click)="test(a)"><i class="pi pi-send"></i></button>
-                    <button class="icon-btn" title="Düzenle" (click)="openEdit(a)"><i class="pi pi-pencil"></i></button>
-                    <button class="icon-btn icon-btn--danger" title="Sil" (click)="remove(a)"><i class="pi pi-trash"></i></button>
+                    <button class="icon-btn" [title]="'admin.emailAccounts.testTitle' | transloco" (click)="test(a)"><i class="pi pi-send"></i></button>
+                    <button class="icon-btn" [title]="'admin.emailAccounts.editTitle' | transloco" (click)="openEdit(a)"><i class="pi pi-pencil"></i></button>
+                    <button class="icon-btn icon-btn--danger" [title]="'admin.emailAccounts.deleteTitle' | transloco" (click)="remove(a)"><i class="pi pi-trash"></i></button>
                   </td>
                 </tr>
               }
@@ -76,73 +77,73 @@ const PRESETS: Record<string, { host: string; port: number; security: string }> 
       <div class="modal-backdrop" (click)="showModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ editId() ? 'Hesabı Düzenle' : 'Yeni Mail Hesabı' }}</h2>
+            <h2>{{ (editId() ? 'admin.emailAccounts.editModalTitle' : 'admin.emailAccounts.newModalTitle') | transloco }}</h2>
             <button class="close-btn" (click)="showModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (error()) { <div class="alert-error">{{ error() }}</div> }
             <div class="form-group">
-              <label>Hesap Adı <span class="required">*</span></label>
-              <input type="text" [(ngModel)]="form.name" placeholder="ör. Kurumsal Exchange" />
+              <label>{{ 'admin.emailAccounts.accountName' | transloco }} <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="form.name" [placeholder]="'admin.emailAccounts.accountNamePh' | transloco" />
             </div>
             <div class="form-group">
-              <label>Sağlayıcı</label>
+              <label>{{ 'admin.emailAccounts.provider' | transloco }}</label>
               <select [(ngModel)]="form.provider" (ngModelChange)="applyPreset($event)">
-                <option value="Exchange">Exchange / Office 365</option>
-                <option value="Gmail">Gmail</option>
-                <option value="Custom">Özel (Custom)</option>
+                <option value="Exchange">{{ 'admin.emailAccounts.providerExchange' | transloco }}</option>
+                <option value="Gmail">{{ 'admin.emailAccounts.providerGmail' | transloco }}</option>
+                <option value="Custom">{{ 'admin.emailAccounts.providerCustom' | transloco }}</option>
               </select>
             </div>
             <div class="form-row">
               <div class="form-group" style="flex:2">
-                <label>SMTP Sunucusu <span class="required">*</span></label>
+                <label>{{ 'admin.emailAccounts.smtpServer' | transloco }} <span class="required">*</span></label>
                 <input type="text" [(ngModel)]="form.host" placeholder="smtp.office365.com" />
               </div>
               <div class="form-group" style="flex:1">
-                <label>Port</label>
+                <label>{{ 'admin.emailAccounts.port' | transloco }}</label>
                 <input type="number" [(ngModel)]="form.port" />
               </div>
             </div>
             <div class="form-group">
-              <label>Güvenlik</label>
+              <label>{{ 'admin.emailAccounts.security' | transloco }}</label>
               <select [(ngModel)]="form.security">
-                <option value="StartTls">STARTTLS (587)</option>
-                <option value="SslOnConnect">SSL/TLS (465)</option>
-                <option value="None">Yok</option>
+                <option value="StartTls">{{ 'admin.emailAccounts.securityStartTls' | transloco }}</option>
+                <option value="SslOnConnect">{{ 'admin.emailAccounts.securitySsl' | transloco }}</option>
+                <option value="None">{{ 'admin.emailAccounts.securityNone' | transloco }}</option>
               </select>
             </div>
             <div class="form-group">
-              <label>Kullanıcı Adı (e-posta) <span class="required">*</span></label>
+              <label>{{ 'admin.emailAccounts.username' | transloco }} <span class="required">*</span></label>
               <div style="display:flex;gap:0.5rem">
                 <input type="text" [(ngModel)]="form.username" placeholder="kullanici@kurum.com" style="flex:1" />
-                <button type="button" class="btn-secondary" [disabled]="discovering()" (click)="discover()" title="E-postadan SMTP ayarlarını otomatik bul">
-                  {{ discovering() ? '...' : 'Ayarları bul' }}
+                <button type="button" class="btn-secondary" [disabled]="discovering()" (click)="discover()" [title]="'admin.emailAccounts.findSettingsTitle' | transloco">
+                  {{ discovering() ? '...' : ('admin.emailAccounts.findSettings' | transloco) }}
                 </button>
               </div>
               @if (discoverHint()) { <span style="display:block;font-size:0.75rem;margin-top:0.25rem;color:var(--success-soft-text)">✓ {{ discoverHint() }}</span> }
             </div>
             <div class="form-group">
-              <label>Parola @if (!editId()) { <span class="required">*</span> } @else { <span class="hint">(değiştirmek için doldurun)</span> }</label>
+              <label>{{ 'admin.emailAccounts.password' | transloco }} @if (!editId()) { <span class="required">*</span> } @else { <span class="hint">{{ 'admin.emailAccounts.passwordEditHint' | transloco }}</span> }</label>
               <input type="password" [(ngModel)]="form.password" placeholder="••••••••" autocomplete="new-password" />
             </div>
             <div class="form-row">
               <div class="form-group" style="flex:1">
-                <label>Gönderen Adresi <span class="required">*</span></label>
+                <label>{{ 'admin.emailAccounts.fromAddress' | transloco }} <span class="required">*</span></label>
                 <input type="email" [(ngModel)]="form.fromAddress" placeholder="noreply@kurum.com" />
               </div>
               <div class="form-group" style="flex:1">
-                <label>Gönderen Adı</label>
+                <label>{{ 'admin.emailAccounts.fromName' | transloco }}</label>
                 <input type="text" [(ngModel)]="form.fromName" placeholder="KYS Platform" />
               </div>
             </div>
-            <label class="checkbox-label"><input type="checkbox" [(ngModel)]="form.acceptAllCertificates" /> Sunucu sertifikasını doğrulama (self-signed / iç sunucular için)</label>
+            <label class="checkbox-label"><input type="checkbox" [(ngModel)]="form.acceptAllCertificates" /> {{ 'admin.emailAccounts.skipCertValidation' | transloco }}</label>
             @if (!editId()) {
-              <label class="checkbox-label"><input type="checkbox" [(ngModel)]="form.makeActive" /> Bu hesabı aktif yap</label>
+              <label class="checkbox-label"><input type="checkbox" [(ngModel)]="form.makeActive" /> {{ 'admin.emailAccounts.makeActiveToggle' | transloco }}</label>
             }
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="showModal.set(false)">İptal</button>
-            <button class="btn btn-primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'Kaydediliyor...' : 'Kaydet' }}</button>
+            <button class="btn btn-secondary" (click)="showModal.set(false)">{{ 'common.cancel' | transloco }}</button>
+            <button class="btn btn-primary" [disabled]="saving()" (click)="save()">{{ (saving() ? 'common.saving' : 'common.save') | transloco }}</button>
           </div>
         </div>
       </div>
@@ -186,6 +187,7 @@ const PRESETS: Record<string, { host: string; port: number; security: string }> 
 export class EmailAccountsComponent implements OnInit {
   private http = inject(HttpClient);
   private notify = inject(NotificationService);
+  private transloco = inject(TranslocoService);
   private base = environment.apiUrl + '/admin/email-accounts';
 
   accounts = signal<EmailAccount[]>([]);
@@ -216,7 +218,7 @@ export class EmailAccountsComponent implements OnInit {
 
   discover() {
     const email = (this.form.username || '').trim();
-    if (!email.includes('@')) { this.error.set('Önce kullanıcı adı (e-posta) giriniz.'); return; }
+    if (!email.includes('@')) { this.error.set(this.transloco.translate('admin.emailAccounts.discoverNoEmail')); return; }
     this.discovering.set(true);
     this.discoverHint.set('');
     this.error.set('');
@@ -231,7 +233,7 @@ export class EmailAccountsComponent implements OnInit {
         this.discovering.set(false);
         this.discoverHint.set(r.source);
       },
-      error: e => { this.discovering.set(false); this.error.set(e.error?.detail ?? 'Ayarlar bulunamadı.'); }
+      error: e => { this.discovering.set(false); this.error.set(e.error?.detail ?? this.transloco.translate('admin.emailAccounts.settingsNotFound')); }
     });
   }
 
@@ -252,8 +254,8 @@ export class EmailAccountsComponent implements OnInit {
   }
 
   save() {
-    if (!this.form.name || !this.form.host || !this.form.username || !this.form.fromAddress) { this.error.set('Zorunlu alanları doldurun.'); return; }
-    if (!this.editId() && !this.form.password) { this.error.set('Parola zorunludur.'); return; }
+    if (!this.form.name || !this.form.host || !this.form.username || !this.form.fromAddress) { this.error.set(this.transloco.translate('admin.emailAccounts.requiredFields')); return; }
+    if (!this.editId() && !this.form.password) { this.error.set(this.transloco.translate('admin.emailAccounts.passwordRequired')); return; }
     this.saving.set(true);
     const body: Record<string, unknown> = {
       name: this.form.name, provider: this.form.provider, host: this.form.host, port: Number(this.form.port),
@@ -264,14 +266,14 @@ export class EmailAccountsComponent implements OnInit {
       body['password'] = this.form.password || null;
       this.http.put(`${this.base}/${this.editId()}`, body).subscribe({
         next: () => { this.saving.set(false); this.showModal.set(false); this.load(); },
-        error: e => { this.saving.set(false); this.error.set(e.error?.detail ?? 'Kayıt başarısız.'); }
+        error: e => { this.saving.set(false); this.error.set(e.error?.detail ?? this.transloco.translate('admin.emailAccounts.saveFailed')); }
       });
     } else {
       body['password'] = this.form.password;
       body['makeActive'] = this.form.makeActive;
       this.http.post(this.base, body).subscribe({
         next: () => { this.saving.set(false); this.showModal.set(false); this.load(); },
-        error: e => { this.saving.set(false); this.error.set(e.error?.detail ?? 'Kayıt başarısız.'); }
+        error: e => { this.saving.set(false); this.error.set(e.error?.detail ?? this.transloco.translate('admin.emailAccounts.saveFailed')); }
       });
     }
   }
@@ -281,16 +283,16 @@ export class EmailAccountsComponent implements OnInit {
   }
 
   remove(a: EmailAccount) {
-    if (!confirm(`"${a.name}" hesabı silinsin mi?`)) return;
+    if (!confirm(this.transloco.translate('admin.emailAccounts.deleteConfirm', { name: a.name }))) return;
     this.http.delete(`${this.base}/${a.id}`).subscribe(() => this.load());
   }
 
   test(a: EmailAccount) {
-    const to = prompt('Test maili gönderilecek adres:', a.fromAddress);
+    const to = prompt(this.transloco.translate('admin.emailAccounts.testPrompt'), a.fromAddress);
     if (!to) return;
     this.http.post(`${this.base}/${a.id}/test`, { toEmail: to }).subscribe({
-      next: () => this.notify.success('Test maili gönderildi.'),
-      error: e => this.notify.error(e.error?.detail ?? 'Test maili gönderilemedi.')
+      next: () => this.notify.success(this.transloco.translate('admin.emailAccounts.testSent')),
+      error: e => this.notify.error(e.error?.detail ?? this.transloco.translate('admin.emailAccounts.testFailed'))
     });
   }
 }

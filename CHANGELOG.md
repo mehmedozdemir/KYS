@@ -36,10 +36,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/)
   - **Ortam detayı** (`environment-detail`): başlık/breadcrumb, barındırma platformu seçici, kaynak kartları + dinamik şema alanları, endpoint URL kartları, "Kaynak Ekle"/"Endpoint URL"/"Credential Yönetimi" modalları, auth tipi seçenekleri, alan etiketleri (TS `fieldLabel`/`authTypeLabel`), tüm onay/hata mesajları
   - **Hesabım** (`account`): profil özeti, izinler, şifre değiştirme formu + validasyon/başarı/hata mesajları
   - **Arama** (`search`): arama kutusu, sonuç özeti, kategori başlıkları (CATEGORY_LABEL → dinamik anahtar), boş/bilgi durumları
-- Yeni sözlük namespace'leri: `environments.*` (~90 anahtar), `account.*`, `search.*`; `common`'a paylaşılan terimler
+  - **Tüm admin ekranları (11)**: Kurum Profili, Audit Log, Erişim Yetkileri, Mail Ayarları, Ortam Tipleri, Barındırma Platformları, Admin Paneli, Özel Alanlar, Kaynak Tipleri, Paylaşımlı Kaynaklar, Platform Kullanıcıları — liste/tablo, CRUD modalları, dinamik şema alanları, enum/rol/aksiyon etiketleri (label map'leri kaldırıldı → dinamik anahtar), tüm onay/hata/toast mesajları
+- Yeni sözlük namespace'leri: `environments.*` (~90 anahtar), `account.*`, `search.*`, `admin.*` (alt: orgProfile, auditLog, accessGrants, emailAccounts, environmentTypes, hostingPlatforms, dashboard, customFields, resourceTypes, sharedResources, platformUsers); `common`'a paylaşılan terimler (`recordNotFound` vb.)
 
 ### Notlar
-- Kalan: admin ekranları (~10) → ortak modallar/toast
+- Tüm UI artık TR/EN. Kalan (kapsam dışı): backend mesajları (validation/mail/enum) — ileride Accept-Language ile
 
 ---
 

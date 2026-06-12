@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 import { NotificationService } from '../../../core/services/notification.service';
 
@@ -48,38 +49,38 @@ const ROLE_COLOR: Record<string, string> = {
 @Component({
   selector: 'app-platform-users',
   standalone: true,
-  imports: [RouterLink, NgClass, FormsModule],
+  imports: [RouterLink, NgClass, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
-          <div class="breadcrumb"><a routerLink="/admin">Admin</a><span>/</span><span>Platform Kullanıcıları</span></div>
-          <h1 class="page-title">Platform Kullanıcıları</h1>
-          <p class="page-subtitle">Platform erişimi olan kişiler ve sistem rolleri</p>
+          <div class="breadcrumb"><a routerLink="/admin">{{ 'admin.crumb' | transloco }}</a><span>/</span><span>{{ 'admin.platformUsers.title' | transloco }}</span></div>
+          <h1 class="page-title">{{ 'admin.platformUsers.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.platformUsers.subtitle' | transloco }}</p>
         </div>
-        <button class="btn btn-primary" (click)="openAdd()"><i class="pi pi-user-plus"></i> Kişi Ekle</button>
+        <button class="btn btn-primary" (click)="openAdd()"><i class="pi pi-user-plus"></i> {{ 'admin.platformUsers.addPerson' | transloco }}</button>
       </div>
 
       <!-- Search -->
       <div class="toolbar">
         <div class="search-box">
           <i class="pi pi-search"></i>
-          <input type="text" placeholder="Kullanıcı ara..." [(ngModel)]="search" (input)="filterUsers()" />
+          <input type="text" [placeholder]="'admin.platformUsers.searchPh' | transloco" [(ngModel)]="search" (input)="filterUsers()" />
         </div>
       </div>
 
       @if (loading()) {
-        <div class="empty-state">Yükleniyor...</div>
+        <div class="empty-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!filtered().length) {
-        <div class="empty-state">Platform erişimi olan kullanıcı bulunamadı.</div>
+        <div class="empty-state">{{ 'admin.platformUsers.empty' | transloco }}</div>
       } @else {
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Kişi</th>
-                <th>Unvan</th>
-                <th>Sistem Rolleri</th>
+                <th>{{ 'admin.platformUsers.colPerson' | transloco }}</th>
+                <th>{{ 'admin.platformUsers.colTitle' | transloco }}</th>
+                <th>{{ 'admin.platformUsers.colRoles' | transloco }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -96,19 +97,19 @@ const ROLE_COLOR: Record<string, string> = {
                   <td class="text-muted">{{ p.title ?? '—' }}</td>
                   <td>
                     @if (p.isLocked) {
-                      <span class="locked-badge"><i class="pi pi-lock"></i> Kilitli</span>
+                      <span class="locked-badge"><i class="pi pi-lock"></i> {{ 'admin.platformUsers.locked' | transloco }}</span>
                     }
                     @let roles = rolesMap().get(p.id);
                     @if (roles === undefined) {
-                      <button class="load-roles-btn" (click)="loadRoles(p.id)">Rolleri yükle</button>
+                      <button class="load-roles-btn" (click)="loadRoles(p.id)">{{ 'admin.platformUsers.loadRoles' | transloco }}</button>
                     } @else if (!roles.length) {
-                      <span class="text-muted">Rol atanmamış</span>
+                      <span class="text-muted">{{ 'admin.platformUsers.noRoles' | transloco }}</span>
                     } @else {
                       <div class="role-chips">
                         @for (r of roles; track r.id) {
                           <span class="role-chip" [ngClass]="roleColor(r.code)">
-                            {{ r.name }}
-                            <button class="remove-role-btn" (click)="removeRole(p.id, r.id)" title="Rolü kaldır">
+                            {{ roleName(r.code, r.name) }}
+                            <button class="remove-role-btn" (click)="removeRole(p.id, r.id)" [title]="'admin.platformUsers.removeRoleTitle' | transloco">
                               <i class="pi pi-times"></i>
                             </button>
                           </span>
@@ -119,18 +120,18 @@ const ROLE_COLOR: Record<string, string> = {
                   <td class="action-cell">
                     <div class="action-group">
                       <button class="btn-sm" (click)="openAssignRole(p.id)">
-                        <i class="pi pi-user-edit"></i> Rol Ekle
+                        <i class="pi pi-user-edit"></i> {{ 'admin.platformUsers.addRole' | transloco }}
                       </button>
                       <button class="btn-sm" (click)="openResetPassword(p.id, p.firstName + ' ' + p.lastName)">
-                        <i class="pi pi-key"></i> Şifre
+                        <i class="pi pi-key"></i> {{ 'admin.platformUsers.password' | transloco }}
                       </button>
                       @if (p.isLocked) {
                         <button class="btn-sm btn-warning" (click)="unlockAccount(p.id)">
-                          <i class="pi pi-lock-open"></i> Kilidi Aç
+                          <i class="pi pi-lock-open"></i> {{ 'admin.platformUsers.unlock' | transloco }}
                         </button>
                       }
-                      <button class="btn-sm btn-danger-sm" (click)="removePlatformUser(p)" title="Platform erişimini kaldır">
-                        <i class="pi pi-user-minus"></i> Kaldır
+                      <button class="btn-sm btn-danger-sm" (click)="removePlatformUser(p)" [title]="'admin.platformUsers.removeAccessTitle' | transloco">
+                        <i class="pi pi-user-minus"></i> {{ 'admin.platformUsers.remove' | transloco }}
                       </button>
                     </div>
                   </td>
@@ -147,7 +148,7 @@ const ROLE_COLOR: Record<string, string> = {
       <div class="modal-backdrop" (click)="assignModal.set(null)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Sistem Rolü Ata</h2>
+            <h2>{{ 'admin.platformUsers.assignModalTitle' | transloco }}</h2>
             <button class="close-btn" (click)="assignModal.set(null)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -160,20 +161,20 @@ const ROLE_COLOR: Record<string, string> = {
               @for (r of ALL_SYSTEM_ROLES; track r.id) {
                 <div class="role-option" [class.assigned]="alreadyAssigned.has(r.id)">
                   <div>
-                    <span class="role-chip" [ngClass]="roleColor(r.code)">{{ r.name }}</span>
+                    <span class="role-chip" [ngClass]="roleColor(r.code)">{{ roleName(r.code, r.name) }}</span>
                     <p class="role-code">{{ r.code }}</p>
                   </div>
                   @if (alreadyAssigned.has(r.id)) {
-                    <span class="assigned-badge">Atanmış</span>
+                    <span class="assigned-badge">{{ 'admin.platformUsers.assigned' | transloco }}</span>
                   } @else {
-                    <button class="btn btn-primary btn-sm-modal" [disabled]="assigning()" (click)="assignRole(r.id)">Ata</button>
+                    <button class="btn btn-primary btn-sm-modal" [disabled]="assigning()" (click)="assignRole(r.id)">{{ 'admin.platformUsers.assign' | transloco }}</button>
                   }
                 </div>
               }
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="assignModal.set(null)">Kapat</button>
+            <button class="btn btn-secondary" (click)="assignModal.set(null)">{{ 'common.close' | transloco }}</button>
           </div>
         </div>
       </div>
@@ -184,7 +185,7 @@ const ROLE_COLOR: Record<string, string> = {
       <div class="modal-backdrop" (click)="resetModal.set(null)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Şifre Sıfırla — {{ resetModal()!.name }}</h2>
+            <h2>{{ 'admin.platformUsers.resetTitle' | transloco }} — {{ resetModal()!.name }}</h2>
             <button class="close-btn" (click)="resetModal.set(null)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body" style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem">
@@ -192,31 +193,31 @@ const ROLE_COLOR: Record<string, string> = {
               <div class="alert-error">{{ resetError() }}</div>
             }
             @if (resetSuccess()) {
-              <div class="alert-success">Şifre sıfırlandı ve yeni şifre kullanıcının e-postasına gönderildi.</div>
+              <div class="alert-success">{{ 'admin.platformUsers.resetSuccessMsg' | transloco }}</div>
             }
             <div style="display:flex;flex-direction:column;gap:0.375rem">
-              <label style="font-size:0.875rem;font-weight:500;color:var(--text)">Yeni Şifre *</label>
+              <label style="font-size:0.875rem;font-weight:500;color:var(--text)">{{ 'admin.platformUsers.newPassword' | transloco }} *</label>
               <div style="display:flex;gap:0.5rem">
                 <input type="text" [(ngModel)]="newPassword"
                   style="flex:1;padding:0.5rem 0.75rem;border:1px solid var(--border-strong);border-radius:0.375rem;font-size:0.875rem"
-                  placeholder="En az 8 karakter" />
-                <button type="button" class="btn-secondary" (click)="generateResetPassword()" title="Otomatik şifre üret"><i class="pi pi-refresh"></i></button>
+                  [placeholder]="'admin.platformUsers.newPasswordPh' | transloco" />
+                <button type="button" class="btn-secondary" (click)="generateResetPassword()" [title]="'admin.platformUsers.generateTitle' | transloco"><i class="pi pi-refresh"></i></button>
               </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:0.375rem">
-              <label style="font-size:0.875rem;font-weight:500;color:var(--text)">Şifre Tekrar *</label>
+              <label style="font-size:0.875rem;font-weight:500;color:var(--text)">{{ 'admin.platformUsers.confirmPassword' | transloco }} *</label>
               <input type="password" [(ngModel)]="confirmPassword"
                 style="padding:0.5rem 0.75rem;border:1px solid var(--border-strong);border-radius:0.375rem;font-size:0.875rem"
-                placeholder="Şifreyi tekrar girin" />
+                [placeholder]="'admin.platformUsers.confirmPasswordPh' | transloco" />
               @if (resetSubmitted() && newPassword !== confirmPassword) {
-                <span style="font-size:0.75rem;color:var(--danger)">Şifreler eşleşmiyor</span>
+                <span style="font-size:0.75rem;color:var(--danger)">{{ 'admin.platformUsers.passwordsMismatch' | transloco }}</span>
               }
             </div>
           </div>
           <div class="modal-footer" style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.75rem">
-            <button class="btn btn-secondary" (click)="resetModal.set(null)">İptal</button>
+            <button class="btn btn-secondary" (click)="resetModal.set(null)">{{ 'common.cancel' | transloco }}</button>
             <button class="btn btn-primary" [disabled]="resetSaving()" (click)="saveResetPassword()">
-              {{ resetSaving() ? 'Kaydediliyor...' : 'Şifreyi Sıfırla' }}
+              {{ (resetSaving() ? 'common.saving' : 'admin.platformUsers.resetButton') | transloco }}
             </button>
           </div>
         </div>
@@ -227,16 +228,16 @@ const ROLE_COLOR: Record<string, string> = {
       <div class="modal-backdrop" (click)="addModal.set(false)">
         <div class="modal modal--lg" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>Platforma Kişi Ekle</h2>
+            <h2>{{ 'admin.platformUsers.addModalTitle' | transloco }}</h2>
             <button class="close-btn" (click)="addModal.set(false)"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body add-body">
             @if (addLoading()) {
-              <div class="empty-state">Yükleniyor...</div>
+              <div class="empty-state">{{ 'common.loading' | transloco }}</div>
             } @else if (!groups().length) {
-              <div class="empty-state">Platforma alınabilecek kişi yok.</div>
+              <div class="empty-state">{{ 'admin.platformUsers.noProvisionable' | transloco }}</div>
             } @else {
-              <p class="add-hint">Seçilen kişiler platform kullanıcısı yapılır; kullanıcı adı e-postaları olur ve giriş bilgileri e-posta ile gönderilir.</p>
+              <p class="add-hint">{{ 'admin.platformUsers.addHint' | transloco }}</p>
               @for (g of groups(); track g.teamName) {
                 <div class="group">
                   <label class="group-head">
@@ -256,10 +257,10 @@ const ROLE_COLOR: Record<string, string> = {
             }
           </div>
           <div class="modal-footer">
-            <span class="sel-count">{{ selected().size }} kişi seçili</span>
-            <button class="btn btn-secondary" (click)="addModal.set(false)">İptal</button>
+            <span class="sel-count">{{ 'admin.platformUsers.selCount' | transloco:{ count: selected().size } }}</span>
+            <button class="btn btn-secondary" (click)="addModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button class="btn btn-primary" [disabled]="selected().size === 0 || addSaving()" (click)="submitAdd()">
-              {{ addSaving() ? 'Ekleniyor...' : 'Platforma Ekle' }}
+              {{ (addSaving() ? 'common.adding' : 'admin.platformUsers.addToPlatform') | transloco }}
             </button>
           </div>
         </div>
@@ -338,8 +339,15 @@ const ROLE_COLOR: Record<string, string> = {
 export class PlatformUsersComponent implements OnInit {
   private http = inject(HttpClient);
   private notify = inject(NotificationService);
+  private transloco = inject(TranslocoService);
 
   readonly ALL_SYSTEM_ROLES = ALL_SYSTEM_ROLES;
+
+  roleName(code: string, fallback: string): string {
+    const key = `admin.platformUsers.role.${code}`;
+    const label = this.transloco.translate(key);
+    return label === key ? fallback : label;
+  }
 
   users = signal<PersonItem[]>([]);
   filtered = signal<PersonItem[]>([]);
@@ -409,10 +417,10 @@ export class PlatformUsersComponent implements OnInit {
       next: r => {
         this.addSaving.set(false);
         this.addModal.set(false);
-        this.notify.success(`${r.provisioned} kişi platform kullanıcısı yapıldı. Giriş bilgileri e-posta ile gönderiliyor.`);
+        this.notify.success(this.transloco.translate('admin.platformUsers.provisioned', { count: r.provisioned }));
         this.loadUsers();
       },
-      error: e => { this.addSaving.set(false); this.notify.error(e.error?.detail ?? 'İşlem başarısız.'); }
+      error: e => { this.addSaving.set(false); this.notify.error(e.error?.detail ?? this.transloco.translate('admin.platformUsers.opFailed')); }
     });
   }
 
@@ -453,7 +461,7 @@ export class PlatformUsersComponent implements OnInit {
     this.assignError.set('');
     this.http.post(`${environment.apiUrl}/admin/users/${personId}/system-roles`, { systemRoleId }).subscribe({
       next: () => { this.assigning.set(false); this.loadRoles(personId); },
-      error: err => { this.assigning.set(false); this.assignError.set(err.error?.detail ?? 'Rol atanamadı'); }
+      error: err => { this.assigning.set(false); this.assignError.set(err.error?.detail ?? this.transloco.translate('admin.platformUsers.roleAssignFailed')); }
     });
   }
 
@@ -497,7 +505,7 @@ export class PlatformUsersComponent implements OnInit {
       },
       error: err => {
         this.resetSaving.set(false);
-        this.resetError.set(err.error?.detail ?? 'Şifre sıfırlanamadı');
+        this.resetError.set(err.error?.detail ?? this.transloco.translate('admin.platformUsers.resetFailed'));
       }
     });
   }
@@ -529,10 +537,10 @@ export class PlatformUsersComponent implements OnInit {
 
   // --- Platform erişimini kaldır ---
   removePlatformUser(p: PersonItem) {
-    if (!confirm(`${p.firstName} ${p.lastName} kişisinin platform erişimi kaldırılsın mı? (Kişi kaydı silinmez, giriş yapamaz hale gelir.)`)) return;
+    if (!confirm(this.transloco.translate('admin.platformUsers.removeConfirm', { name: `${p.firstName} ${p.lastName}` }))) return;
     this.http.post(`${environment.apiUrl}/admin/users/${p.id}/remove-platform-user`, {}).subscribe({
-      next: () => { this.notify.success('Platform erişimi kaldırıldı.'); this.loadUsers(); },
-      error: e => this.notify.error(e.error?.detail ?? 'İşlem başarısız.')
+      next: () => { this.notify.success(this.transloco.translate('admin.platformUsers.accessRemoved')); this.loadUsers(); },
+      error: e => this.notify.error(e.error?.detail ?? this.transloco.translate('admin.platformUsers.opFailed'))
     });
   }
 }

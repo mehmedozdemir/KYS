@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 
 interface FieldSchemaEntry {
@@ -27,32 +28,32 @@ interface ResourceType {
 @Component({
   selector: 'app-resource-types',
   standalone: true,
-  imports: [RouterLink, NgClass, FormsModule],
+  imports: [RouterLink, NgClass, FormsModule, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
         <div>
           <div class="breadcrumb">
-            <a routerLink="/admin">Admin</a>
+            <a routerLink="/admin">{{ 'admin.crumb' | transloco }}</a>
             <span>/</span>
-            <span>Kaynak Tipleri</span>
+            <span>{{ 'admin.resourceTypes.title' | transloco }}</span>
           </div>
-          <h1 class="page-title">Kaynak Tipleri</h1>
-          <p class="page-subtitle">{{ types().length }} tip tanımlı</p>
+          <h1 class="page-title">{{ 'admin.resourceTypes.title' | transloco }}</h1>
+          <p class="page-subtitle">{{ 'admin.resourceTypes.subtitle' | transloco:{ count: types().length } }}</p>
         </div>
         <button class="btn btn-primary" (click)="openCreate()">
-          <i class="pi pi-plus"></i> Yeni Kaynak Tipi
+          <i class="pi pi-plus"></i> {{ 'admin.resourceTypes.newType' | transloco }}
         </button>
       </div>
 
       @if (loading()) {
-        <div class="loading-state">Yükleniyor...</div>
+        <div class="loading-state">{{ 'common.loading' | transloco }}</div>
       } @else if (!types().length) {
         <div class="empty-state">
           <i class="pi pi-box"></i>
-          <p>Henüz kaynak tipi tanımlanmamış.</p>
+          <p>{{ 'admin.resourceTypes.empty' | transloco }}</p>
           <button class="btn btn-primary" (click)="openCreate()">
-            <i class="pi pi-plus"></i> İlk Kaynak Tipini Ekle
+            <i class="pi pi-plus"></i> {{ 'admin.resourceTypes.addFirst' | transloco }}
           </button>
         </div>
       } @else {
@@ -60,11 +61,11 @@ interface ResourceType {
           <table>
             <thead>
               <tr>
-                <th>Ad</th>
-                <th>Kod</th>
-                <th>Kategori</th>
-                <th>Alan Tanımları</th>
-                <th>Durum</th>
+                <th>{{ 'admin.resourceTypes.colName' | transloco }}</th>
+                <th>{{ 'admin.resourceTypes.colCode' | transloco }}</th>
+                <th>{{ 'admin.resourceTypes.colCategory' | transloco }}</th>
+                <th>{{ 'admin.resourceTypes.colFields' | transloco }}</th>
+                <th>{{ 'admin.resourceTypes.colStatus' | transloco }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -87,7 +88,7 @@ interface ResourceType {
                       <div class="field-chips">
                         @for (k of keys; track k) {
                           <span class="field-chip"
-                            [title]="t.fieldSchema[k].label + ' (' + t.fieldSchema[k].type + (t.fieldSchema[k].required ? ', zorunlu' : '') + ')'">
+                            [title]="t.fieldSchema[k].label + ' (' + t.fieldSchema[k].type + (t.fieldSchema[k].required ? (', ' + ('admin.resourceTypes.requiredSuffix' | transloco)) : '') + ')'">
                             @if (t.fieldSchema[k].required) { <span class="req-dot"></span> }
                             {{ t.fieldSchema[k].label }}
                           </span>
@@ -99,14 +100,14 @@ interface ResourceType {
                   </td>
                   <td>
                     <span class="badge" [ngClass]="t.isActive ? 'badge--active' : 'badge--inactive'">
-                      {{ t.isActive ? 'Aktif' : 'Pasif' }}
+                      {{ (t.isActive ? 'admin.resourceTypes.active' : 'admin.resourceTypes.inactive') | transloco }}
                     </span>
                   </td>
                   <td class="actions-cell">
-                    <button class="btn-icon" title="Düzenle" (click)="openEdit(t)">
+                    <button class="btn-icon" [title]="'admin.resourceTypes.editTitle' | transloco" (click)="openEdit(t)">
                       <i class="pi pi-pencil"></i>
                     </button>
-                    <button class="btn-icon btn-icon--danger" title="Pasif Yap"
+                    <button class="btn-icon btn-icon--danger" [title]="'admin.resourceTypes.deactivateTitle' | transloco"
                       [disabled]="deletingId() === t.id" (click)="deleteType(t)">
                       @if (deletingId() === t.id) { <i class="pi pi-spin pi-spinner"></i> }
                       @else { <i class="pi pi-trash"></i> }
@@ -125,7 +126,7 @@ interface ResourceType {
       <div class="modal-backdrop" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ editingId() ? 'Kaynak Tipini Düzenle' : 'Yeni Kaynak Tipi' }}</h2>
+            <h2>{{ (editingId() ? 'admin.resourceTypes.editModal' : 'admin.resourceTypes.newModal') | transloco }}</h2>
             <button type="button" class="close-btn" (click)="closeModal()">
               <i class="pi pi-times"></i>
             </button>
@@ -136,51 +137,51 @@ interface ResourceType {
             }
 
             <!-- Temel Bilgiler -->
-            <div class="section-label">Temel Bilgiler</div>
+            <div class="section-label">{{ 'admin.resourceTypes.basicInfo' | transloco }}</div>
             <div class="form-row">
               <div class="form-group">
-                <label>Ad <span class="req">*</span></label>
+                <label>{{ 'admin.resourceTypes.name' | transloco }} <span class="req">*</span></label>
                 <input type="text" [(ngModel)]="form.name"
                   [class.input-error]="submitted() && !form.name.trim()"
-                  placeholder="ör. PostgreSQL" />
+                  [placeholder]="'admin.resourceTypes.namePh' | transloco" />
                 @if (submitted() && !form.name.trim()) {
-                  <span class="field-error">Zorunlu alan</span>
+                  <span class="field-error">{{ 'admin.resourceTypes.requiredField' | transloco }}</span>
                 }
               </div>
               <div class="form-group">
-                <label>Kod <span class="req">*</span></label>
+                <label>{{ 'admin.resourceTypes.code' | transloco }} <span class="req">*</span></label>
                 <input type="text" [(ngModel)]="form.code"
                   [class.input-error]="submitted() && !form.code.trim()"
-                  placeholder="ör. postgresql"
+                  [placeholder]="'admin.resourceTypes.codePh' | transloco"
                   [disabled]="!!editingId()" />
                 @if (submitted() && !form.code.trim()) {
-                  <span class="field-error">Zorunlu alan</span>
+                  <span class="field-error">{{ 'admin.resourceTypes.requiredField' | transloco }}</span>
                 }
                 @if (editingId()) {
-                  <span class="field-hint">Kod değiştirilemez</span>
+                  <span class="field-hint">{{ 'admin.resourceTypes.codeImmutable' | transloco }}</span>
                 }
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Kategori</label>
-                <input type="text" [(ngModel)]="form.category" placeholder="ör. Veritabanı, Cache" />
+                <label>{{ 'admin.resourceTypes.category' | transloco }}</label>
+                <input type="text" [(ngModel)]="form.category" [placeholder]="'admin.resourceTypes.categoryPh' | transloco" />
               </div>
               <div class="form-group">
-                <label>İkon</label>
-                <input type="text" [(ngModel)]="form.icon" placeholder="ör. database, server" />
-                <span class="field-hint">PrimeIcons adı (pi- prefix'siz)</span>
+                <label>{{ 'admin.resourceTypes.icon' | transloco }}</label>
+                <input type="text" [(ngModel)]="form.icon" [placeholder]="'admin.resourceTypes.iconPh' | transloco" />
+                <span class="field-hint">{{ 'admin.resourceTypes.iconHint' | transloco }}</span>
               </div>
             </div>
             <div class="form-group">
-              <label>Açıklama</label>
-              <textarea [(ngModel)]="form.description" rows="2" placeholder="Kısa açıklama..."></textarea>
+              <label>{{ 'admin.resourceTypes.description' | transloco }}</label>
+              <textarea [(ngModel)]="form.description" rows="2" [placeholder]="'admin.resourceTypes.descriptionPh' | transloco"></textarea>
             </div>
             @if (editingId()) {
               <div class="form-group">
                 <label class="toggle-label">
                   <input type="checkbox" [(ngModel)]="form.isActive" />
-                  <span>Aktif</span>
+                  <span>{{ 'admin.resourceTypes.activeToggle' | transloco }}</span>
                 </label>
               </div>
             }
@@ -188,8 +189,8 @@ interface ResourceType {
             <!-- Alan Tanımları -->
             <div class="section-divider"></div>
             <div class="schema-header">
-              <div class="section-label" style="margin:0">Alan Tanımları</div>
-              <span class="section-hint">Credential formunda görünecek alanlar</span>
+              <div class="section-label" style="margin:0">{{ 'admin.resourceTypes.fieldDefs' | transloco }}</div>
+              <span class="section-hint">{{ 'admin.resourceTypes.fieldDefsHint' | transloco }}</span>
             </div>
 
             @if (fieldEntries().length) {
@@ -198,53 +199,53 @@ interface ResourceType {
                   <div class="field-entry">
                     <div class="field-entry-row">
                       <div class="form-group field-key-group">
-                        <label>Alan Anahtarı</label>
-                        <input type="text" [(ngModel)]="f.key" placeholder="ör. host, password" />
+                        <label>{{ 'admin.resourceTypes.fieldKey' | transloco }}</label>
+                        <input type="text" [(ngModel)]="f.key" [placeholder]="'admin.resourceTypes.fieldKeyPh' | transloco" />
                       </div>
                       <div class="form-group field-label-group">
-                        <label>Görünen Ad</label>
-                        <input type="text" [(ngModel)]="f.label" placeholder="ör. Sunucu Adresi" />
+                        <label>{{ 'admin.resourceTypes.fieldLabel' | transloco }}</label>
+                        <input type="text" [(ngModel)]="f.label" [placeholder]="'admin.resourceTypes.fieldLabelPh' | transloco" />
                       </div>
                       <div class="form-group field-type-group">
-                        <label>Tip</label>
+                        <label>{{ 'admin.resourceTypes.fieldTypeLabel' | transloco }}</label>
                         <select [(ngModel)]="f.type">
-                          <option value="string">Metin</option>
-                          <option value="password">Şifre</option>
-                          <option value="number">Sayı</option>
-                          <option value="boolean">Evet/Hayır</option>
+                          <option value="string">{{ 'admin.resourceTypes.typeString' | transloco }}</option>
+                          <option value="password">{{ 'admin.resourceTypes.typePassword' | transloco }}</option>
+                          <option value="number">{{ 'admin.resourceTypes.typeNumber' | transloco }}</option>
+                          <option value="boolean">{{ 'admin.resourceTypes.typeBoolean' | transloco }}</option>
                         </select>
                       </div>
                       <div class="form-group field-req-group">
-                        <label>Zorunlu</label>
+                        <label>{{ 'admin.resourceTypes.required' | transloco }}</label>
                         <label class="toggle-label" style="margin-top:0.375rem">
                           <input type="checkbox" [(ngModel)]="f.required" />
-                          <span>Evet</span>
+                          <span>{{ 'common.yes' | transloco }}</span>
                         </label>
                       </div>
-                      <button type="button" class="btn-remove-field" (click)="removeField(i)" title="Kaldır">
+                      <button type="button" class="btn-remove-field" (click)="removeField(i)" [title]="'admin.resourceTypes.removeFieldTitle' | transloco">
                         <i class="pi pi-times"></i>
                       </button>
                     </div>
                     <div class="form-group" style="margin-top:0.25rem">
-                      <label>Varsayılan Değer <span class="field-hint">(isteğe bağlı)</span></label>
-                      <input type="text" [(ngModel)]="f.defaultValue" placeholder="Varsayılan değer..." />
+                      <label>{{ 'admin.resourceTypes.defaultValue' | transloco }} <span class="field-hint">{{ 'admin.resourceTypes.defaultOptional' | transloco }}</span></label>
+                      <input type="text" [(ngModel)]="f.defaultValue" [placeholder]="'admin.resourceTypes.defaultValuePh' | transloco" />
                     </div>
                   </div>
                 }
               </div>
             } @else {
-              <div class="no-fields">Alan tanımı yok — aşağıdan ekleyin</div>
+              <div class="no-fields">{{ 'admin.resourceTypes.noFields' | transloco }}</div>
             }
 
             <button type="button" class="btn-add-field" (click)="addField()">
-              <i class="pi pi-plus"></i> Alan Ekle
+              <i class="pi pi-plus"></i> {{ 'admin.resourceTypes.addField' | transloco }}
             </button>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">İptal</button>
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
               @if (saving()) { <i class="pi pi-spin pi-spinner"></i> }
-              {{ editingId() ? 'Güncelle' : 'Oluştur' }}
+              {{ (editingId() ? 'common.update' : 'common.create') | transloco }}
             </button>
           </div>
         </div>
@@ -324,6 +325,7 @@ interface ResourceType {
 })
 export class ResourceTypesComponent implements OnInit {
   private http = inject(HttpClient);
+  private transloco = inject(TranslocoService);
 
   types = signal<ResourceType[]>([]);
   loading = signal(true);
@@ -418,12 +420,12 @@ export class ResourceTypesComponent implements OnInit {
 
     req.subscribe({
       next: () => { this.saving.set(false); this.showModal.set(false); this.load(); },
-      error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? 'Kaydedilemedi.'); }
+      error: err => { this.saving.set(false); this.saveError.set(err.error?.detail ?? this.transloco.translate('admin.resourceTypes.saveFailed')); }
     });
   }
 
   deleteType(t: ResourceType) {
-    if (!confirm(`"${t.name}" kaynak tipini pasif hale getirmek istediğinizden emin misiniz?`)) return;
+    if (!confirm(this.transloco.translate('admin.resourceTypes.deleteConfirm', { name: t.name }))) return;
     this.deletingId.set(t.id);
     this.http.delete(`${environment.apiUrl}/resources/types/${t.id}`).subscribe({
       next: () => { this.deletingId.set(null); this.load(); },
