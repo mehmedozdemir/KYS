@@ -12,6 +12,13 @@ interface CredentialStub {
   lastRotatedAt: string | null;
 }
 
+interface PersonalCredentialStub {
+  id: string;
+  fieldKey: string;
+  lastRotatedAt: string | null;
+  createdAt: string;
+}
+
 interface FieldSchemaDef {
   type: string;
   label: string;
@@ -279,6 +286,12 @@ interface HostingPlatformOption {
                       }
                       <button type="button" class="btn-cred" (click)="openCredModal(r)">
                         <i class="pi pi-key"></i> {{ 'environments.manageCredential' | transloco }}
+                      </button>
+                      <button type="button" class="btn-personal-cred" (click)="openPersonalCredModal(r)">
+                        <i class="pi pi-user"></i> {{ 'environments.myPersonalCreds' | transloco }}
+                        @if ((personalCreds()[r.id]?.length ?? 0) > 0) {
+                          <span class="personal-cred-badge">{{ personalCreds()[r.id].length }}</span>
+                        }
                       </button>
                       <button type="button" class="btn-remove-resource" [title]="'environments.removeResourceTitle' | transloco"
                         [disabled]="removingResourceId() === r.id"
@@ -720,6 +733,136 @@ interface HostingPlatformOption {
       </div>
     }
 
+    <!-- Kişisel Credential Modal -->
+    @if (showPersonalCredModal() && personalCredResource()) {
+      <div class="modal-backdrop" (click)="closePersonalCredModal()">
+        <div class="modal modal--wide" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>{{ 'environments.personalCredsMgmt' | transloco }}</h2>
+              <p class="modal-subtitle">{{ personalCredResource()!.templateName }} · {{ personalCredResource()!.resourceTypeName }}</p>
+            </div>
+            <button type="button" class="modal-close" (click)="closePersonalCredModal()"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+
+            <!-- Bilgi kutusu -->
+            <div class="personal-creds-info-box">
+              <i class="pi pi-shield"></i>
+              {{ 'environments.personalCredsInfo' | transloco }}
+            </div>
+
+            <!-- Mevcut kişisel credential'lar -->
+            @if (personalCredsLoading()[personalCredResource()!.id]) {
+              <div class="loading-state">{{ 'common.loading' | transloco }}</div>
+            } @else if ((personalCreds()[personalCredResource()!.id]?.length ?? 0) === 0) {
+              <p class="empty-creds">{{ 'environments.personalCredsEmpty' | transloco }}</p>
+            } @else {
+              <div class="cred-section-title">{{ 'environments.savedCredentials' | transloco }}</div>
+              <div class="cred-table">
+                @for (c of personalCreds()[personalCredResource()!.id]; track c.id) {
+                  <div class="cred-row">
+                    <span class="cred-key">
+                      <i class="pi pi-user"></i>
+                      {{ fieldLabelForResource(personalCredResource()!, c.fieldKey) }}
+                      <code class="cred-key-code">{{ c.fieldKey }}</code>
+                    </span>
+                    <div class="cred-value-cell">
+                      @if (personalCredsRevealed()[c.id]; as val) {
+                        <span class="cred-revealed">{{ val }}</span>
+                        <button type="button" class="copy-btn" (click)="copy(val)" [title]="'common.copy' | transloco"><i class="pi pi-copy"></i></button>
+                        <button type="button" class="btn-hide" (click)="hidePersonalCredValue(c.id)"><i class="pi pi-eye-slash"></i> {{ 'environments.hide' | transloco }}</button>
+                      } @else {
+                        <span class="cred-masked-lg">••••••••</span>
+                        <button type="button" class="btn-reveal" [disabled]="personalCredsRevealLoading()[c.id]" (click)="revealPersonalCred(c.id)">
+                          @if (personalCredsRevealLoading()[c.id]) { <i class="pi pi-spin pi-spinner"></i> }
+                          @else { <i class="pi pi-eye"></i> {{ 'environments.reveal' | transloco }} }
+                        </button>
+                      }
+                    </div>
+                    <div class="cred-meta">
+                      @if (c.lastRotatedAt) {
+                        <span class="cred-rotated">{{ c.lastRotatedAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                      }
+                      <button type="button" class="btn-edit-cred"
+                        (click)="startEditPersonalCred(c)" [title]="'common.update' | transloco">
+                        <i class="pi pi-pencil"></i>
+                      </button>
+                      <button type="button" class="btn-del-cred"
+                        [disabled]="deletingPersonalCredId()[c.id]"
+                        (click)="deletePersonalCred(c.id)" [title]="'common.delete' | transloco">
+                        @if (deletingPersonalCredId()[c.id]) { <i class="pi pi-spin pi-spinner"></i> }
+                        @else { <i class="pi pi-trash"></i> }
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Ekle / Güncelle formu -->
+            <div class="cred-form-divider">
+              <span>{{ personalCredEditingKey() ? ('environments.updateField' | transloco:{ field: fieldLabelForResource(personalCredResource()!, personalCredEditingKey()!) }) : ('environments.addCredential' | transloco) }}</span>
+              @if (personalCredEditingKey()) {
+                <button type="button" class="btn-cancel-edit" (click)="cancelEditPersonalCred()">{{ 'common.cancel' | transloco }}</button>
+              }
+            </div>
+            <div class="cred-form">
+              <div class="form-group">
+                <label>{{ 'environments.fieldName' | transloco }} <span class="required">*</span></label>
+                @if (personalCredSchemaKeys().length && !personalCredEditingKey()) {
+                  <select [(ngModel)]="personalCredForm.fieldKey"
+                    [class.input-error]="personalCredSubmitted() && !personalCredForm.fieldKey.trim()">
+                    <option value="">{{ 'environments.selectField' | transloco }}</option>
+                    @for (fk of personalCredSchemaKeys(); track fk) {
+                      <option [value]="fk">{{ fieldLabelForResource(personalCredResource()!, fk) }} ({{ fk }})</option>
+                    }
+                    <option value="__custom__">{{ 'environments.customField' | transloco }}</option>
+                  </select>
+                } @else {
+                  <input type="text" [(ngModel)]="personalCredForm.fieldKey"
+                    [placeholder]="'environments.fieldKeyPlaceholder' | transloco"
+                    [disabled]="!!personalCredEditingKey()"
+                    [class.input-error]="personalCredSubmitted() && !personalCredForm.fieldKey.trim()" />
+                }
+                @if (personalCredSubmitted() && !personalCredForm.fieldKey.trim()) {
+                  <span class="error-msg">{{ 'environments.fieldNameRequired' | transloco }}</span>
+                }
+                @if (personalCredForm.fieldKey === '__custom__') {
+                  <input type="text" [(ngModel)]="personalCredForm.customFieldKey"
+                    [placeholder]="'environments.enterFieldName' | transloco"
+                    style="margin-top:0.375rem" />
+                }
+              </div>
+              <div class="form-group">
+                <label>{{ 'environments.value' | transloco }} <span class="required">*</span></label>
+                <div class="password-input-wrap">
+                  <input [type]="personalCredShowValue() ? 'text' : 'password'"
+                    [(ngModel)]="personalCredForm.value"
+                    [placeholder]="'environments.enterValue' | transloco"
+                    [class.input-error]="personalCredSubmitted() && !personalCredForm.value.trim()" />
+                  <button type="button" class="pw-toggle" (click)="personalCredShowValue.update(v => !v)">
+                    <i class="pi" [class]="personalCredShowValue() ? 'pi-eye-slash' : 'pi-eye'"></i>
+                  </button>
+                </div>
+                @if (personalCredSubmitted() && !personalCredForm.value.trim()) {
+                  <span class="error-msg">{{ 'environments.valueRequired' | transloco }}</span>
+                }
+              </div>
+              @if (personalCredError()) {
+                <div class="alert-error">{{ personalCredError() }}</div>
+              }
+              <button type="button" class="btn-save-cred" [disabled]="personalCredSaving()" (click)="savePersonalCred()">
+                @if (personalCredSaving()) { <i class="pi pi-spin pi-spinner"></i> {{ 'common.saving' | transloco }} }
+                @else { <i class="pi pi-check"></i> {{ (personalCredEditingKey() ? 'common.update' : 'common.add') | transloco }} }
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Credential Yönetim Modal -->
     @if (showCredModal() && (credResource() || credEndpoint())) {
       <div class="modal-backdrop" (click)="closeCredModal()">
@@ -1007,6 +1150,11 @@ interface HostingPlatformOption {
     .required { color: var(--danger); }
     .alert-error { padding: 0.75rem; background: var(--danger-faint-bg); border: 1px solid var(--danger-border); border-radius: 0.375rem; color: var(--danger-soft-text); font-size: 0.8125rem; }
     .btn-save-cred { background: var(--warning); color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1.25rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.375rem; align-self: flex-start; &:hover { background: var(--warning-strong); } &:disabled { opacity: 0.6; cursor: not-allowed; } }
+
+    /* Personal credentials */
+    .btn-personal-cred { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: 0.375rem; padding: 0.25rem 0.75rem; font-size: 0.8125rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.375rem; &:hover { border-color: var(--indigo-strong); color: var(--indigo-strong); background: var(--indigo-soft-bg); } }
+    .personal-cred-badge { background: var(--indigo-soft-bg); color: var(--indigo-strong); border-radius: 9999px; padding: 0.05rem 0.4rem; font-size: 0.7rem; font-weight: 700; }
+    .personal-creds-info-box { display: flex; align-items: flex-start; gap: 0.625rem; padding: 0.75rem 1rem; background: var(--indigo-soft-bg); border: 1px solid var(--indigo-soft-bg-2, #c7d2fe); border-radius: 0.5rem; font-size: 0.8125rem; color: var(--indigo-strong, #4338ca); i { flex-shrink: 0; margin-top: 0.1rem; } }
   `]
 })
 export class EnvironmentDetailComponent implements OnInit {
@@ -1339,6 +1487,149 @@ export class EnvironmentDetailComponent implements OnInit {
       ApiKey: 'API Key', OAuth2: 'OAuth2', None: this.transloco.translate('environments.authNoneLabel')
     };
     return name ? (labels[name] ?? name) : this.transloco.translate('environments.authNoneLabel');
+  }
+
+  // Personal credential modal state
+  showPersonalCredModal = signal(false);
+  personalCredResource = signal<EnvironmentResource | null>(null);
+  personalCreds = signal<Record<string, PersonalCredentialStub[]>>({});
+  personalCredsLoading = signal<Record<string, boolean>>({});
+  personalCredsRevealed = signal<Record<string, string>>({});
+  personalCredsRevealLoading = signal<Record<string, boolean>>({});
+  personalCredEditingKey = signal<string | null>(null);
+  personalCredSubmitted = signal(false);
+  personalCredSaving = signal(false);
+  personalCredError = signal('');
+  personalCredShowValue = signal(false);
+  personalCredForm = { fieldKey: '', customFieldKey: '', value: '' };
+  deletingPersonalCredId = signal<Record<string, boolean>>({});
+
+  openPersonalCredModal(r: EnvironmentResource) {
+    this.personalCredResource.set(r);
+    this.personalCredEditingKey.set(null);
+    this.personalCredSubmitted.set(false);
+    this.personalCredError.set('');
+    this.personalCredShowValue.set(false);
+    this.personalCredForm = { fieldKey: '', customFieldKey: '', value: '' };
+    this.showPersonalCredModal.set(true);
+    if (!this.personalCreds()[r.id]) {
+      this.loadPersonalCreds(r.id);
+    }
+  }
+
+  closePersonalCredModal() {
+    this.showPersonalCredModal.set(false);
+    this.personalCredResource.set(null);
+  }
+
+  private loadPersonalCreds(resourceId: string) {
+    this.personalCredsLoading.update(m => ({ ...m, [resourceId]: true }));
+    this.http.get<PersonalCredentialStub[]>(
+      `${environment.apiUrl}/personal-credentials?environmentResourceId=${resourceId}`
+    ).subscribe({
+      next: list => {
+        this.personalCreds.update(m => ({ ...m, [resourceId]: list }));
+        this.personalCredsLoading.update(m => ({ ...m, [resourceId]: false }));
+      },
+      error: () => this.personalCredsLoading.update(m => ({ ...m, [resourceId]: false }))
+    });
+  }
+
+  personalCredSchemaKeys(): string[] {
+    const r = this.personalCredResource();
+    return r ? Object.keys(r.fieldSchema ?? {}) : [];
+  }
+
+  fieldLabelForResource(r: EnvironmentResource, fieldKey: string): string {
+    const schema = r.fieldSchema;
+    if (schema?.[fieldKey]?.label) return schema[fieldKey].label;
+    const commonLabels: Record<string, string> = {
+      username: this.transloco.translate('environments.fieldUsername'),
+      password: this.transloco.translate('environments.fieldPassword'),
+      token: this.transloco.translate('environments.fieldToken'),
+      apiKey: this.transloco.translate('environments.fieldApiKey'),
+      clientId: 'Client ID', clientSecret: 'Client Secret'
+    };
+    return commonLabels[fieldKey] ?? fieldKey;
+  }
+
+  startEditPersonalCred(c: PersonalCredentialStub) {
+    this.personalCredEditingKey.set(c.fieldKey);
+    this.personalCredForm = { fieldKey: c.fieldKey, customFieldKey: '', value: '' };
+    this.personalCredSubmitted.set(false);
+    this.personalCredError.set('');
+    this.personalCredShowValue.set(false);
+  }
+
+  cancelEditPersonalCred() {
+    this.personalCredEditingKey.set(null);
+    this.personalCredForm = { fieldKey: '', customFieldKey: '', value: '' };
+    this.personalCredSubmitted.set(false);
+    this.personalCredError.set('');
+  }
+
+  revealPersonalCred(credId: string) {
+    this.personalCredsRevealLoading.update(m => ({ ...m, [credId]: true }));
+    this.http.get<{ value: string }>(`${environment.apiUrl}/personal-credentials/${credId}/reveal`).subscribe({
+      next: r => {
+        this.personalCredsRevealed.update(m => ({ ...m, [credId]: r.value }));
+        this.personalCredsRevealLoading.update(m => ({ ...m, [credId]: false }));
+        setTimeout(() => this.hidePersonalCredValue(credId), 30_000);
+      },
+      error: () => {
+        this.personalCredsRevealLoading.update(m => ({ ...m, [credId]: false }));
+        this.personalCredError.set(this.transloco.translate('environments.personalCredRevealError'));
+      }
+    });
+  }
+
+  hidePersonalCredValue(credId: string) {
+    this.personalCredsRevealed.update(m => { const u = { ...m }; delete u[credId]; return u; });
+  }
+
+  savePersonalCred() {
+    this.personalCredSubmitted.set(true);
+    const resolvedKey = this.personalCredForm.fieldKey === '__custom__'
+      ? this.personalCredForm.customFieldKey.trim()
+      : this.personalCredForm.fieldKey.trim();
+    if (!resolvedKey || !this.personalCredForm.value.trim()) return;
+
+    this.personalCredSaving.set(true);
+    this.personalCredError.set('');
+    const resourceId = this.personalCredResource()!.id;
+
+    this.http.put<{ id: string }>(`${environment.apiUrl}/personal-credentials`, {
+      environmentResourceId: resourceId,
+      sharedResourceId: null,
+      fieldKey: resolvedKey,
+      plainValue: this.personalCredForm.value.trim()
+    }).subscribe({
+      next: () => {
+        this.personalCredSaving.set(false);
+        this.cancelEditPersonalCred();
+        this.loadPersonalCreds(resourceId);
+      },
+      error: err => {
+        this.personalCredSaving.set(false);
+        this.personalCredError.set(err.error?.detail ?? this.transloco.translate('environments.personalCredSaveError'));
+      }
+    });
+  }
+
+  deletePersonalCred(credId: string) {
+    if (!confirm(this.transloco.translate('environments.personalCredDeleteConfirm'))) return;
+    this.deletingPersonalCredId.update(m => ({ ...m, [credId]: true }));
+    this.http.delete(`${environment.apiUrl}/personal-credentials/${credId}`).subscribe({
+      next: () => {
+        this.deletingPersonalCredId.update(m => ({ ...m, [credId]: false }));
+        const resourceId = this.personalCredResource()?.id;
+        if (resourceId) this.loadPersonalCreds(resourceId);
+      },
+      error: () => {
+        this.deletingPersonalCredId.update(m => ({ ...m, [credId]: false }));
+        this.personalCredError.set(this.transloco.translate('environments.personalCredDeleteError'));
+      }
+    });
   }
 
   // Credential modal state

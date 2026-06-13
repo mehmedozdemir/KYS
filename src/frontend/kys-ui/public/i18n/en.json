@@ -624,7 +624,16 @@
     "urlSaveError": "Could not save the URL.",
     "credDeleteError": "Could not delete the credential.",
     "credRevealError": "Could not reveal the credential. You may not have permission.",
-    "credSaveError": "Could not save the credential."
+    "credSaveError": "Could not save the credential.",
+    "myPersonalCreds": "My Personal Credentials",
+    "myPersonalCredsCount": "{{count}} personal",
+    "personalCredsMgmt": "Personal Credentials",
+    "personalCredsInfo": "These credentials are yours only. No other user — including admins — can see them.",
+    "personalCredsEmpty": "You have not added any personal credentials for this resource yet.",
+    "personalCredRevealError": "Could not reveal personal credential.",
+    "personalCredSaveError": "Could not save personal credential.",
+    "personalCredDeleteConfirm": "This personal credential will be deleted. Are you sure?",
+    "personalCredDeleteError": "Could not delete personal credential."
   },
   "account": {
     "title": "My Account",

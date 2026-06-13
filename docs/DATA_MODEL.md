@@ -552,7 +552,43 @@ CREATE TABLE resource_credentials (
 
 ---
 
-### 5.8 customer_environment_endpoints
+### 5.8 personal_resource_credentials
+
+Kişiye özel erişim bilgileri. Sadece sahibi (`owner_person_id`) reveal edebilir; yönetici dahil başka hiçbir kullanıcı açık değeri göremez.
+
+```sql
+CREATE TABLE personal_resource_credentials (
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    -- Hangi kaynağa ait (ikisinden biri dolu, ikisi birden dolu olamaz)
+    environment_resource_id UUID REFERENCES environment_resources(id) ON DELETE CASCADE,
+    shared_resource_id      UUID REFERENCES shared_resources(id) ON DELETE CASCADE,
+
+    -- Sadece bu kişi reveal edebilir
+    owner_person_id         UUID NOT NULL REFERENCES people(id) ON DELETE RESTRICT,
+
+    field_key               VARCHAR(100) NOT NULL,
+    encrypted_value         TEXT NOT NULL,           -- AES-256-CBC, base64
+    iv                      VARCHAR(100) NOT NULL,   -- AES IV, base64
+
+    last_rotated_at         TIMESTAMPTZ,
+    -- base columns (created_at, created_by, updated_at, updated_by, is_deleted, deleted_at, deleted_by)
+
+    CONSTRAINT chk_personal_cred_resource CHECK (
+        (environment_resource_id IS NOT NULL AND shared_resource_id IS NULL) OR
+        (environment_resource_id IS NULL  AND shared_resource_id IS NOT NULL)
+    )
+);
+```
+
+**Güvenlik kuralları:**
+- `GET /api/v1/personal-credentials/{id}/reveal` → sadece `owner_person_id == mevcut kullanıcı`; başka hiçbir koşulda bypass yok
+- Admin (`personal-credential:manage` yetkisiyle) sadece sıfırlama veya silme yapabilir — açık değeri **göremez**
+- Her reveal işlemi `AuditLog`'a yazılır (Action = "PersonalCredentialRevealed")
+
+---
+
+### 5.9 customer_environment_endpoints
 
 Müşteriye özel endpoint URL'leri (product_endpoints'teki şablonu override eder).
 

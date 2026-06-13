@@ -30,6 +30,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<SharedResource> SharedResources => Set<SharedResource>();
     public DbSet<EnvironmentResource> EnvironmentResources => Set<EnvironmentResource>();
     public DbSet<ResourceCredential> ResourceCredentials => Set<ResourceCredential>();
+    public DbSet<PersonalCredential> PersonalCredentials => Set<PersonalCredential>();
     public DbSet<CustomerEnvironmentEndpoint> CustomerEnvironmentEndpoints => Set<CustomerEnvironmentEndpoint>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<KbArticle> KbArticles => Set<KbArticle>();

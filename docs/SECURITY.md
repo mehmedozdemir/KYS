@@ -136,6 +136,11 @@ public static class Permissions
 | admin.* | ✅ | ❌ | ❌ | ❌ | ❌ |
 
 > *Developer: sadece atandığı ürünlerin credential'larını görebilir
+> **Kişisel Credential (personal_resource_credentials):** Sadece sahibi (`owner_person_id == currentUser`) reveal edebilir. Hiçbir rol bypass edemez.
+
+| **personal-credential:manage** | ✅ | ❌ | ✅ | ❌ | ❌ |
+
+> `personal-credential:manage`: PlatformAdmin ve TeamLead başkasının kişisel credential'ını **silebilir veya sıfırlayabilir** ama **açık değerini göremez**.
 
 ### Resource-Level Authorization
 
@@ -144,7 +149,7 @@ Sadece rol bazlı yetki yeterli değil — kaynak bazlı kontrol de şart:
 ```csharp
 public class ResourceAuthorizationService
 {
-    // "Bu kişi bu credential'ı görebilir mi?"
+    // "Bu kişi bu paylaşımlı credential'ı görebilir mi?"
     public async Task<bool> CanRevealCredentialAsync(
         Guid personId,
         Guid environmentResourceId,
@@ -168,6 +173,10 @@ public class ResourceAuthorizationService
                         .Any(ce => ce.EnvironmentResources
                             .Any(er => er.Id == environmentResourceId))), ct);
     }
+
+    // "Bu kişisel credential'ı sadece sahibi görebilir — HİÇBİR bypass yok"
+    public bool CanRevealPersonalCredential(Guid ownerId, Guid currentUserId)
+        => ownerId == currentUserId;
 }
 ```
 
