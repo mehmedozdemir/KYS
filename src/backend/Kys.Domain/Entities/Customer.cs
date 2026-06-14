@@ -37,6 +37,7 @@ public sealed class Customer : AuditableEntity
 
     // Navigation
     public ICollection<CustomerProduct> Products { get; set; } = [];
+    public ICollection<CustomerVpnConfig> VpnConfigs { get; set; } = [];
 
     public void Churn(DateOnly serviceEndedAt, string? reason)
     {

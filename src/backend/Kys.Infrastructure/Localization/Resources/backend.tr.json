@@ -67,6 +67,12 @@
   "err.smtp.protocolError": "SMTP protokol hatası: {0} (yanlış porta bağlanıyor olabilirsiniz).",
   "err.smtp.sendFailed": "E-posta gönderilemedi ({0}:{1}): {2}",
 
+  "err.vpnConfig.notFound": "VPN yapılandırması bulunamadı.",
+  "err.vpnConfig.noPassword": "Bu VPN yapılandırmasında şifre tanımlı değil.",
+  "err.vpnConfig.forbiddenReveal": "Bu VPN şifresini görüntüleme yetkiniz yok.",
+  "val.vpnConfig.nameRequired": "VPN adı zorunludur.",
+  "val.vpnConfig.serverHostRequired": "Sunucu adresi zorunludur.",
+
   "val.credential.targetRequired": "EnvironmentResourceId, SharedResourceId veya EndpointUrlId belirtilmelidir.",
   "val.personalCredential.fieldKeyRequired": "Alan anahtarı zorunludur.",
   "val.personalCredential.valueRequired": "Değer zorunludur.",

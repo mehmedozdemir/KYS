@@ -5,9 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { NgClass, DatePipe } from '@angular/common';
 import { environment } from '../../../../environments/environment';
 import { PermissionService } from '../../../core/services/permission.service';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 
 const STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
+const VPN_TYPES = ['OpenVPN','WireGuard','CiscoAnyConnect','Fortinet','PulseSecure','SonicWall','MicrosoftVpn','Other'];
 
 interface CustomFieldDef {
   id: string;
@@ -242,6 +243,50 @@ interface Customer {
                 </div>
               }
             }
+            <div class="section-title">
+              <span>{{ 'customerDetail.tabVpn' | transloco }}</span>
+              <button type="button" class="vpn-toggle-btn" (click)="showVpnSection.set(!showVpnSection())">
+                @if (showVpnSection()) { <i class="pi pi-minus"></i> {{ 'common.hide' | transloco }} }
+                @else { <i class="pi pi-plus"></i> {{ 'customerDetail.addVpn' | transloco }} }
+              </button>
+            </div>
+            @if (showVpnSection()) {
+              <div class="form-row">
+                <div class="form-group">
+                  <label>{{ 'customerDetail.vpnName' | transloco }}</label>
+                  <input type="text" [(ngModel)]="vpnForm.name" [placeholder]="'customerDetail.vpnNamePh' | transloco" />
+                </div>
+                <div class="form-group">
+                  <label>{{ 'customerDetail.vpnType' | transloco }}</label>
+                  <select [(ngModel)]="vpnForm.vpnType">
+                    <option value="">—</option>
+                    @for (t of vpnTypes; track t) {
+                      <option [value]="t">{{ 'status.vpnType.' + t | transloco }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>{{ 'customerDetail.vpnServer' | transloco }}</label>
+                  <input type="text" [(ngModel)]="vpnForm.serverHost" [placeholder]="'customerDetail.vpnServerPh' | transloco" />
+                </div>
+                <div class="form-group">
+                  <label>{{ 'customerDetail.vpnPort' | transloco }}</label>
+                  <input type="number" [(ngModel)]="vpnForm.serverPort" [placeholder]="'customerDetail.vpnPortPh' | transloco" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>{{ 'customerDetail.vpnUsername' | transloco }}</label>
+                  <input type="text" [(ngModel)]="vpnForm.username" [placeholder]="'customerDetail.vpnUsernamePh' | transloco" />
+                </div>
+                <div class="form-group">
+                  <label>{{ 'customerDetail.vpnPassword' | transloco }}</label>
+                  <input type="password" [(ngModel)]="vpnForm.password" [placeholder]="'customerDetail.vpnPasswordPh' | transloco" autocomplete="new-password" />
+                </div>
+              </div>
+            }
             @if (saveError()) {
               <div class="alert-error">{{ saveError() }}</div>
             }
@@ -336,7 +381,8 @@ interface Customer {
     .input-error { border-color: var(--danger) !important; }
     .error-msg { font-size: 0.75rem; color: var(--danger); }
     .required { color: var(--danger); }
-    .section-title { font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-top: 1px solid var(--surface-3); padding-top: 0.75rem; }
+    .section-title { font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-top: 1px solid var(--surface-3); padding-top: 0.75rem; display: flex; align-items: center; justify-content: space-between; }
+    .vpn-toggle-btn { background: none; border: 1px solid var(--border-strong); border-radius: 0.25rem; padding: 0.15rem 0.5rem; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 0.25rem; text-transform: none; letter-spacing: 0; &:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-soft-bg); } i { font-size: 0.7rem; } }
     .alert-error { padding: 0.75rem; background: var(--danger-faint-bg); border: 1px solid var(--danger-border); border-radius: 0.375rem; color: var(--danger-soft-text); font-size: 0.8125rem; }
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; line-height: 1.5; &:disabled { opacity: 0.6; cursor: not-allowed; } }
     .btn-primary { background: var(--primary) !important; color: var(--surface) !important; &:not(:disabled):hover { background: var(--primary-hover) !important; } }
@@ -365,6 +411,8 @@ export class CustomerListComponent implements OnInit {
   private http = inject(HttpClient);
   protected perms = inject(PermissionService);
   private router = inject(Router);
+  private transloco = inject(TranslocoService);
+  readonly vpnTypes = VPN_TYPES;
 
   customers: Customer[] = [];
   search = '';
@@ -404,6 +452,8 @@ export class CustomerListComponent implements OnInit {
   submitted = signal(false);
   saving = signal(false);
   saveError = signal('');
+  showVpnSection = signal(false);
+  vpnForm = { name: '', vpnType: '', serverHost: '', serverPort: null as number | null, username: '', password: '' };
 
   customFieldDefs = signal<CustomFieldDef[]>([]);
   private cfLoaded = false;
@@ -458,6 +508,8 @@ export class CustomerListComponent implements OnInit {
     this.showModal.set(false);
     this.submitted.set(false);
     this.saveError.set('');
+    this.showVpnSection.set(false);
+    this.vpnForm = { name: '', vpnType: '', serverHost: '', serverPort: null, username: '', password: '' };
     this.cfValues = {};
     this.form = {
       name: '', code: '', shortName: '', sector: '',
@@ -517,13 +569,32 @@ export class CustomerListComponent implements OnInit {
 
     this.http.post<{ id: string }>(`${environment.apiUrl}/customers`, body).subscribe({
       next: res => {
-        this.saving.set(false);
-        this.closeModal();
-        this.router.navigate(['/customers', res.id]);
+        const customerId = res.id;
+        const hasVpn = this.showVpnSection() && this.vpnForm.name.trim() && this.vpnForm.vpnType && this.vpnForm.serverHost.trim();
+        if (hasVpn) {
+          const vpnBody = {
+            name: this.vpnForm.name.trim(),
+            vpnType: this.vpnForm.vpnType,
+            serverHost: this.vpnForm.serverHost.trim(),
+            serverPort: this.vpnForm.serverPort || null,
+            username: this.vpnForm.username.trim() || null,
+            password: this.vpnForm.password.trim() || null,
+            notes: null,
+            isActive: true
+          };
+          this.http.post(`${environment.apiUrl}/customers/${customerId}/vpn-configs`, vpnBody).subscribe({
+            next: () => { this.saving.set(false); this.closeModal(); this.router.navigate(['/customers', customerId]); },
+            error: () => { this.saving.set(false); this.closeModal(); this.router.navigate(['/customers', customerId]); }
+          });
+        } else {
+          this.saving.set(false);
+          this.closeModal();
+          this.router.navigate(['/customers', customerId]);
+        }
       },
       error: err => {
         this.saving.set(false);
-        this.saveError.set(err.error?.detail ?? 'Müşteri oluşturulamadı');
+        this.saveError.set(err.error?.detail ?? this.transloco.translate('customers.createErr'));
       }
     });
   }

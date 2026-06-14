@@ -43,6 +43,7 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
     public async Task<Customer?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await dbContext.Customers
             .Include(c => c.Products).ThenInclude(cp => cp.Product)
+            .Include(c => c.VpnConfigs).ThenInclude(v => v.CustomerEnvironment)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
     public async Task<bool> ExistsByCodeAsync(string code, CancellationToken ct = default)
@@ -76,4 +77,22 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
 
     public void RemoveCustomerProduct(CustomerProduct customerProduct)
         => dbContext.CustomerProducts.Remove(customerProduct);
+
+    public async Task<IReadOnlyList<CustomerVpnConfig>> GetVpnConfigsAsync(Guid customerId, CancellationToken ct = default)
+        => await dbContext.CustomerVpnConfigs
+            .Include(v => v.CustomerEnvironment)
+            .AsNoTracking()
+            .Where(v => v.CustomerId == customerId)
+            .OrderBy(v => v.SortOrder)
+            .ThenBy(v => v.Name)
+            .ToListAsync(ct);
+
+    public async Task<CustomerVpnConfig?> GetVpnConfigByIdAsync(Guid id, CancellationToken ct = default)
+        => await dbContext.CustomerVpnConfigs.FindAsync([id], ct);
+
+    public async Task AddVpnConfigAsync(CustomerVpnConfig config, CancellationToken ct = default)
+        => await dbContext.CustomerVpnConfigs.AddAsync(config, ct);
+
+    public void UpdateVpnConfig(CustomerVpnConfig config)
+        => dbContext.CustomerVpnConfigs.Update(config);
 }

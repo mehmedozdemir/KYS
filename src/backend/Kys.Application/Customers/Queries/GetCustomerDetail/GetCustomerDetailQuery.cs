@@ -1,3 +1,4 @@
+using Kys.Application.Customers.Queries.GetCustomerVpnConfigs;
 using Kys.Domain.Enumerations;
 using MediatR;
 
@@ -27,7 +28,8 @@ public sealed record CustomerDetailDto(
     string? PrimaryContactEmail,
     string? PrimaryContactPhone,
     IReadOnlyList<CustomerProductDto> Products,
-    Dictionary<string, object?> CustomFields
+    Dictionary<string, object?> CustomFields,
+    IReadOnlyList<CustomerVpnConfigDto> VpnConfigs
 );
 
 public sealed record CustomerProductDto(

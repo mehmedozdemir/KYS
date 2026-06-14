@@ -22,4 +22,10 @@ public interface ICustomerRepository
     Task AddCustomerProductAsync(CustomerProduct customerProduct, CancellationToken ct = default);
     void UpdateCustomerProduct(CustomerProduct customerProduct);
     void RemoveCustomerProduct(CustomerProduct customerProduct);
+
+    // VpnConfig
+    Task<IReadOnlyList<CustomerVpnConfig>> GetVpnConfigsAsync(Guid customerId, CancellationToken ct = default);
+    Task<CustomerVpnConfig?> GetVpnConfigByIdAsync(Guid id, CancellationToken ct = default);
+    Task AddVpnConfigAsync(CustomerVpnConfig config, CancellationToken ct = default);
+    void UpdateVpnConfig(CustomerVpnConfig config);
 }

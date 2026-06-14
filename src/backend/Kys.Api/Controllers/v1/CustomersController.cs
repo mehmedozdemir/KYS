@@ -3,13 +3,18 @@ using Kys.Application.Customers.Commands.AddProductToCustomer;
 using Kys.Application.Customers.Commands.RemoveCustomerProduct;
 using Kys.Application.Customers.Commands.ArchiveCustomer;
 using Kys.Application.Customers.Commands.CreateCustomer;
+using Kys.Application.Customers.Commands.CreateCustomerVpnConfig;
 using Kys.Application.Customers.Commands.DeleteCustomer;
+using Kys.Application.Customers.Commands.DeleteCustomerVpnConfig;
 using Kys.Application.Customers.Commands.RestoreCustomer;
+using Kys.Application.Customers.Commands.RevealVpnPassword;
 using Kys.Application.Customers.Commands.UpdateCustomer;
 using Kys.Application.Customers.Commands.UpdateCustomerProductStatus;
 using Kys.Application.Customers.Commands.UpdateCustomerStatus;
+using Kys.Application.Customers.Commands.UpdateCustomerVpnConfig;
 using Kys.Application.Customers.Queries.GetCustomerDetail;
 using Kys.Application.Customers.Queries.GetCustomers;
+using Kys.Application.Customers.Queries.GetCustomerVpnConfigs;
 using Kys.Api.Authorization;
 using Kys.Domain.Authorization;
 using Kys.Domain.Enumerations;
@@ -143,6 +148,57 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
             customerId, productId, request.NewStatus, request.GoLiveAt, request.DiscontinuedAt), ct);
         return NoContent();
     }
+
+    // --- VPN Configs ---
+
+    [HttpGet("{customerId:guid}/vpn-configs")]
+    [RequirePermission(Capabilities.CustomerRead)]
+    [ProducesResponseType(typeof(IReadOnlyList<CustomerVpnConfigDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetVpnConfigs(Guid customerId, CancellationToken ct)
+        => Ok(await mediator.Send(new GetCustomerVpnConfigsQuery(customerId), ct));
+
+    [HttpPost("{customerId:guid}/vpn-configs")]
+    [RequirePermission(Capabilities.CustomerWrite)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CreateVpnConfig(Guid customerId, [FromBody] CreateVpnConfigRequest request, CancellationToken ct)
+    {
+        var id = await mediator.Send(new CreateCustomerVpnConfigCommand(
+            customerId, request.CustomerEnvironmentId, request.Name, request.VpnType,
+            request.ServerHost, request.ServerPort, request.Username, request.PlainPassword,
+            request.Notes, request.IsActive, request.SortOrder), ct);
+        return Created(string.Empty, new { id });
+    }
+
+    [HttpPut("{customerId:guid}/vpn-configs/{id:guid}")]
+    [RequirePermission(Capabilities.CustomerWrite)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateVpnConfig(Guid customerId, Guid id, [FromBody] UpdateVpnConfigRequest request, CancellationToken ct)
+    {
+        await mediator.Send(new UpdateCustomerVpnConfigCommand(
+            id, request.CustomerEnvironmentId, request.Name, request.VpnType,
+            request.ServerHost, request.ServerPort, request.Username, request.PlainPassword,
+            request.Notes, request.IsActive, request.SortOrder), ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{customerId:guid}/vpn-configs/{id:guid}")]
+    [RequirePermission(Capabilities.CustomerWrite)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteVpnConfig(Guid customerId, Guid id, CancellationToken ct)
+    {
+        await mediator.Send(new DeleteCustomerVpnConfigCommand(id), ct);
+        return NoContent();
+    }
+
+    [HttpGet("{customerId:guid}/vpn-configs/{id:guid}/reveal-password")]
+    [RequirePermission(Capabilities.CredentialView)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RevealPassword(Guid customerId, Guid id, CancellationToken ct)
+        => Ok(await mediator.Send(new RevealVpnPasswordCommand(id), ct));
 }
 
 public sealed record UpdateCustomerRequest(
@@ -154,3 +210,13 @@ public sealed record UpdateCustomerRequest(
 public sealed record UpdateStatusRequest(CustomerStatus NewStatus, DateOnly? ServiceEndedAt, string? ChurnReason);
 public sealed record AddProductRequest(Guid ProductId, UsageMode UsageMode, string? Notes);
 public sealed record UpdateProductStatusRequest(CustomerProductStatus NewStatus, DateOnly? GoLiveAt, DateOnly? DiscontinuedAt);
+
+public sealed record CreateVpnConfigRequest(
+    Guid? CustomerEnvironmentId, string Name, VpnType VpnType,
+    string ServerHost, int? ServerPort, string? Username, string? PlainPassword,
+    string? Notes, bool IsActive = true, int SortOrder = 0);
+
+public sealed record UpdateVpnConfigRequest(
+    Guid? CustomerEnvironmentId, string Name, VpnType VpnType,
+    string ServerHost, int? ServerPort, string? Username, string? PlainPassword,
+    string? Notes, bool IsActive, int SortOrder);

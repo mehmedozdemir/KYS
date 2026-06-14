@@ -1,3 +1,4 @@
+using Kys.Application.Customers.Queries.GetCustomerVpnConfigs;
 using Kys.Domain.Authorization;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
@@ -28,7 +29,14 @@ public sealed class GetCustomerDetailQueryHandler(ICustomerRepository customerRe
                 cp.Id, cp.ProductId, cp.Product.Name, cp.Product.Code,
                 cp.UsageMode, cp.Status, cp.GoLiveAt
             )).ToList(),
-            customer.CustomFields
+            customer.CustomFields,
+            customer.VpnConfigs.Select(v => new CustomerVpnConfigDto(
+                v.Id, v.CustomerId, v.CustomerEnvironmentId,
+                v.CustomerEnvironment?.Name,
+                v.Name, v.VpnType, v.ServerHost, v.ServerPort,
+                v.Username, !string.IsNullOrEmpty(v.EncryptedPassword),
+                v.Notes, v.IsActive, v.SortOrder, v.UpdatedAt
+            )).ToList()
         );
     }
 }

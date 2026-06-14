@@ -60,6 +60,16 @@
       "1": "On Leave",
       "2": "Resigned",
       "3": "Left"
+    },
+    "vpnType": {
+      "OpenVPN": "OpenVPN",
+      "WireGuard": "WireGuard",
+      "CiscoAnyConnect": "Cisco AnyConnect",
+      "Fortinet": "Fortinet",
+      "PulseSecure": "Pulse Secure",
+      "SonicWall": "SonicWall",
+      "MicrosoftVpn": "Microsoft VPN",
+      "Other": "Other"
     }
   },
   "type": {
@@ -427,7 +437,36 @@
     "statusError": "Could not update status",
     "addProductErr": "Could not add product",
     "editErr": "Update failed",
-    "envErr": "Could not create environment"
+    "envErr": "Could not create environment",
+    "tabVpn": "VPN Access",
+    "vpnCount": "{{count}} VPN",
+    "noVpnConfigs": "No VPN configurations added yet.",
+    "addVpn": "Add VPN",
+    "vpnEditTitle": "VPN Configuration",
+    "vpnName": "Connection Name",
+    "vpnNamePh": "e.g. Production VPN",
+    "vpnType": "VPN Type",
+    "vpnServer": "Server (Host / IP)",
+    "vpnServerPh": "e.g. vpn.customer.com",
+    "vpnPort": "Port",
+    "vpnPortPh": "e.g. 1194",
+    "vpnUsername": "Username",
+    "vpnUsernamePh": "optional",
+    "vpnPassword": "Password",
+    "vpnPasswordPh": "optional",
+    "vpnNotes": "Notes / Connection Instructions",
+    "vpnNotesPh": "Custom notes for VPN connection...",
+    "vpnIsActive": "Active",
+    "vpnNameRequired": "Connection name is required",
+    "vpnTypeRequired": "VPN type is required",
+    "vpnServerRequired": "Server address is required",
+    "vpnSaveErr": "Could not save VPN configuration",
+    "vpnDeleteConfirm": "Are you sure you want to delete \"{{name}}\" VPN configuration?",
+    "vpnDeleteErr": "Could not delete VPN configuration",
+    "vpnRevealPassword": "Show Password",
+    "vpnHidePassword": "Hide",
+    "vpnRevealErr": "Could not retrieve password",
+    "vpnPasswordHint": "Password will be hidden after 30 seconds"
   },
   "customers": {
     "title": "Customers",
@@ -460,7 +499,8 @@
     "descriptionPlaceholder": "Short description...",
     "primaryContact": "Primary Contact (optional)",
     "contactName": "Full Name",
-    "create": "Create"
+    "create": "Create",
+    "createErr": "Could not create customer"
   },
   "menu": {
     "dashboard": "Dashboard",
