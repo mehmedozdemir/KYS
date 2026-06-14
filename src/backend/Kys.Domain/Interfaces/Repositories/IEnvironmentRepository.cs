@@ -48,4 +48,12 @@ public interface IEnvironmentRepository
     Task AddEndpointUrlAsync(CustomerEnvironmentEndpoint endpoint, CancellationToken ct = default);
     void UpdateEndpointUrl(CustomerEnvironmentEndpoint endpoint);
     void RemoveEndpointUrl(CustomerEnvironmentEndpoint endpoint);
+
+    // PersonalCredential
+    Task<PersonalCredential?> GetPersonalCredentialAsync(Guid ownerPersonId, Guid? environmentResourceId, Guid? sharedResourceId, string fieldKey, CancellationToken ct = default);
+    Task<IReadOnlyList<PersonalCredential>> GetMyPersonalCredentialsAsync(Guid ownerPersonId, Guid? environmentResourceId, Guid? sharedResourceId, CancellationToken ct = default);
+    Task<PersonalCredential?> GetPersonalCredentialByIdAsync(Guid id, CancellationToken ct = default);
+    Task AddPersonalCredentialAsync(PersonalCredential credential, CancellationToken ct = default);
+    void UpdatePersonalCredential(PersonalCredential credential);
+    void DeletePersonalCredential(PersonalCredential credential);
 }

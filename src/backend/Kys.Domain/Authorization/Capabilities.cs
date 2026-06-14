@@ -41,4 +41,6 @@ public static class Capabilities
 
     /// <summary>Global okuma kapsamı — taşıyan rol tüm kayıtları görür (Admin/Director "*" ile, CTO açık).</summary>
     public const string ScopeGlobal = "scope:global";
+
+    public const string PersonalCredentialManage = "personal-credential:manage";
 }

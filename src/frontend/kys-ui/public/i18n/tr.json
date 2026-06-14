@@ -624,7 +624,16 @@
     "urlSaveError": "URL kaydedilemedi.",
     "credDeleteError": "Credential silinemedi.",
     "credRevealError": "Credential gösterilemedi. Yetkiniz olmayabilir.",
-    "credSaveError": "Credential kaydedilemedi."
+    "credSaveError": "Credential kaydedilemedi.",
+    "myPersonalCreds": "Kişisel Erişim Bilgilerim",
+    "myPersonalCredsCount": "{{count}} kişisel",
+    "personalCredsMgmt": "Kişisel Erişim Bilgileri",
+    "personalCredsInfo": "Bu bilgiler yalnızca size özel. Başka hiçbir kullanıcı — yönetici dahil — bu bilgileri göremez.",
+    "personalCredsEmpty": "Bu kaynak için henüz kişisel erişim bilgisi eklemediniz.",
+    "personalCredRevealError": "Kişisel credential gösterilemedi.",
+    "personalCredSaveError": "Kişisel credential kaydedilemedi.",
+    "personalCredDeleteConfirm": "Bu kişisel credential silinecek. Emin misiniz?",
+    "personalCredDeleteError": "Kişisel credential silinemedi."
   },
   "account": {
     "title": "Hesabım",

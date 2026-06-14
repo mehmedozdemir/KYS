@@ -151,4 +151,32 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
 
     public void RemoveEndpointUrl(CustomerEnvironmentEndpoint endpoint)
         => db.CustomerEnvironmentEndpoints.Remove(endpoint);
+
+    public async Task<PersonalCredential?> GetPersonalCredentialAsync(Guid ownerPersonId, Guid? environmentResourceId, Guid? sharedResourceId, string fieldKey, CancellationToken ct = default)
+        => await db.PersonalCredentials
+            .FirstOrDefaultAsync(x =>
+                x.OwnerPersonId == ownerPersonId &&
+                x.EnvironmentResourceId == environmentResourceId &&
+                x.SharedResourceId == sharedResourceId &&
+                x.FieldKey == fieldKey, ct);
+
+    public async Task<IReadOnlyList<PersonalCredential>> GetMyPersonalCredentialsAsync(Guid ownerPersonId, Guid? environmentResourceId, Guid? sharedResourceId, CancellationToken ct = default)
+        => await db.PersonalCredentials
+            .Where(x => x.OwnerPersonId == ownerPersonId &&
+                (environmentResourceId == null || x.EnvironmentResourceId == environmentResourceId) &&
+                (sharedResourceId == null || x.SharedResourceId == sharedResourceId))
+            .OrderBy(x => x.FieldKey)
+            .ToListAsync(ct);
+
+    public async Task<PersonalCredential?> GetPersonalCredentialByIdAsync(Guid id, CancellationToken ct = default)
+        => await db.PersonalCredentials.FindAsync([id], ct);
+
+    public async Task AddPersonalCredentialAsync(PersonalCredential credential, CancellationToken ct = default)
+        => await db.PersonalCredentials.AddAsync(credential, ct);
+
+    public void UpdatePersonalCredential(PersonalCredential credential)
+        => db.PersonalCredentials.Update(credential);
+
+    public void DeletePersonalCredential(PersonalCredential credential)
+        => db.PersonalCredentials.Remove(credential);
 }
