@@ -3,8 +3,10 @@ using Kys.Api.Extensions;
 using Kys.Api.Middleware;
 using Kys.Application;
 using Kys.Infrastructure;
+using Kys.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -47,19 +49,23 @@ try
         SupportedUICultures = supportedCultures
     });
 
+    // EF Core migration'larını uygulama başlarken otomatik çalıştır
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.MigrateAsync();
+    }
+
     app.UseExceptionHandler();
     app.UseMiddleware<CorrelationIdMiddleware>();
     app.UseSerilogRequestLogging();
 
-    if (app.Environment.IsDevelopment())
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
     {
-        app.UseSwagger();
-        app.UseSwaggerUI(c =>
-        {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "KYS API v1");
-            c.RoutePrefix = "swagger";
-        });
-    }
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "KYS API v1");
+        c.RoutePrefix = "swagger";
+    });
 
     app.UseCors("AllowFrontend");
     app.UseHttpsRedirection();

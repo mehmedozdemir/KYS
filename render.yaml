@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: kys-api
+    runtime: docker
+    dockerfilePath: docker/Dockerfile.api
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health/live
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ConnectionStrings__DefaultConnection
+        sync: false   # Neon bağlantı dizesini Render dashboard'da gir
+      - key: Jwt__Secret
+        sync: false   # Güçlü rastgele string (min 32 karakter)
+      - key: Jwt__Issuer
+        value: kys-api
+      - key: Jwt__Audience
+        value: kys-clients
+      - key: Encryption__Key
+        sync: false   # 32 bayt base64 key
+      - key: Encryption__IV
+        sync: false   # 16 bayt base64 IV
+      - key: Cors__AllowedOrigins__0
+        sync: false   # Vercel URL'si: https://kys-app.vercel.app

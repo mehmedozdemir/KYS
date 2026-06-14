@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Build & Test Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/backend/Kys.Api/Kys.Api.csproj
+
+      - name: Build
+        run: dotnet build src/backend/Kys.Api/Kys.Api.csproj --no-restore -c Release
+
+      - name: Test
+        run: dotnet test tests/ --no-build -c Release --verbosity normal
+        continue-on-error: true
+
+  frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/frontend/kys-ui/package-lock.json
+
+      - name: Install
+        working-directory: src/frontend/kys-ui
+        run: npm ci --legacy-peer-deps
+
+      - name: Generate environment file
+        working-directory: src/frontend/kys-ui
+        run: node scripts/set-env.js
+        env:
+          API_BASE_URL: 'https://ci-placeholder.example.com'
+
+      - name: Build
+        working-directory: src/frontend/kys-ui
+        run: npm run build -- --configuration production

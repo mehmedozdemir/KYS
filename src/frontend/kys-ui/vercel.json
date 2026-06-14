@@ -1,0 +1,8 @@
+{
+  "buildCommand": "node scripts/set-env.js && npm run build -- --configuration production",
+  "outputDirectory": "dist/kys-ui/browser",
+  "installCommand": "npm ci --legacy-peer-deps",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
