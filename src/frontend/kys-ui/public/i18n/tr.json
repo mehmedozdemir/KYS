@@ -60,6 +60,16 @@
       "1": "İzinde",
       "2": "İstifa",
       "3": "Ayrıldı"
+    },
+    "vpnType": {
+      "OpenVPN": "OpenVPN",
+      "WireGuard": "WireGuard",
+      "CiscoAnyConnect": "Cisco AnyConnect",
+      "Fortinet": "Fortinet",
+      "PulseSecure": "Pulse Secure",
+      "SonicWall": "SonicWall",
+      "MicrosoftVpn": "Microsoft VPN",
+      "Other": "Diğer"
     }
   },
   "type": {
@@ -427,7 +437,36 @@
     "statusError": "Durum güncellenemedi",
     "addProductErr": "Ürün eklenemedi",
     "editErr": "Güncelleme başarısız",
-    "envErr": "Ortam oluşturulamadı"
+    "envErr": "Ortam oluşturulamadı",
+    "tabVpn": "VPN Erişimi",
+    "vpnCount": "{{count}} VPN",
+    "noVpnConfigs": "Henüz VPN yapılandırması eklenmemiş.",
+    "addVpn": "VPN Ekle",
+    "vpnEditTitle": "VPN Yapılandırması",
+    "vpnName": "Bağlantı Adı",
+    "vpnNamePh": "ör. Üretim VPN",
+    "vpnType": "VPN Türü",
+    "vpnServer": "Sunucu (Host / IP)",
+    "vpnServerPh": "ör. vpn.musteri.com",
+    "vpnPort": "Port",
+    "vpnPortPh": "ör. 1194",
+    "vpnUsername": "Kullanıcı Adı",
+    "vpnUsernamePh": "isteğe bağlı",
+    "vpnPassword": "Şifre",
+    "vpnPasswordPh": "isteğe bağlı",
+    "vpnNotes": "Notlar / Bağlantı Talimatları",
+    "vpnNotesPh": "VPN bağlantısı için özel notlar...",
+    "vpnIsActive": "Aktif",
+    "vpnNameRequired": "Bağlantı adı zorunludur",
+    "vpnTypeRequired": "VPN türü zorunludur",
+    "vpnServerRequired": "Sunucu adresi zorunludur",
+    "vpnSaveErr": "VPN yapılandırması kaydedilemedi",
+    "vpnDeleteConfirm": "\"{{name}}\" VPN yapılandırmasını silmek istediğinizden emin misiniz?",
+    "vpnDeleteErr": "VPN yapılandırması silinemedi",
+    "vpnRevealPassword": "Şifreyi Göster",
+    "vpnHidePassword": "Gizle",
+    "vpnRevealErr": "Şifre alınamadı",
+    "vpnPasswordHint": "Şifre 30 saniye sonra gizlenecek"
   },
   "customers": {
     "title": "Müşteriler",
@@ -460,7 +499,8 @@
     "descriptionPlaceholder": "Kısa açıklama...",
     "primaryContact": "Birincil İletişim (isteğe bağlı)",
     "contactName": "Ad Soyad",
-    "create": "Oluştur"
+    "create": "Oluştur",
+    "createErr": "Müşteri oluşturulamadı"
   },
   "menu": {
     "dashboard": "Dashboard",

@@ -11,6 +11,8 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 const CUST_STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
 const USAGE_MODE_CSS: Record<string, string> = { SaaS: 'badge--saas', Dedicated: 'badge--custom' };
 const CP_STATUS_CSS: Record<string, string> = { Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Discontinued: 'badge--archived' };
+const VPN_TYPE_CSS: Record<string, string> = { OpenVPN: 'vpn--openvpn', WireGuard: 'vpn--wireguard', CiscoAnyConnect: 'vpn--cisco', Fortinet: 'vpn--fortinet', PulseSecure: 'vpn--pulse', SonicWall: 'vpn--sonicwall', MicrosoftVpn: 'vpn--microsoft', Other: 'vpn--other' };
+const VPN_TYPES = ['OpenVPN','WireGuard','CiscoAnyConnect','Fortinet','PulseSecure','SonicWall','MicrosoftVpn','Other'];
 
 interface EnvironmentSummary {
   id: string;
@@ -57,6 +59,21 @@ interface CustomerProduct {
   goLiveAt: string | null;
 }
 
+interface CustomerVpnConfig {
+  id: string;
+  customerId: string;
+  customerEnvironmentId: string | null;
+  name: string;
+  vpnType: string;
+  serverHost: string;
+  serverPort: number | null;
+  username: string | null;
+  hasPassword: boolean;
+  notes: string | null;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 interface CustomerDetail {
   id: string;
   name: string;
@@ -79,6 +96,7 @@ interface CustomerDetail {
   primaryContactEmail: string | null;
   primaryContactPhone: string | null;
   products: CustomerProduct[];
+  vpnConfigs: CustomerVpnConfig[];
   customFields: Record<string, unknown>;
 }
 
@@ -154,6 +172,12 @@ interface CustomerDetail {
           </button>
           <button class="tab-btn" [class.active]="activeTab() === 'environments'" (click)="onEnvironmentsTab()">
             {{ 'customerDetail.tabEnvironments' | transloco }}
+          </button>
+          <button class="tab-btn" [class.active]="activeTab() === 'vpn'" (click)="activeTab.set('vpn')">
+            {{ 'customerDetail.tabVpn' | transloco }}
+            @if (customer()!.vpnConfigs?.length) {
+              <span class="tab-count">{{ customer()!.vpnConfigs.length }}</span>
+            }
           </button>
         </div>
 
@@ -274,6 +298,82 @@ interface CustomerDetail {
                 </div>
               }
             </div>
+          </div>
+        }
+
+        <!-- Tab: VPN Erişimi -->
+        @if (activeTab() === 'vpn') {
+          <div class="tab-content">
+            <div class="section-action-row">
+              <span class="section-count">{{ 'customerDetail.vpnCount' | transloco:{ count: customer()!.vpnConfigs?.length ?? 0 } }}</span>
+              @if (perms.has('customer:write')) {
+                <button class="btn-sm" (click)="openAddVpn()">
+                  <i class="pi pi-plus"></i> {{ 'customerDetail.addVpn' | transloco }}
+                </button>
+              }
+            </div>
+            @if (!(customer()!.vpnConfigs?.length)) {
+              <p class="empty-text">{{ 'customerDetail.noVpnConfigs' | transloco }}</p>
+            } @else {
+              <div class="vpn-grid">
+                @for (vpn of customer()!.vpnConfigs; track vpn.id) {
+                  <div class="vpn-card" [class.vpn-card--inactive]="!vpn.isActive">
+                    <div class="vpn-card-header">
+                      <span class="vpn-type-badge" [ngClass]="vpnTypeCss(vpn.vpnType)">
+                        {{ 'status.vpnType.' + vpn.vpnType | transloco }}
+                      </span>
+                      @if (!vpn.isActive) {
+                        <span class="badge badge--inactive" style="font-size:0.7rem;padding:0.1rem 0.4rem">{{ 'status.customer.Inactive' | transloco }}</span>
+                      }
+                      @if (perms.has('customer:write')) {
+                        <div style="margin-left:auto;display:flex;gap:0.25rem">
+                          <button type="button" class="btn-icon-sm" [title]="'common.edit' | transloco" (click)="openEditVpn(vpn)">
+                            <i class="pi pi-pencil"></i>
+                          </button>
+                          <button type="button" class="btn-icon-danger-sm" [title]="'common.delete' | transloco" (click)="deleteVpn(vpn)">
+                            <i class="pi pi-trash"></i>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                    <h4 class="vpn-name">{{ vpn.name }}</h4>
+                    <div class="vpn-server">
+                      <i class="pi pi-server"></i>
+                      <code>{{ vpn.serverHost }}{{ vpn.serverPort ? ':' + vpn.serverPort : '' }}</code>
+                    </div>
+                    @if (vpn.username) {
+                      <div class="vpn-field">
+                        <span class="vpn-field-label"><i class="pi pi-user"></i></span>
+                        <span>{{ vpn.username }}</span>
+                      </div>
+                    }
+                    @if (vpn.hasPassword) {
+                      <div class="vpn-field">
+                        <span class="vpn-field-label"><i class="pi pi-lock"></i></span>
+                        @if (revealedVpnPasswords()[vpn.id]) {
+                          <div class="vpn-password-row">
+                            <code class="vpn-password-value">{{ revealedVpnPasswords()[vpn.id] }}</code>
+                            <button type="button" class="btn-xs-link" (click)="hideVpnPassword(vpn.id)">
+                              {{ 'customerDetail.vpnHidePassword' | transloco }}
+                            </button>
+                          </div>
+                          <div class="vpn-password-hint">{{ 'customerDetail.vpnPasswordHint' | transloco }}</div>
+                        } @else {
+                          <button type="button" class="btn-xs" [disabled]="vpnRevealingId() === vpn.id" (click)="revealVpnPassword(vpn)">
+                            @if (vpnRevealingId() === vpn.id) { <i class="pi pi-spin pi-spinner"></i> }
+                            @else { <i class="pi pi-eye"></i> }
+                            {{ 'customerDetail.vpnRevealPassword' | transloco }}
+                          </button>
+                        }
+                      </div>
+                    }
+                    @if (vpn.notes) {
+                      <p class="vpn-notes">{{ vpn.notes }}</p>
+                    }
+                  </div>
+                }
+              </div>
+            }
           </div>
         }
 
@@ -517,6 +617,91 @@ interface CustomerDetail {
       </div>
     }
 
+    <!-- VPN Config Modal -->
+    @if (showVpnModal()) {
+      <div class="modal-backdrop" (click)="showVpnModal.set(false)">
+        <div class="modal modal--wide" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>{{ 'customerDetail.vpnEditTitle' | transloco }}</h2>
+            <button type="button" class="modal-close" (click)="showVpnModal.set(false)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            @if (vpnFormError()) {
+              <div class="alert-error">{{ vpnFormError() }}</div>
+            }
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ 'customerDetail.vpnName' | transloco }} <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="vpnForm.name" [placeholder]="'customerDetail.vpnNamePh' | transloco"
+                  [class.input-error]="vpnFormSubmitted() && !vpnForm.name.trim()" />
+                @if (vpnFormSubmitted() && !vpnForm.name.trim()) {
+                  <span class="error-msg">{{ 'customerDetail.vpnNameRequired' | transloco }}</span>
+                }
+              </div>
+              <div class="form-group">
+                <label>{{ 'customerDetail.vpnType' | transloco }} <span class="required">*</span></label>
+                <select [(ngModel)]="vpnForm.vpnType" [class.input-error]="vpnFormSubmitted() && !vpnForm.vpnType">
+                  <option value="">—</option>
+                  @for (t of vpnTypes; track t) {
+                    <option [value]="t">{{ 'status.vpnType.' + t | transloco }}</option>
+                  }
+                </select>
+                @if (vpnFormSubmitted() && !vpnForm.vpnType) {
+                  <span class="error-msg">{{ 'customerDetail.vpnTypeRequired' | transloco }}</span>
+                }
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ 'customerDetail.vpnServer' | transloco }} <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="vpnForm.serverHost" [placeholder]="'customerDetail.vpnServerPh' | transloco"
+                  [class.input-error]="vpnFormSubmitted() && !vpnForm.serverHost.trim()" />
+                @if (vpnFormSubmitted() && !vpnForm.serverHost.trim()) {
+                  <span class="error-msg">{{ 'customerDetail.vpnServerRequired' | transloco }}</span>
+                }
+              </div>
+              <div class="form-group">
+                <label>{{ 'customerDetail.vpnPort' | transloco }}</label>
+                <input type="number" [(ngModel)]="vpnForm.serverPort" [placeholder]="'customerDetail.vpnPortPh' | transloco" min="1" max="65535" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ 'customerDetail.vpnUsername' | transloco }}</label>
+                <input type="text" [(ngModel)]="vpnForm.username" [placeholder]="'customerDetail.vpnUsernamePh' | transloco" />
+              </div>
+              <div class="form-group">
+                <label>{{ 'customerDetail.vpnPassword' | transloco }}</label>
+                <div style="position:relative">
+                  <input [type]="showVpnPasswordInForm() ? 'text' : 'password'" [(ngModel)]="vpnForm.password"
+                    [placeholder]="'customerDetail.vpnPasswordPh' | transloco" style="padding-right:2.5rem" />
+                  <button type="button" class="btn-eye" (click)="showVpnPasswordInForm.set(!showVpnPasswordInForm())">
+                    <i class="pi" [ngClass]="showVpnPasswordInForm() ? 'pi-eye-slash' : 'pi-eye'"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>{{ 'customerDetail.vpnNotes' | transloco }}</label>
+              <textarea [(ngModel)]="vpnForm.notes" rows="3" [placeholder]="'customerDetail.vpnNotesPh' | transloco"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label" style="font-weight:400">
+                <input type="checkbox" [(ngModel)]="vpnForm.isActive" />
+                {{ 'customerDetail.vpnIsActive' | transloco }}
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="showVpnModal.set(false)">{{ 'common.cancel' | transloco }}</button>
+            <button type="button" class="btn-save" [disabled]="vpnFormSaving()" (click)="saveVpn()">
+              {{ (vpnFormSaving() ? 'common.saving' : 'common.save') | transloco }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Create Environment Modal -->
     @if (showEnvModal()) {
       <div class="modal-backdrop" (click)="showEnvModal.set(false)">
@@ -661,6 +846,34 @@ interface CustomerDetail {
     .alert-error { padding: 0.75rem; background: var(--danger-faint-bg); border: 1px solid var(--danger-border); border-radius: 0.375rem; color: var(--danger-soft-text); font-size: 0.8125rem; }
     .btn-cancel { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: 0.5rem; padding: 0.5rem 1.25rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; &:hover { background: var(--surface-3); } }
     .btn-save { background: var(--primary); color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1.25rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; &:not(:disabled):hover { background: var(--primary-hover); } &:disabled { opacity: 0.6; cursor: not-allowed; } }
+
+    /* VPN tab */
+    .vpn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+    .vpn-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .vpn-card--inactive { opacity: 0.65; }
+    .vpn-card-header { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .vpn-type-badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; }
+    .vpn--openvpn { background: #fff3e0; color: #e65100; }
+    .vpn--wireguard { background: #e3f2fd; color: #1565c0; }
+    .vpn--cisco { background: #e8f5e9; color: #1b5e20; }
+    .vpn--fortinet { background: #fce4ec; color: #880e4f; }
+    .vpn--pulse { background: #ede7f6; color: #4a148c; }
+    .vpn--sonicwall { background: #e0f7fa; color: #006064; }
+    .vpn--microsoft { background: #e8eaf6; color: #1a237e; }
+    .vpn--other { background: var(--surface-3); color: var(--text-muted); }
+    .vpn-name { font-size: 1rem; font-weight: 600; color: var(--text-strong); margin: 0; }
+    .vpn-server { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--text-muted); i { font-size: 0.75rem; } code { font-family: monospace; font-size: 0.8125rem; background: var(--border); padding: 0.1rem 0.35rem; border-radius: 0.25rem; } }
+    .vpn-field { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: var(--text); }
+    .vpn-field-label { color: var(--text-subtle); i { font-size: 0.75rem; } }
+    .vpn-password-row { display: flex; align-items: center; gap: 0.5rem; }
+    .vpn-password-value { font-family: monospace; font-size: 0.8125rem; background: var(--danger-faint-bg); color: var(--danger-soft-text); padding: 0.125rem 0.35rem; border-radius: 0.25rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .vpn-password-hint { font-size: 0.7rem; color: var(--text-subtle); }
+    .vpn-notes { font-size: 0.8125rem; color: var(--text-muted); margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .btn-icon-sm { background: none; border: none; cursor: pointer; color: var(--text-subtle); padding: 0.25rem 0.35rem; border-radius: 0.25rem; font-size: 0.75rem; display: inline-flex; align-items: center; &:hover { background: var(--surface-3); color: var(--primary); } }
+    .btn-xs { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.6rem; background: var(--surface-3); color: var(--text); border: 1px solid var(--border-strong); border-radius: 0.25rem; font-size: 0.75rem; cursor: pointer; &:hover:not(:disabled) { background: var(--primary-soft-bg-2); color: var(--primary); border-color: var(--primary-soft-bg-2); } &:disabled { opacity: 0.5; cursor: not-allowed; } i { font-size: 0.7rem; } }
+    .btn-xs-link { background: none; border: none; cursor: pointer; color: var(--primary); font-size: 0.75rem; padding: 0; text-decoration: underline; &:hover { color: var(--primary-hover); } }
+    .btn-eye { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0.25rem; &:hover { color: var(--text); } i { font-size: 0.875rem; } }
+    .checkbox-label { font-size: 0.8125rem; color: var(--text); display: flex; align-items: center; gap: 0.375rem; cursor: pointer; }
   `]
 })
 export class CustomerDetailComponent implements OnInit {
@@ -862,6 +1075,108 @@ export class CustomerDetailComponent implements OnInit {
         this.editError.set(err.error?.detail ?? this.transloco.translate('customerDetail.editErr'));
       }
     });
+  }
+
+  // VPN config state
+  readonly vpnTypes = VPN_TYPES;
+  showVpnModal = signal(false);
+  private editingVpnId = signal<string | null>(null);
+  vpnFormSaving = signal(false);
+  vpnFormSubmitted = signal(false);
+  vpnFormError = signal('');
+  showVpnPasswordInForm = signal(false);
+  vpnRevealingId = signal<string | null>(null);
+  revealedVpnPasswords = signal<Record<string, string>>({});
+  private vpnHideTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+
+  vpnForm = { name: '', vpnType: '', serverHost: '', serverPort: null as number | null, username: '', password: '', notes: '', isActive: true };
+
+  vpnTypeCss(t: string) { return VPN_TYPE_CSS[t] ?? 'vpn--other'; }
+
+  openAddVpn() {
+    this.editingVpnId.set(null);
+    this.vpnForm = { name: '', vpnType: '', serverHost: '', serverPort: null, username: '', password: '', notes: '', isActive: true };
+    this.vpnFormSubmitted.set(false);
+    this.vpnFormError.set('');
+    this.showVpnPasswordInForm.set(false);
+    this.showVpnModal.set(true);
+  }
+
+  openEditVpn(vpn: CustomerVpnConfig) {
+    this.editingVpnId.set(vpn.id);
+    this.vpnForm = { name: vpn.name, vpnType: vpn.vpnType, serverHost: vpn.serverHost, serverPort: vpn.serverPort, username: vpn.username ?? '', password: '', notes: vpn.notes ?? '', isActive: vpn.isActive };
+    this.vpnFormSubmitted.set(false);
+    this.vpnFormError.set('');
+    this.showVpnPasswordInForm.set(false);
+    this.showVpnModal.set(true);
+  }
+
+  saveVpn() {
+    this.vpnFormSubmitted.set(true);
+    if (!this.vpnForm.name.trim() || !this.vpnForm.vpnType || !this.vpnForm.serverHost.trim()) return;
+    this.vpnFormSaving.set(true);
+    this.vpnFormError.set('');
+    const customerId = this.customer()!.id;
+    const body = {
+      name: this.vpnForm.name.trim(),
+      vpnType: this.vpnForm.vpnType,
+      serverHost: this.vpnForm.serverHost.trim(),
+      serverPort: this.vpnForm.serverPort || null,
+      username: this.vpnForm.username.trim() || null,
+      password: this.vpnForm.password.trim() || null,
+      notes: this.vpnForm.notes.trim() || null,
+      isActive: this.vpnForm.isActive
+    };
+    const editId = this.editingVpnId();
+    const req = editId
+      ? this.http.put(`${environment.apiUrl}/customers/${customerId}/vpn-configs/${editId}`, body)
+      : this.http.post(`${environment.apiUrl}/customers/${customerId}/vpn-configs`, body);
+    req.subscribe({
+      next: () => {
+        this.vpnFormSaving.set(false);
+        this.showVpnModal.set(false);
+        this.loadCustomer();
+      },
+      error: err => {
+        this.vpnFormSaving.set(false);
+        this.vpnFormError.set(err.error?.detail ?? this.transloco.translate('customerDetail.vpnSaveErr'));
+      }
+    });
+  }
+
+  deleteVpn(vpn: CustomerVpnConfig) {
+    if (!confirm(this.transloco.translate('customerDetail.vpnDeleteConfirm', { name: vpn.name }))) return;
+    const customerId = this.customer()!.id;
+    this.http.delete(`${environment.apiUrl}/customers/${customerId}/vpn-configs/${vpn.id}`).subscribe({
+      next: () => this.loadCustomer(),
+      error: err => alert(err.error?.detail ?? this.transloco.translate('customerDetail.vpnDeleteErr'))
+    });
+  }
+
+  revealVpnPassword(vpn: CustomerVpnConfig) {
+    this.vpnRevealingId.set(vpn.id);
+    const customerId = this.customer()!.id;
+    this.http.get<string>(`${environment.apiUrl}/customers/${customerId}/vpn-configs/${vpn.id}/reveal-password`).subscribe({
+      next: plainPassword => {
+        this.vpnRevealingId.set(null);
+        const current = { ...this.revealedVpnPasswords() };
+        current[vpn.id] = plainPassword;
+        this.revealedVpnPasswords.set(current);
+        clearTimeout(this.vpnHideTimers[vpn.id]);
+        this.vpnHideTimers[vpn.id] = setTimeout(() => this.hideVpnPassword(vpn.id), 30_000);
+      },
+      error: err => {
+        this.vpnRevealingId.set(null);
+        alert(err.error?.detail ?? this.transloco.translate('customerDetail.vpnRevealErr'));
+      }
+    });
+  }
+
+  hideVpnPassword(vpnId: string) {
+    clearTimeout(this.vpnHideTimers[vpnId]);
+    const current = { ...this.revealedVpnPasswords() };
+    delete current[vpnId];
+    this.revealedVpnPasswords.set(current);
   }
 
   removingProductId = signal<string | null>(null);

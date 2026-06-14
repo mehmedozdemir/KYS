@@ -67,6 +67,12 @@
   "err.smtp.protocolError": "SMTP protocol error: {0} (you may be connecting to the wrong port).",
   "err.smtp.sendFailed": "Could not send the email ({0}:{1}): {2}",
 
+  "err.vpnConfig.notFound": "VPN configuration not found.",
+  "err.vpnConfig.noPassword": "This VPN configuration has no password set.",
+  "err.vpnConfig.forbiddenReveal": "You do not have permission to reveal this VPN password.",
+  "val.vpnConfig.nameRequired": "VPN name is required.",
+  "val.vpnConfig.serverHostRequired": "Server host is required.",
+
   "val.credential.targetRequired": "EnvironmentResourceId, SharedResourceId or EndpointUrlId must be provided.",
   "val.personalCredential.fieldKeyRequired": "Field key is required.",
   "val.personalCredential.valueRequired": "Value is required.",
