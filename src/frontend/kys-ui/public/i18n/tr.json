@@ -59,7 +59,11 @@
       "0": "Aktif",
       "1": "İzinde",
       "2": "İstifa",
-      "3": "Ayrıldı"
+      "3": "Ayrıldı",
+      "Active": "Aktif",
+      "OnLeave": "İzinde",
+      "Resigned": "İstifa",
+      "Terminated": "Ayrıldı"
     },
     "vpnType": {
       "OpenVPN": "OpenVPN",
