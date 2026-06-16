@@ -841,7 +841,7 @@ interface HostingPlatformOption {
                     [(ngModel)]="personalCredForm.value"
                     [placeholder]="'environments.enterValue' | transloco"
                     [class.input-error]="personalCredSubmitted() && !personalCredForm.value.trim()" />
-                  <button type="button" class="pw-toggle" (click)="personalCredShowValue.update(v => !v)">
+                  <button type="button" class="pw-toggle" (click)="togglePersonalCredValue()">
                     <i class="pi" [class]="personalCredShowValue() ? 'pi-eye-slash' : 'pi-eye'"></i>
                   </button>
                 </div>
@@ -1503,6 +1503,8 @@ export class EnvironmentDetailComponent implements OnInit {
   personalCredShowValue = signal(false);
   personalCredForm = { fieldKey: '', customFieldKey: '', value: '' };
   deletingPersonalCredId = signal<Record<string, boolean>>({});
+
+  togglePersonalCredValue() { this.personalCredShowValue.update(v => !v); }
 
   openPersonalCredModal(r: EnvironmentResource) {
     this.personalCredResource.set(r);
