@@ -17,13 +17,21 @@ public sealed class UpdateCustomerProductStatusCommandHandler(
             request.CustomerId, request.ProductId, cancellationToken)
             ?? throw new NotFoundException(nameof(CustomerProduct), $"{request.CustomerId}/{request.ProductId}");
 
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
         cp.Status = request.NewStatus;
 
-        if (request.NewStatus == CustomerProductStatus.Active && request.GoLiveAt is not null)
-            cp.GoLiveAt = request.GoLiveAt;
+        if (request.NewStatus == CustomerProductStatus.Active)
+        {
+            // Go-live tarihi verilmezse bugün; müşterinin canlıya geçiş tarihi en erken ürünün tarihidir.
+            cp.GoLiveAt = request.GoLiveAt ?? cp.GoLiveAt ?? today;
+            var customer = await customerRepository.GetByIdAsync(request.CustomerId, cancellationToken)
+                ?? throw new NotFoundException(nameof(Customer), request.CustomerId);
+            customer.MarkProductionLive(cp.GoLiveAt.Value);
+            customerRepository.Update(customer);
+        }
 
         if (request.NewStatus == CustomerProductStatus.Discontinued)
-            cp.DiscontinuedAt = request.DiscontinuedAt ?? DateOnly.FromDateTime(DateTime.UtcNow);
+            cp.DiscontinuedAt = request.DiscontinuedAt ?? today;
 
         customerRepository.UpdateCustomerProduct(cp);
         await unitOfWork.SaveChangesAsync(cancellationToken);

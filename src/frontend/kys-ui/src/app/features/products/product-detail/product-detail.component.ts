@@ -8,9 +8,13 @@ import { PermissionService } from '../../../core/services/permission.service';
 import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 
-const PRODUCT_TYPE_CSS: Record<number, string> = { 0: 'badge--saas', 1: 'badge--custom', 2: 'badge--hybrid' };
+// API enum'ları string döner (JsonStringEnumConverter); eski sayısal değerler de normalize edilir.
+const PRODUCT_TYPES = ['SaaS', 'CustomerBased', 'Hybrid'];
+const ENDPOINT_TYPES = ['Frontend', 'RestAPI', 'Grpc', 'Soap', 'GraphQL'];
+const enumName = (names: string[], v: string | number) => typeof v === 'number' ? names[v] ?? String(v) : v;
+const PRODUCT_TYPE_CSS: Record<string, string> = { SaaS: 'badge--saas', CustomerBased: 'badge--custom', Hybrid: 'badge--hybrid' };
 const STATUS_CSS: Record<string, string> = { Active: 'badge--active', Deprecated: 'badge--deprecated', Discontinued: 'badge--archived' };
-const ENDPOINT_ICON: Record<number, string> = { 0: 'pi-desktop', 1: 'pi-server', 2: 'pi-server', 3: 'pi-server', 4: 'pi-code' };
+const ENDPOINT_ICON: Record<string, string> = { Frontend: 'pi-desktop', RestAPI: 'pi-server', Grpc: 'pi-server', Soap: 'pi-server', GraphQL: 'pi-code' };
 
 interface ProductDetail {
   id: string;
@@ -18,7 +22,7 @@ interface ProductDetail {
   code: string;
   description: string | null;
   version: string | null;
-  productType: number;
+  productType: string | number;
   status: string;
   poPersonId: string | null;
   poName: string | null;
@@ -27,7 +31,7 @@ interface ProductDetail {
   documentationUrl: string | null;
   teams: { teamId: string; teamName: string; role: string | null; since: string | null }[];
   assignments: { personId: string; fullName: string; responsibility: string | null; startedAt: string | null; isActive: boolean }[];
-  endpoints: { id: string; name: string; endpointType: number; defaultBaseUrl: string | null; swaggerUrl: string | null; sortOrder: number }[];
+  endpoints: { id: string; name: string; endpointType: string | number; defaultBaseUrl: string | null; swaggerUrl: string | null; sortOrder: number }[];
   resourceTemplates: { id: string; name: string; description?: string; resourceTypeId: string; resourceTypeName: string; isRequired: boolean; canBeShared: boolean; sortOrder: number }[];
   customFields: Record<string, unknown>;
 }
@@ -66,7 +70,7 @@ interface ProductDetail {
             </div>
           </div>
           <div class="header-right">
-            <span class="badge" [ngClass]="typeCss(product()!.productType)">{{ 'type.product.' + product()!.productType | transloco }}</span>
+            <span class="badge" [ngClass]="typeCss(product()!.productType)">{{ 'type.product.' + typeName(product()!.productType) | transloco }}</span>
             <span class="badge" [ngClass]="statusCss(product()!.status)">{{ 'status.product.' + product()!.status | transloco }}</span>
             @if (perms.has('product:write')) {
               <button type="button" class="btn-edit" (click)="openEdit()">
@@ -114,7 +118,7 @@ interface ProductDetail {
             <div class="info-grid">
               <div class="info-item">
                 <label>{{ 'productDetail.productType' | transloco }}</label>
-                <span><span class="badge" [ngClass]="typeCss(product()!.productType)">{{ 'type.product.' + product()!.productType | transloco }}</span></span>
+                <span><span class="badge" [ngClass]="typeCss(product()!.productType)">{{ 'type.product.' + typeName(product()!.productType) | transloco }}</span></span>
               </div>
               <div class="info-item">
                 <label>{{ 'productDetail.colStatus' | transloco }}</label>
@@ -191,7 +195,7 @@ interface ProductDetail {
                       </div>
                       <div class="ep-info">
                         <span class="ep-name">{{ ep.name }}</span>
-                        <span class="badge badge--ep">{{ 'type.endpoint.' + ep.endpointType | transloco }}</span>
+                        <span class="badge badge--ep">{{ 'type.endpoint.' + endpointTypeName(ep.endpointType) | transloco }}</span>
                       </div>
                       <button type="button" class="ep-delete-btn" (click)="deleteEndpoint(ep.id)" [title]="'common.delete' | transloco">
                         <i class="pi pi-trash"></i>
@@ -886,9 +890,11 @@ export class ProductDetailComponent implements OnInit {
   activeAssignments() { return (this.product()?.assignments ?? []).filter(a => a.isActive).length; }
   sortedEndpoints() { return [...(this.product()?.endpoints ?? [])].sort((a, b) => a.sortOrder - b.sortOrder); }
 
-  typeCss(t: number) { return PRODUCT_TYPE_CSS[t] ?? ''; }
+  typeCss(t: string | number) { return PRODUCT_TYPE_CSS[enumName(PRODUCT_TYPES, t)] ?? ''; }
+  typeName(t: string | number) { return enumName(PRODUCT_TYPES, t); }
+  endpointTypeName(t: string | number) { return enumName(ENDPOINT_TYPES, t); }
   statusCss(s: string) { return STATUS_CSS[s] ?? ''; }
-  endpointIcon(t: number) { return ENDPOINT_ICON[t] ?? 'pi-server'; }
+  endpointIcon(t: string | number) { return ENDPOINT_ICON[enumName(ENDPOINT_TYPES, t)] ?? 'pi-server'; }
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');

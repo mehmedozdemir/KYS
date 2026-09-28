@@ -13,5 +13,6 @@ public sealed record CreatePersonCommand(
     DateOnly? HireDate,
     bool IsPlatformUser,
     string? Username,
-    string? Password
+    string? Password,
+    Guid? SystemRoleId = null   // platform kullanıcısı için; verilmezse Salt Okuma (en az yetki)
 ) : IRequest<Guid>;

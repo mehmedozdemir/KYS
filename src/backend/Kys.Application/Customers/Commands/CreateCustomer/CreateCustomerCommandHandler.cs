@@ -31,6 +31,7 @@ public sealed class CreateCustomerCommandHandler(
             PrimaryContactPhone = request.PrimaryContactPhone,
             CustomFields = request.CustomFields ?? []
         };
+        customer.ChangeStatus(customer.Status, DateOnly.FromDateTime(DateTime.UtcNow));
 
         await customerRepository.AddAsync(customer, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

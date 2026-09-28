@@ -24,7 +24,7 @@ public sealed class UpdateCustomerStatusCommandHandler(
         }
         else
         {
-            customer.Status = request.NewStatus;
+            customer.ChangeStatus(request.NewStatus, DateOnly.FromDateTime(DateTime.UtcNow));
         }
 
         customerRepository.Update(customer);

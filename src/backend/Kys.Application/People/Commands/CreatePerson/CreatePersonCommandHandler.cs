@@ -1,3 +1,4 @@
+using Kys.Domain.Authorization;
 using Kys.Domain.Entities;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
@@ -12,9 +13,13 @@ public sealed class CreatePersonCommandHandler(
     IUnitOfWork unitOfWork,
     IPasswordHasher<Person> passwordHasher,
     IAccountEmailService accountEmail,
-    ILocalizer localizer
+    ILocalizer localizer,
+    ISystemRoleRepository systemRoleRepository,
+    ICurrentUserService currentUser
 ) : IRequestHandler<CreatePersonCommand, Guid>
 {
+    private static readonly Guid ReadOnlyRoleId = Guid.Parse("00000000-0000-0000-0000-000000000005");
+
     public async Task<Guid> Handle(CreatePersonCommand request, CancellationToken cancellationToken)
     {
         var existing = await personRepository.GetByEmailAsync(request.Email, cancellationToken);
@@ -37,6 +42,24 @@ public sealed class CreatePersonCommandHandler(
 
         if (request.IsPlatformUser && request.Password is not null)
             person.PasswordHash = passwordHasher.HashPassword(person, request.Password);
+
+        // Platform kullanıcısı rolsüz kalmamalı (giriş yapıp hiçbir şey göremiyordu).
+        // Salt Okuma dışındaki bir rolü yalnızca rol atama yetkisi olan kullanıcı verebilir (yetki yükseltme önlemi).
+        if (request.IsPlatformUser)
+        {
+            var roleId = request.SystemRoleId ?? ReadOnlyRoleId;
+            if (roleId != ReadOnlyRoleId && !currentUser.HasPermission(Capabilities.AdminUsers))
+                throw new ForbiddenException("err.forbidden.assignRole");
+            _ = await systemRoleRepository.GetByIdAsync(roleId, cancellationToken)
+                ?? throw new NotFoundException(nameof(SystemRole), roleId);
+            person.SystemRoles.Add(new PersonSystemRole
+            {
+                PersonId = person.Id,
+                SystemRoleId = roleId,
+                AssignedAt = DateTime.UtcNow,
+                AssignedBy = currentUser.UserId
+            });
+        }
 
         await personRepository.AddAsync(person, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

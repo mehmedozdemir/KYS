@@ -95,7 +95,7 @@ const CATEGORY_ICON: Record<string, string> = {
                           <div class="result-sub">{{ item.subTitle }}</div>
                         }
                         @if (item.status) {
-                          <span class="result-status">{{ item.status }}</span>
+                          <span class="result-status">{{ group.statusPrefix + item.status | transloco }}</span>
                         }
                       </a>
                     }
@@ -169,11 +169,11 @@ export class SearchComponent implements OnInit {
     const r = this.result();
     if (!r) return [];
     return [
-      { labelKey: CATEGORY_LABEL_KEY['Customer'], icon: 'pi-' + CATEGORY_ICON['Customer'], route: CATEGORY_ROUTE['Customer'], items: r.customers },
-      { labelKey: CATEGORY_LABEL_KEY['Product'], icon: 'pi-' + CATEGORY_ICON['Product'], route: CATEGORY_ROUTE['Product'], items: r.products },
-      { labelKey: CATEGORY_LABEL_KEY['Person'], icon: 'pi-' + CATEGORY_ICON['Person'], route: CATEGORY_ROUTE['Person'], items: r.people },
-      { labelKey: CATEGORY_LABEL_KEY['Team'], icon: 'pi-' + CATEGORY_ICON['Team'], route: CATEGORY_ROUTE['Team'], items: r.teams },
-      { labelKey: CATEGORY_LABEL_KEY['Article'], icon: 'pi-' + CATEGORY_ICON['Article'], route: CATEGORY_ROUTE['Article'], items: r.articles },
+      { statusPrefix: 'status.customer.', labelKey: CATEGORY_LABEL_KEY['Customer'], icon: 'pi-' + CATEGORY_ICON['Customer'], route: CATEGORY_ROUTE['Customer'], items: r.customers },
+      { statusPrefix: 'status.product.', labelKey: CATEGORY_LABEL_KEY['Product'], icon: 'pi-' + CATEGORY_ICON['Product'], route: CATEGORY_ROUTE['Product'], items: r.products },
+      { statusPrefix: 'status.employment.', labelKey: CATEGORY_LABEL_KEY['Person'], icon: 'pi-' + CATEGORY_ICON['Person'], route: CATEGORY_ROUTE['Person'], items: r.people },
+      { statusPrefix: 'type.teamShort.', labelKey: CATEGORY_LABEL_KEY['Team'], icon: 'pi-' + CATEGORY_ICON['Team'], route: CATEGORY_ROUTE['Team'], items: r.teams },
+      { statusPrefix: 'type.kbVisibility.', labelKey: CATEGORY_LABEL_KEY['Article'], icon: 'pi-' + CATEGORY_ICON['Article'], route: CATEGORY_ROUTE['Article'], items: r.articles },
     ].filter(g => g.items.length > 0);
   }
 

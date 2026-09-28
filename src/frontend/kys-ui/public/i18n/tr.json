@@ -37,20 +37,20 @@
   "status": {
     "customer": {
       "Prospect": "Potansiyel",
-      "Onboarding": "Onboarding",
+      "Onboarding": "Devreye Alma",
       "Active": "Aktif",
       "Inactive": "Pasif",
       "Churned": "Ayrıldı"
     },
     "customerProduct": {
-      "Onboarding": "Onboarding",
+      "Onboarding": "Devreye Alma",
       "Active": "Aktif",
       "Inactive": "Pasif",
       "Discontinued": "Kapatıldı"
     },
     "usageMode": {
       "SaaS": "SaaS",
-      "Dedicated": "Dedicated"
+      "Dedicated": "Özel Kurulum"
     },
     "product": {
       "Active": "Aktif",
@@ -82,14 +82,22 @@
     "product": {
       "0": "SaaS",
       "1": "Müşteriye Özel",
-      "2": "Hibrit"
+      "2": "Hibrit",
+      "SaaS": "SaaS",
+      "CustomerBased": "Müşteriye Özel",
+      "Hybrid": "Hibrit"
     },
     "endpoint": {
       "0": "Frontend",
       "1": "REST API",
       "2": "gRPC",
       "3": "SOAP",
-      "4": "GraphQL"
+      "4": "GraphQL",
+      "Frontend": "Frontend",
+      "RestAPI": "REST API",
+      "Grpc": "gRPC",
+      "Soap": "SOAP",
+      "GraphQL": "GraphQL"
     },
     "team": {
       "Project": "Project — Proje bazlı ekip",
@@ -100,6 +108,11 @@
       "Internal": "Dahili",
       "TeamOnly": "Ekip",
       "Public": "Herkese Açık"
+    },
+    "teamShort": {
+      "Project": "Proje",
+      "Domain": "Domain",
+      "Platform": "Platform"
     }
   },
   "kb": {
@@ -168,7 +181,9 @@
     "enterEmail": "(e-posta giriniz)",
     "passwordRule": "En az 8 karakter, bir büyük harf ve rakam içermeli.",
     "operationFailed": "İşlem başarısız.",
-    "genericError": "Bir hata oluştu."
+    "genericError": "Bir hata oluştu.",
+    "systemRole": "Sistem Rolü",
+    "systemRoleHint": "Kullanıcının platformda neleri görüp düzenleyebileceğini belirler. Varsayılan: Salt Okuma."
   },
   "peopleDetail": {
     "notFound": "Kişi bulunamadı.",
@@ -472,7 +487,11 @@
     "vpnRevealPassword": "Şifreyi Göster",
     "vpnHidePassword": "Gizle",
     "vpnRevealErr": "Şifre alınamadı",
-    "vpnPasswordHint": "Şifre 30 saniye sonra gizlenecek"
+    "vpnPasswordHint": "Şifre 30 saniye sonra gizlenecek",
+    "usageModeFixed": "Kullanım modu ürün tipine göre belirlenir.",
+    "changeProductStatus": "Ürün Durumu",
+    "goLiveHint": "Müşterinin canlıya geçiş tarihi, ürünlerin en erken canlıya geçiş tarihidir.",
+    "discontinuedAt": "Kapatılma Tarihi"
   },
   "customers": {
     "title": "Müşteriler",
@@ -759,7 +778,9 @@
         "Updated": "Güncellendi",
         "Deleted": "Silindi",
         "Restored": "Geri Yüklendi",
-        "CredentialRevealed": "Şifre Görüntülendi"
+        "CredentialRevealed": "Şifre Görüntülendi",
+        "VpnPasswordRevealed": "VPN Şifresi Görüntülendi",
+        "PersonalCredentialRevealed": "Kişisel Şifre Görüntülendi"
       },
       "entity": {
         "Customer": "Müşteri",
@@ -771,7 +792,25 @@
         "KbArticle": "KB Makalesi",
         "TeamMembership": "Ekip Üyeliği",
         "CustomerProduct": "Müşteri Ürünü",
-        "SystemRole": "Sistem Rolü"
+        "SystemRole": "Sistem Rolü",
+        "ResourceCredential": "Erişim Bilgisi",
+        "CustomerVpnConfig": "VPN Yapılandırması",
+        "ProductEndpoint": "Ürün Endpoint'i",
+        "ProductResourceTemplate": "Kaynak Şablonu",
+        "ProductTeam": "Ürün Ekibi",
+        "ProductAssignment": "Ürün Ataması",
+        "CustomerEnvironmentEndpoint": "Ortam Endpoint'i",
+        "SharedResource": "Paylaşımlı Kaynak",
+        "AccessGrant": "Erişim Yetkisi",
+        "OrganizationProfile": "Kurum Profili",
+        "CustomFieldDefinition": "Özel Alan",
+        "EnvironmentType": "Ortam Tipi",
+        "HostingPlatform": "Barındırma Platformu",
+        "ResourceType": "Kaynak Tipi",
+        "KbTag": "KB Etiketi",
+        "EmailAccount": "E-posta Hesabı",
+        "PersonalCredential": "Kişisel Erişim Bilgisi",
+        "OrganizationRole": "Organizasyon Rolü"
       }
     },
     "accessGrants": {
@@ -1128,7 +1167,9 @@
         "Director": "Direktör",
         "TeamLead": "Ekip Lideri",
         "Developer": "Geliştirici",
-        "ReadOnly": "Salt Okuma"
+        "ReadOnly": "Salt Okuma",
+        "PO": "Ürün Sahibi (PO)",
+        "CTO": "CTO"
       },
       "resetTitle": "Şifre Sıfırla",
       "resetSuccessMsg": "Şifre sıfırlandı ve yeni şifre kullanıcının e-postasına gönderildi.",

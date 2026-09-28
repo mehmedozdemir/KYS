@@ -3,6 +3,10 @@ import { RouterOutlet } from '@angular/router';
 import { ThemeService } from './core/services/theme.service';
 import { NotificationService } from './core/services/notification.service';
 import { BrandingService } from './core/services/branding.service';
+import { Store } from '@ngrx/store';
+import { TokenService } from './core/services/token.service';
+import { AuthUser } from './core/models/auth.models';
+import { restoreSession } from './core/store/auth/auth.actions';
 
 @Component({
   selector: 'app-root',
@@ -37,5 +41,14 @@ export class AppComponent {
   constructor() {
     inject(ThemeService).init();
     inject(BrandingService).load();
+
+    // F5 sonrası store boş başlar; oturum hâlâ geçerliyse kullanıcıyı (güncel token'larla) geri yükle.
+    const tokens = inject(TokenService);
+    const user = tokens.getUser<AuthUser>();
+    if (user && tokens.isLoggedIn()) {
+      inject(Store).dispatch(restoreSession({
+        user: { ...user, accessToken: tokens.getAccessToken()!, refreshToken: tokens.getRefreshToken() ?? user.refreshToken }
+      }));
+    }
   }
 }

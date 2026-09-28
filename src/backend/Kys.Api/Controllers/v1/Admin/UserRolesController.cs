@@ -10,6 +10,7 @@ using Kys.Application.People.Commands.MakePlatformUsers;
 using Kys.Application.People.Commands.RemovePlatformUser;
 using Kys.Application.People.Queries.GetProvisionablePeople;
 using Kys.Application.Admin.Queries.GetPersonSystemRoles;
+using Kys.Application.Admin.Queries.GetSystemRoles;
 using Kys.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -49,6 +50,12 @@ public sealed class UserRolesController(IMediator mediator) : ControllerBase
         await mediator.Send(new RemoveSystemRoleCommand(personId, systemRoleId), ct);
         return NoContent();
     }
+
+    // Atanabilir tüm sistem rolleri (UI'da sabit liste yerine).
+    [HttpGet("/api/v{version:apiVersion}/admin/system-roles")]
+    [ProducesResponseType(typeof(IReadOnlyList<SystemRoleOptionDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllRoles(CancellationToken ct)
+        => Ok(await mediator.Send(new GetSystemRolesQuery(), ct));
 
     [HttpGet("/api/v{version:apiVersion}/admin/users/provisionable")]
     [ProducesResponseType(typeof(IReadOnlyList<ProvisionableGroupDto>), StatusCodes.Status200OK)]

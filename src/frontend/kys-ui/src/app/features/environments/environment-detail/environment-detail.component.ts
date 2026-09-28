@@ -407,7 +407,7 @@ interface HostingPlatformOption {
                     </div>
                     <div class="ep-title">
                       <div class="ep-name">{{ ep.endpointName }}</div>
-                      <div class="ep-type">{{ ep.endpointType }}</div>
+                      <div class="ep-type">{{ 'type.endpoint.' + ep.endpointType | transloco }}</div>
                     </div>
                     <div class="ep-badges">
                       @if (!ep.isActive) {
@@ -734,7 +734,7 @@ interface HostingPlatformOption {
           <div class="modal-header">
             <div>
               <h2>{{ (editingEp()!.baseUrl ? 'environments.editEndpointUrl' : 'environments.setEndpointUrl') | transloco }}</h2>
-              <p class="modal-subtitle">{{ editingEp()!.endpointName }} · {{ editingEp()!.endpointType }}</p>
+              <p class="modal-subtitle">{{ editingEp()!.endpointName }} · {{ 'type.endpoint.' + editingEp()!.endpointType | transloco }}</p>
             </div>
             <button type="button" class="modal-close" (click)="closeEpModal()"><i class="pi pi-times"></i></button>
           </div>

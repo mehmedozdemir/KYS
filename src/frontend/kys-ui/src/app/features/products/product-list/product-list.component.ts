@@ -18,7 +18,10 @@ interface CustomFieldDef {
 }
 
 // 0=SaaS, 1=CustomerBased, 2=Hybrid | 0=Active, 1=Deprecated, 2=Discontinued
-const TYPE_CSS: Record<number, string> = { 0: 'badge--saas', 1: 'badge--custom', 2: 'badge--hybrid' };
+// API enum'ları string döner (JsonStringEnumConverter); eski sayısal değerler de normalize edilir.
+const PRODUCT_TYPES = ['SaaS', 'CustomerBased', 'Hybrid'] as const;
+const TYPE_CSS: Record<string, string> = { SaaS: 'badge--saas', CustomerBased: 'badge--custom', Hybrid: 'badge--hybrid' };
+const productTypeName = (t: string | number) => typeof t === 'number' ? PRODUCT_TYPES[t] ?? String(t) : t;
 const STATUS_CSS: Record<string, string> = { Active: 'badge--active', Deprecated: 'badge--deprecated', Discontinued: 'badge--archived' };
 
 interface TeamBadge {
@@ -31,7 +34,7 @@ interface ProductListItem {
   id: string;
   name: string;
   code: string;
-  productType: number;
+  productType: string | number;
   status: string;
   poName: string | null;
   teamCount: number;
@@ -49,7 +52,7 @@ interface PagedResult {
 interface CreateProductForm {
   name: string;
   code: string;
-  productType: number;
+  productType: string | number;
   description: string;
 }
 
@@ -117,7 +120,7 @@ interface CreateProductForm {
                     <span class="product-name">{{ p.name }}</span>
                   </td>
                   <td><code class="code-badge">{{ p.code }}</code></td>
-                  <td><span class="badge" [class]="typeCss(p.productType)">{{ 'type.product.' + p.productType | transloco }}</span></td>
+                  <td><span class="badge" [class]="typeCss(p.productType)">{{ 'type.product.' + typeName(p.productType) | transloco }}</span></td>
                   <td><span class="badge" [class]="statusCss(p.status)">{{ 'status.product.' + p.status | transloco }}</span></td>
                   <td class="muted">{{ p.poName ?? '—' }}</td>
                   <td (click)="$event.stopPropagation()">
@@ -476,7 +479,8 @@ export class ProductListComponent implements OnInit {
     return hasAny ? result : null;
   }
 
-  typeCss(t: number) { return TYPE_CSS[t] ?? ''; }
+  typeCss(t: string | number) { return TYPE_CSS[productTypeName(t)] ?? ''; }
+  typeName(t: string | number) { return productTypeName(t); }
   statusCss(s: string) { return STATUS_CSS[s] ?? ''; }
 
   goToTeam(teamId: string) { this.router.navigate(['/teams', teamId]); }
