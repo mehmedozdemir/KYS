@@ -1156,7 +1156,8 @@ export class CustomerDetailComponent implements OnInit {
   revealVpnPassword(vpn: CustomerVpnConfig) {
     this.vpnRevealingId.set(vpn.id);
     const customerId = this.customer()!.id;
-    this.http.get<string>(`${environment.apiUrl}/customers/${customerId}/vpn-configs/${vpn.id}/reveal-password`).subscribe({
+    // API text/plain döner; varsayılan JSON parse'ı düz şifrede hata verir.
+    this.http.get(`${environment.apiUrl}/customers/${customerId}/vpn-configs/${vpn.id}/reveal-password`, { responseType: 'text' }).subscribe({
       next: plainPassword => {
         this.vpnRevealingId.set(null);
         const current = { ...this.revealedVpnPasswords() };

@@ -18,16 +18,13 @@ RUN dotnet publish src/backend/Kys.Api/Kys.Api.csproj -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup --system --gid 1001 appgroup \
-    && adduser --system --uid 1001 --ingroup appgroup appuser
-
 COPY --from=build /app/publish .
 
-# Create log directory with proper permissions
-RUN mkdir -p logs && chown -R appuser:appgroup /app
+# Create log directory with proper permissions.
+# .NET 8+ imajları yetkisiz "app" kullanıcısını ($APP_UID) hazır getirir.
+RUN mkdir -p logs && chown -R $APP_UID:$APP_UID /app
 
-USER appuser
+USER $APP_UID
 
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
