@@ -20,6 +20,7 @@
   "err.forbidden.product": "Bu ürünü görme yetkiniz yok.",
   "err.grant.scopeFieldsRequired": "Scope grant için ScopeType, ScopeId ve Level zorunludur.",
   "err.grant.capabilityRequired": "Capability grant için Capability zorunludur.",
+  "err.grant.expiryInPast": "Bitiş tarihi geçmişte olamaz.",
   "err.customer.churnedDateRequired": "Churned durumu için hizmet bitiş tarihi zorunludur.",
   "err.customer.notArchived": "Müşteri arşivlenmiş değil.",
   "err.customer.alreadyArchived": "Müşteri zaten arşivlenmiş.",

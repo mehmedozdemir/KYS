@@ -49,7 +49,8 @@ public sealed record EnvironmentResourceDto(
     IReadOnlyList<CredentialStubDto> Credentials,
     Dictionary<string, object?> FieldSchema,
     Dictionary<string, object?> SharedConnectionFields,
-    IReadOnlyList<CredentialStubDto> SharedCredentials);
+    IReadOnlyList<CredentialStubDto> SharedCredentials,
+    Dictionary<string, object?> ConnectionFields);
 
 public sealed record CredentialStubDto(
     Guid Id,

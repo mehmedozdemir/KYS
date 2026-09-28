@@ -5,5 +5,6 @@ public interface ICurrentUserService
     Guid? UserId { get; }
     string? Username { get; }
     bool IsAuthenticated { get; }
+    string? IpAddress { get; }
     bool HasPermission(string permission);
 }

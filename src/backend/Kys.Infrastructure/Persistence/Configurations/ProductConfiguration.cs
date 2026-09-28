@@ -33,7 +33,7 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasColumnType("jsonb")
             .HasDefaultValueSql("'{}'");
 
-        builder.HasIndex(x => x.Code).IsUnique();
+        builder.HasIndex(x => x.Code).IsUnique().HasFilter("is_deleted = false");
 
         builder.HasOne(x => x.PoPerson)
             .WithMany()

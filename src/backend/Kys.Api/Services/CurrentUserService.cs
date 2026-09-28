@@ -21,6 +21,20 @@ public sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor)
 
     public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated == true;
 
+    // Nginx/proxy arkasında gerçek istemci IP'si X-Forwarded-For'un ilk değeridir.
+    public string? IpAddress
+    {
+        get
+        {
+            var ctx = httpContextAccessor.HttpContext;
+            if (ctx is null) return null;
+            var forwarded = ctx.Request.Headers["X-Forwarded-For"].ToString();
+            if (!string.IsNullOrWhiteSpace(forwarded))
+                return forwarded.Split(',')[0].Trim();
+            return ctx.Connection.RemoteIpAddress?.ToString();
+        }
+    }
+
     public bool HasPermission(string permission)
         => Principal?.HasClaim("permission", "*") == true ||
            Principal?.HasClaim("permission", permission) == true;

@@ -578,7 +578,7 @@ export class CustomerListComponent implements OnInit {
             serverHost: this.vpnForm.serverHost.trim(),
             serverPort: this.vpnForm.serverPort || null,
             username: this.vpnForm.username.trim() || null,
-            password: this.vpnForm.password.trim() || null,
+            plainPassword: this.vpnForm.password ? this.vpnForm.password : null,
             notes: null,
             isActive: true
           };

@@ -1117,17 +1117,22 @@ export class CustomerDetailComponent implements OnInit {
     this.vpnFormSaving.set(true);
     this.vpnFormError.set('');
     const customerId = this.customer()!.id;
+    const editId = this.editingVpnId();
+    const existing = editId ? this.customer()!.vpnConfigs.find(v => v.id === editId) : undefined;
     const body = {
+      customerEnvironmentId: existing?.customerEnvironmentId ?? null,
       name: this.vpnForm.name.trim(),
       vpnType: this.vpnForm.vpnType,
       serverHost: this.vpnForm.serverHost.trim(),
       serverPort: this.vpnForm.serverPort || null,
       username: this.vpnForm.username.trim() || null,
-      password: this.vpnForm.password.trim() || null,
+      // API alanı plainPassword; boş bırakılırsa null → düzenlemede mevcut şifre korunur.
+      // Şifre trim edilmez: baştaki/sondaki boşluk şifrenin parçası olabilir.
+      plainPassword: this.vpnForm.password ? this.vpnForm.password : null,
       notes: this.vpnForm.notes.trim() || null,
-      isActive: this.vpnForm.isActive
+      isActive: this.vpnForm.isActive,
+      sortOrder: existing?.sortOrder ?? 0
     };
-    const editId = this.editingVpnId();
     const req = editId
       ? this.http.put(`${environment.apiUrl}/customers/${customerId}/vpn-configs/${editId}`, body)
       : this.http.post(`${environment.apiUrl}/customers/${customerId}/vpn-configs`, body);
