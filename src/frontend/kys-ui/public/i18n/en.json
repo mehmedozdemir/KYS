@@ -755,7 +755,16 @@
     "secretFieldsHint": "Secret fields such as passwords are managed encrypted under \"Credential\".",
     "deployedVersion": "Deployed version",
     "addDeployedVersion": "Add version",
-    "productVersionIs": "Current product version is v{{version}}"
+    "productVersionIs": "Current product version is v{{version}}",
+    "moreActions": "More actions",
+    "copyConnection": "Copy connection",
+    "copied": "Copied",
+    "prodWarning": "Production environment — changes directly affect the customer.",
+    "vpnRequired": "VPN for access",
+    "vpnCustomerWide": "customer-wide",
+    "vpnManage": "VPN details",
+    "urlMissingList": "URL not set:",
+    "productLinkTitle": "Product deployment status by customer"
   },
   "account": {
     "title": "My Account",

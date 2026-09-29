@@ -17,4 +17,5 @@ public sealed record CustomerEnvironmentSummaryDto(
     string? Notes,
     string? HostingPlatformName,
     string? HostingPlatformIcon,
-    string? HostingPlatformColor);
+    string? HostingPlatformColor,
+    string? DeployedVersion);
