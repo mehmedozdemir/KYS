@@ -32,6 +32,9 @@ public sealed class DeploymentRepository(AppDbContext db) : IDeploymentRepositor
             .OrderBy(e => e.EnvironmentType.SortOrder)
             .Select(e => new DeploymentEnvironmentRow(
                 e.Id, e.CustomerProductId, e.Name, e.EnvironmentType.Code, e.EnvironmentType.Name, e.EnvironmentType.Color,
-                e.EnvironmentType.SortOrder, e.HostingPlatform != null ? e.HostingPlatform.Name : null, e.DeployedVersion, e.IsActive))
+                e.EnvironmentType.SortOrder, e.HostingPlatform != null ? e.HostingPlatform.Name : null, e.DeployedVersion, e.IsActive,
+                // Ürünün zorunlu şablonlarından bu ortamda karşılığı olmayanlar
+                e.CustomerProduct.Product.ResourceTemplates.Count(t => t.IsRequired
+                    && !e.Resources.Any(r => r.ProductResourceTemplateId == t.Id))))
             .ToListAsync(ct);
 }

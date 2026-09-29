@@ -6,7 +6,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { environment } from '../../../environments/environment';
 import { STAGE_META, STAGE_ORDER, DeploymentStage } from '../../shared/deployment-stage';
 
-interface MatrixCell { customerId: string; productId: string; stage: DeploymentStage; isOverdue: boolean; prodVersion: string | null; }
+interface MatrixCell { customerId: string; productId: string; stage: DeploymentStage; isOverdue: boolean; prodVersion: string | null; missingRequiredResources: number; }
 interface DeploymentMatrix {
   products: { id: string; name: string; code: string }[];
   customers: { id: string; name: string; code: string; status: string }[];
@@ -37,6 +37,7 @@ interface DeploymentMatrix {
             <span class="legend-item" [attr.data-stage]="s"><i class="pi" [class]="meta[s].icon"></i> {{ 'deployment.stage.' + s | transloco }}</span>
           }
           <span class="legend-item overdue"><i class="pi pi-exclamation-triangle"></i> {{ 'deployment.overdue' | transloco }}</span>
+          <span class="legend-item missing"><i class="pi pi-box"></i> {{ 'deployment.missingLegend' | transloco }}</span>
         </div>
       </div>
 
@@ -60,12 +61,19 @@ interface DeploymentMatrix {
                 @for (p of d.products; track p.id) {
                   @if (cell(c.id, p.id); as x) {
                     <td [attr.data-stage]="x.stage" [class.is-overdue]="x.isOverdue"
-                        [title]="c.name + ' · ' + p.name + ': ' + ('deployment.stage.' + x.stage | transloco) + (x.prodVersion ? ' · v' + x.prodVersion : '')">
+                        [title]="c.name + ' · ' + p.name + ': ' + ('deployment.stage.' + x.stage | transloco) + (x.prodVersion ? ' · v' + x.prodVersion : '') + (x.missingRequiredResources ? ' · ' + ('deployment.missingResources' | transloco:{ count: x.missingRequiredResources }) : '')">
                       <span class="cell">
                         <i class="pi" [class]="x.isOverdue ? 'pi-exclamation-triangle' : meta[x.stage].icon"></i>
                         <span class="cell-label">{{ 'deployment.stage.' + x.stage | transloco }}</span>
                       </span>
-                      @if (x.prodVersion) { <span class="cell-ver">v{{ x.prodVersion }}</span> }
+                      @if (x.prodVersion || x.missingRequiredResources) {
+                        <span class="cell-ver">
+                          @if (x.prodVersion) { v{{ x.prodVersion }} }
+                          @if (x.missingRequiredResources) {
+                            <span class="cell-missing"><i class="pi pi-box"></i> {{ x.missingRequiredResources }}<span class="sr-only"> {{ 'deployment.missingResources' | transloco:{ count: x.missingRequiredResources } }}</span></span>
+                          }
+                        </span>
+                      }
                     </td>
                   } @else {
                     <td class="empty-cell"><span class="sr-only">{{ 'deployment.stage.NotUsed' | transloco }}</span>·</td>
@@ -124,6 +132,8 @@ interface DeploymentMatrix {
     [data-stage='Inactive'] .pi, [data-stage='Discontinued'] .pi { color: var(--text-subtle); font-weight: 500; }
     td.is-overdue { box-shadow: inset 0 0 0 2px var(--danger); .pi { color: var(--danger); } }
     .legend-item.overdue .pi { color: var(--danger); }
+    .legend-item.missing .pi, .cell-missing { color: var(--warning-strong, var(--warning)); }
+    .cell-missing { font-weight: 600; margin-left: 0.25rem; .pi { font-size: 0.65rem; } }
     .empty-cell { color: var(--text-subtle); }
     .total { font-variant-numeric: tabular-nums; }
     .no-rows { text-align: center; color: var(--text-subtle); padding: 2rem; }
@@ -160,7 +170,7 @@ export class DeploymentMatrixComponent {
     const inProgress = new Set<DeploymentStage>(['Planned', 'Installing', 'ProdReady']);
     return d.customers.filter(c =>
       (!q || c.name.toLocaleLowerCase('tr-TR').includes(q) || c.code.toLocaleLowerCase('tr-TR').includes(q)) &&
-      (!this.inProgressOnly() || d.cells.some(x => x.customerId === c.id && (inProgress.has(x.stage) || x.isOverdue))));
+      (!this.inProgressOnly() || d.cells.some(x => x.customerId === c.id && (inProgress.has(x.stage) || x.isOverdue || x.missingRequiredResources > 0))));
   });
 
   constructor() {

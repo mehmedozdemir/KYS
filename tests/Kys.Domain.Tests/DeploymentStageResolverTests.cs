@@ -25,6 +25,16 @@ public sealed class DeploymentStageResolverTests
         => DeploymentStageResolver.Assess(Facts(nonProd: nonProd, prod: prod), Today).Stage.Should().Be(expected);
 
     [Fact]
+    public void Onboarding_ProdWithMissingRequiredResources_IsStillInstalling()
+        => DeploymentStageResolver.Assess(Facts(nonProd: true, prod: true) with { ProdMissingRequiredResources = true }, Today)
+            .Stage.Should().Be(DeploymentStage.Installing);
+
+    [Fact]
+    public void Active_WithMissingRequiredResources_StaysLive()
+        => DeploymentStageResolver.Assess(Facts(CustomerProductStatus.Active, nonProd: true, prod: true) with { ProdMissingRequiredResources = true }, Today)
+            .Stage.Should().Be(DeploymentStage.Live);
+
+    [Fact]
     public void Saas_Onboarding_IsPlanned_EvenWithoutEnvironments()
         => DeploymentStageResolver.Assess(Facts(mode: UsageMode.SaaS), Today).Stage.Should().Be(DeploymentStage.Planned);
 

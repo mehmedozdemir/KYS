@@ -1328,6 +1328,9 @@
       "searchCustomer": "Müşteri ara…",
       "onlyInProgress": "Yalnızca süreci devam edenler",
       "liveTotal": "Canlı / kullanan"
-    }
+    },
+    "missingResources": "{{count}} zorunlu kaynak eksik",
+    "missingFilter": "Kaynak eksik",
+    "missingLegend": "Zorunlu kaynak eksik"
   }
 }

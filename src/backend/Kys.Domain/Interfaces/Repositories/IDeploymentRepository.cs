@@ -22,4 +22,4 @@ public sealed record DeploymentLinkRow(
 
 public sealed record DeploymentEnvironmentRow(
     Guid Id, Guid CustomerProductId, string Name, string TypeCode, string TypeName, string? TypeColor, int TypeSortOrder,
-    string? PlatformName, string? DeployedVersion, bool IsActive);
+    string? PlatformName, string? DeployedVersion, bool IsActive, int MissingRequiredCount);

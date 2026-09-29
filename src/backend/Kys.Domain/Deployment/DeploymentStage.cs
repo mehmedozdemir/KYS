@@ -8,7 +8,7 @@ public enum DeploymentStage
     NotUsed,        // müşteri ürünü kullanmıyor
     Planned,        // ilişki var, henüz ortam yok
     Installing,     // yalnızca production dışı ortamlar (Test/UAT/Pre-Prod)
-    ProdReady,      // Prod ortamı var ama henüz canlıya geçilmedi
+    ProdReady,      // Prod ortamı var, zorunlu kaynakları tam, henüz canlıya geçilmedi
     Live,           // canlı
     Inactive,       // pasif
     Discontinued    // kullanım sonlandı
@@ -26,7 +26,8 @@ public sealed record DeploymentFacts(
     DateOnly? ProdReadyAt,
     DateOnly? GoLiveAt,
     DateOnly? TargetGoLiveAt,
-    DateOnly? DiscontinuedAt);
+    DateOnly? DiscontinuedAt,
+    bool ProdMissingRequiredResources = false);
 
 public sealed record DeploymentAssessment(
     DeploymentStage Stage,
@@ -47,7 +48,9 @@ public static class DeploymentStageResolver
             CustomerProductStatus.Active => DeploymentStage.Live,
             // Devreye alma: ortam durumuna göre ayrıştırılır. SaaS'ta ortam yoktur → Planlandı.
             _ when f.UsageMode == UsageMode.SaaS => DeploymentStage.Planned,
-            _ when f.HasProdEnvironment => DeploymentStage.ProdReady,
+            // Prod ortamında zorunlu kaynak eksikse kurulum sürmektedir; "canlıya hazır" sayılmaz
+            _ when f.HasProdEnvironment && !f.ProdMissingRequiredResources => DeploymentStage.ProdReady,
+            _ when f.HasProdEnvironment => DeploymentStage.Installing,
             _ when f.HasNonProdEnvironment => DeploymentStage.Installing,
             _ => DeploymentStage.Planned
         };

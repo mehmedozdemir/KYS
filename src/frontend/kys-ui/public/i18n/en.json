@@ -1328,6 +1328,9 @@
       "searchCustomer": "Search customer…",
       "onlyInProgress": "Only in-progress",
       "liveTotal": "Live / using"
-    }
+    },
+    "missingResources": "{{count}} required resource(s) missing",
+    "missingFilter": "Missing resources",
+    "missingLegend": "Required resource missing"
   }
 }
