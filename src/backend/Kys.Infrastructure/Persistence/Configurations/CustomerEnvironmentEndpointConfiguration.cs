@@ -20,7 +20,7 @@ public sealed class CustomerEnvironmentEndpointConfiguration : IEntityTypeConfig
                 v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                 v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object?>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new());
 
-        builder.HasIndex(x => new { x.CustomerEnvironmentId, x.ProductEndpointId }).IsUnique();
+        builder.HasIndex(x => new { x.CustomerEnvironmentId, x.ProductEndpointId }).IsUnique().HasFilter("is_deleted = false");
 
         builder.HasOne(x => x.CustomerEnvironment)
             .WithMany(x => x.Endpoints)

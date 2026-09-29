@@ -30,7 +30,7 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasColumnType("jsonb")
             .HasDefaultValueSql("'{}'");
 
-        builder.HasIndex(x => x.Code).IsUnique();
+        builder.HasIndex(x => x.Code).IsUnique().HasFilter("is_deleted = false");
         builder.HasIndex(x => new { x.Status, x.IsArchived, x.IsDeleted });
 
         builder.HasMany(x => x.Products)

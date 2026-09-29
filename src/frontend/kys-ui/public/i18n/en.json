@@ -30,7 +30,9 @@
     "update": "Update",
     "assign": "Assign",
     "adding": "Adding...",
-    "recordNotFound": "No records found."
+    "recordNotFound": "No records found.",
+    "hide": "Hide",
+    "show": "Show"
   },
   "status": {
     "customer": {
@@ -677,7 +679,11 @@
     "personalCredRevealError": "Could not reveal personal credential.",
     "personalCredSaveError": "Could not save personal credential.",
     "personalCredDeleteConfirm": "This personal credential will be deleted. Are you sure?",
-    "personalCredDeleteError": "Could not delete personal credential."
+    "personalCredDeleteError": "Could not delete personal credential.",
+    "editConnection": "Connection Details",
+    "connectionSaveError": "Could not save connection details",
+    "secretSaveError": "Resource added but these secret fields could not be saved: {{fields}}. Retry from Credential Management.",
+    "secretFieldsHint": "Secret fields such as passwords are managed encrypted under \"Credential\"."
   },
   "account": {
     "title": "My Account",

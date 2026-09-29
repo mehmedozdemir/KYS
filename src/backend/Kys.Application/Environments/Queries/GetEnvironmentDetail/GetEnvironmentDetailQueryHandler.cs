@@ -40,7 +40,8 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
             r.ProductResourceTemplate.ResourceType.FieldSchema,
             r.SharedResource?.ConnectionFields ?? [],
             r.SharedResourceId.HasValue && sharedCredentialMap.TryGetValue(r.SharedResourceId.Value, out var sc)
-                ? sc : [])).ToList();
+                ? sc : [],
+            r.ConnectionFields)).ToList();
 
         var endpointUrlMap = env.Endpoints.ToDictionary(e => e.ProductEndpointId);
         var endpoints = env.CustomerProduct.Product.Endpoints

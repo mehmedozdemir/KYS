@@ -6,6 +6,7 @@ using Kys.Application.Environments.Commands.RemoveEnvironmentResource;
 using Kys.Application.Environments.Commands.RemoveEnvironmentEndpointUrl;
 using Kys.Application.Environments.Commands.SetEnvironmentEndpointUrl;
 using Kys.Application.Environments.Commands.SetEnvironmentHostingPlatform;
+using Kys.Application.Environments.Commands.UpdateEnvironmentResource;
 using Kys.Application.Environments.Queries.GetCustomerEnvironments;
 using Kys.Application.Environments.Queries.GetEnvironmentDetail;
 using Kys.Application.Environments.Queries.GetEnvironmentTypes;
@@ -94,6 +95,20 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
         return Created($"api/v1/environments/{environmentId}/resources/{id}", new { id });
     }
 
+    [HttpPut("{environmentId:guid}/resources/{resourceId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequirePermission(Capabilities.EnvironmentWrite)]
+    public async Task<IActionResult> UpdateResource(
+        Guid environmentId,
+        Guid resourceId,
+        UpdateEnvironmentResourceRequest request,
+        CancellationToken ct)
+    {
+        await mediator.Send(new UpdateEnvironmentResourceCommand(resourceId, request.ConnectionFields, request.Notes), ct);
+        return NoContent();
+    }
+
     [HttpDelete("{environmentId:guid}/resources/{resourceId:guid}")]
     [RequirePermission(Capabilities.EnvironmentWrite)]
     public async Task<IActionResult> RemoveResource(Guid environmentId, Guid resourceId, CancellationToken ct)
@@ -144,6 +159,10 @@ public sealed record AddResourceToEnvironmentRequest(
     Guid ProductResourceTemplateId,
     bool IsShared,
     Guid? SharedResourceId,
+    Dictionary<string, object?> ConnectionFields,
+    string? Notes);
+
+public sealed record UpdateEnvironmentResourceRequest(
     Dictionary<string, object?> ConnectionFields,
     string? Notes);
 

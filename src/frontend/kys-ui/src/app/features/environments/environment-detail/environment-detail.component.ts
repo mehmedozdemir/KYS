@@ -40,6 +40,7 @@ interface EnvironmentResource {
   fieldSchema: Record<string, FieldSchemaDef>;
   sharedConnectionFields: Record<string, unknown>;
   sharedCredentials: CredentialStub[];
+  connectionFields: Record<string, unknown>;
 }
 
 interface EndpointUrl {
@@ -284,6 +285,11 @@ interface HostingPlatformOption {
                       @if (r.credentials.length) {
                         <span class="cred-count">{{ 'environments.credentialCount' | transloco:{ count: r.credentials.length } }}</span>
                       }
+                      @if (hasPlainFields(r)) {
+                        <button type="button" class="btn-cred" (click)="openConnEdit(r)">
+                          <i class="pi pi-pencil"></i> {{ 'environments.editConnection' | transloco }}
+                        </button>
+                      }
                       <button type="button" class="btn-cred" (click)="openCredModal(r)">
                         <i class="pi pi-key"></i> {{ 'environments.manageCredential' | transloco }}
                       </button>
@@ -348,15 +354,20 @@ interface HostingPlatformOption {
                     <div class="cred-kv-grid">
                       @for (entry of schemaEntries; track entry.key) {
                         @let stub = credStubForKey(r, entry.key);
-                        <div class="cred-kv-item" [class.cred-kv-missing]="!stub">
+                        @let plain = entry.type !== 'password' ? plainFieldValue(r, entry.key) : null;
+                        <div class="cred-kv-item" [class.cred-kv-missing]="!stub && plain === null">
                           <span class="cred-kv-label">{{ entry.label }}</span>
-                          @if (!stub) {
+                          @if (plain !== null) {
+                            <span class="cred-kv-value">{{ plain }}</span>
+                          } @else if (!stub) {
                             <span class="cred-kv-value cred-kv-empty">—</span>
-                          } @else if (entry.type === 'password') {
+                          } @else {
+                            <!-- Şifre alanları ve eski sürümde şifreli saklanmış düz alanlar: yalnızca istek üzerine açılır -->
                             <span class="cred-kv-value cred-kv-pw">
                               {{ cardVisiblePasswords()[stub.id] ? (cardRevealedValues()[stub.id] ?? '••••••') : '••••••' }}
                             </span>
                             <button type="button" class="cred-kv-eye"
+                              [title]="(cardVisiblePasswords()[stub.id] ? 'common.hide' : 'common.show') | transloco"
                               [disabled]="cardRevealingIds()[stub.id]"
                               (click)="toggleCardPassword(stub.id)">
                               @if (cardRevealingIds()[stub.id]) {
@@ -365,8 +376,6 @@ interface HostingPlatformOption {
                                 <i class="pi" [ngClass]="cardVisiblePasswords()[stub.id] ? 'pi-eye-slash' : 'pi-eye'"></i>
                               }
                             </button>
-                          } @else {
-                            <span class="cred-kv-value">{{ cardRevealedValues()[stub.id] ?? '···' }}</span>
                           }
                         </div>
                       }
@@ -675,6 +684,43 @@ interface HostingPlatformOption {
             <button type="button" class="btn btn-secondary" (click)="closeAddResource()">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="addResourceSaving()" (click)="saveResource()">
               @if (addResourceSaving()) { <i class="pi pi-spin pi-spinner"></i> {{ 'common.adding' | transloco }} } @else { {{ 'common.add' | transloco }} }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Bağlantı Bilgileri (gizli olmayan alanlar) Düzenleme Modal -->
+    @if (connEditResource(); as cr) {
+      <div class="modal-backdrop" (click)="closeConnEdit()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>{{ 'environments.editConnection' | transloco }}</h2>
+              <p class="modal-subtitle">{{ cr.templateName }} · {{ cr.resourceTypeName }}</p>
+            </div>
+            <button type="button" class="modal-close" (click)="closeConnEdit()"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            @if (connEditError()) { <div class="alert-error">{{ connEditError() }}</div> }
+            @for (entry of plainSchemaEntries(cr); track entry.key) {
+              <div class="form-group">
+                <label>{{ entry.label }} <code class="field-key-badge">{{ entry.key }}</code></label>
+                <input [type]="entry.type === 'number' ? 'number' : 'text'"
+                  [value]="connEditValues[entry.key] ?? ''"
+                  (input)="connEditValues[entry.key] = $any($event.target).value" />
+              </div>
+            }
+            <div class="form-group">
+              <label>{{ 'environments.notes' | transloco }}</label>
+              <input type="text" [(ngModel)]="connEditNotes" [placeholder]="'environments.notesPlaceholder' | transloco" />
+            </div>
+            <p class="cred-fields-hint"><i class="pi pi-lock"></i> {{ 'environments.secretFieldsHint' | transloco }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeConnEdit()">{{ 'common.cancel' | transloco }}</button>
+            <button type="button" class="btn btn-primary" [disabled]="connEditSaving()" (click)="saveConnEdit()">
+              @if (connEditSaving()) { <i class="pi pi-spin pi-spinner"></i> {{ 'common.saving' | transloco }} } @else { {{ 'common.save' | transloco }} }
             </button>
           </div>
         </div>
@@ -1235,17 +1281,100 @@ export class EnvironmentDetailComponent implements OnInit {
     });
   }
 
+  // Şema anahtarları JSON sırasıyla (alfabetik) gelir; formda mantıksal sıra:
+  // adres/port → diğer bağlantı alanları → kullanıcı adı → gizli alanlar.
+  private orderedSchemaKeys(schema: Record<string, FieldSchemaDef> | undefined): string[] {
+    if (!schema) return [];
+    const rank = (key: string) => {
+      const def = schema[key];
+      if (def?.type === 'password') return 4;
+      if (/user|access_?key|client_?id/i.test(key)) return 3;
+      if (/^(host|url|endpoint|server|endpoint_url)$/i.test(key)) return 0;
+      if (/port/i.test(key)) return 1;
+      return 2;
+    };
+    return Object.keys(schema)
+      .map((key, i) => ({ key, i, r: rank(key) }))
+      .sort((a, b) => a.r - b.r || a.i - b.i)
+      .map(x => x.key);
+  }
+
   addResourceSchemaKeys(tpl: AvailableTemplate): string[] {
-    return tpl.fieldSchema ? Object.keys(tpl.fieldSchema) : [];
+    return this.orderedSchemaKeys(tpl.fieldSchema);
   }
 
   resourceSchemaEntries(r: EnvironmentResource): { key: string; label: string; type: string }[] {
-    if (!r.fieldSchema) return [];
-    return Object.entries(r.fieldSchema).map(([key, def]) => ({
+    return this.orderedSchemaKeys(r.fieldSchema).map(key => ({
       key,
-      label: (def as FieldSchemaDef).label ?? key,
-      type: (def as FieldSchemaDef).type ?? 'string'
+      label: r.fieldSchema[key]?.label ?? key,
+      type: r.fieldSchema[key]?.type ?? 'string'
     }));
+  }
+
+  plainFieldValue(r: EnvironmentResource, key: string): string | null {
+    const v = r.connectionFields?.[key];
+    return v == null || v === '' ? null : String(v);
+  }
+
+  plainSchemaEntries(r: EnvironmentResource) {
+    return this.resourceOwnSchemaEntries(r).filter(e => e.type !== 'password');
+  }
+
+  hasPlainFields(r: EnvironmentResource): boolean {
+    return this.plainSchemaEntries(r).length > 0;
+  }
+
+  // --- Bağlantı bilgileri (düz alanlar) düzenleme ---
+  connEditResource = signal<EnvironmentResource | null>(null);
+  connEditSaving = signal(false);
+  connEditError = signal('');
+  connEditValues: Record<string, string> = {};
+  connEditNotes = '';
+
+  openConnEdit(r: EnvironmentResource) {
+    this.connEditValues = {};
+    for (const e of this.plainSchemaEntries(r)) {
+      const v = this.plainFieldValue(r, e.key);
+      if (v !== null) this.connEditValues[e.key] = v;
+    }
+    this.connEditNotes = r.notes ?? '';
+    this.connEditError.set('');
+    this.connEditResource.set(r);
+  }
+
+  closeConnEdit() {
+    this.connEditResource.set(null);
+  }
+
+  saveConnEdit() {
+    const r = this.connEditResource();
+    if (!r) return;
+    this.connEditSaving.set(true);
+    this.connEditError.set('');
+    const connectionFields = this.toConnectionFields(r.fieldSchema, this.connEditValues);
+    this.http.put(`${environment.apiUrl}/environments/${this.env()!.id}/resources/${r.id}`, {
+      connectionFields,
+      notes: this.connEditNotes.trim() || null
+    }).subscribe({
+      next: () => { this.connEditSaving.set(false); this.connEditResource.set(null); this.load(); },
+      error: err => {
+        this.connEditSaving.set(false);
+        this.connEditError.set(err.error?.detail ?? this.transloco.translate('environments.connectionSaveError'));
+      }
+    });
+  }
+
+  // Formdaki gizli olmayan değerleri şema tipine göre (number → sayı) connectionFields'a dönüştürür.
+  private toConnectionFields(schema: Record<string, FieldSchemaDef>, values: Record<string, string>): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+    for (const [key, raw] of Object.entries(values)) {
+      const def = schema?.[key];
+      if (def?.type === 'password') continue;
+      const v = (raw ?? '').trim();
+      if (!v) continue;
+      result[key] = def?.type === 'number' && !Number.isNaN(Number(v)) ? Number(v) : v;
+    }
+    return result;
   }
 
   // Kaynağın kendi (ortama özgü) alanları — paylaşımlıdan kalıtılanları hariç tut
@@ -1282,20 +1411,12 @@ export class EnvironmentDetailComponent implements OnInit {
   cardVisiblePasswords = signal<Record<string, boolean>>({});
   cardRevealingIds = signal<Record<string, boolean>>({});
 
-  private autoRevealNonPasswordCreds(detail: EnvironmentDetail) {
+  // Credential'lar asla otomatik çözülmez: her reveal audit log'a "görüntülendi" yazar.
+  // Gizli olmayan alanlar connectionFields'tan düz gösterilir; şifreli olanlar yalnızca kullanıcı isteğiyle açılır.
+  private resetCardReveal() {
     this.cardRevealedValues.set({});
     this.cardVisiblePasswords.set({});
     this.cardRevealingIds.set({});
-    for (const resource of detail.resources) {
-      for (const cred of resource.credentials) {
-        const def = resource.fieldSchema?.[cred.fieldKey] as FieldSchemaDef | undefined;
-        if (def && def.type !== 'password') {
-          this.http.get<{ value: string }>(`${environment.apiUrl}/credentials/${cred.id}/reveal`).subscribe({
-            next: res => this.cardRevealedValues.update(v => ({ ...v, [cred.id]: res.value }))
-          });
-        }
-      }
-    }
   }
 
   toggleCardPassword(credId: string) {
@@ -1362,31 +1483,43 @@ export class EnvironmentDetailComponent implements OnInit {
     this.addResourceSaving.set(true);
     this.addResourceError.set('');
     const envId = this.env()!.id;
+    const schema = this.selectedTemplate()?.fieldSchema ?? {};
+    // Yalnızca şema tipi "password" olan alanlar şifreli credential'dır; diğerleri düz connectionFields.
+    const connectionFields = this.toConnectionFields(schema, this.addResourceCreds);
+    const secretEntries = Object.entries(this.addResourceCreds)
+      .filter(([key, v]) => schema[key]?.type === 'password' && v !== '');
     this.http.post<{ id: string }>(`${environment.apiUrl}/environments/${envId}/resources`, {
       productResourceTemplateId: f.templateId,
       isShared: f.isShared,
       sharedResourceId: f.isShared ? f.sharedResourceId : null,
-      connectionFields: {},
+      connectionFields,
       notes: f.notes.trim() || null
     }).subscribe({
       next: (res) => {
-        const credEntries = Object.entries(this.addResourceCreds).filter(([, v]) => v.trim());
-        if (credEntries.length) {
-          const requests = credEntries.map(([fieldKey, plainValue]) =>
-            this.http.put(`${environment.apiUrl}/credentials`, {
-              environmentResourceId: res.id,
-              sharedResourceId: null,
-              fieldKey,
-              plainValue
-            })
-          );
-          let remaining = requests.length;
-          requests.forEach(req => req.subscribe({
-            next: () => { if (--remaining === 0) this.finishAdd(res.id); },
-            error: () => { if (--remaining === 0) this.finishAdd(res.id); }
-          }));
-        } else {
-          this.finishAdd(res.id);
+        if (!secretEntries.length) { this.finishAdd(res.id); return; }
+        let remaining = secretEntries.length;
+        const failed: string[] = [];
+        const done = () => {
+          if (--remaining > 0) return;
+          if (failed.length) {
+            // Kaynak oluştu ama şifre(ler) kaydedilemedi: sessizce geçme, kullanıcıya söyle.
+            this.addResourceSaving.set(false);
+            this.addResourceError.set(this.transloco.translate('environments.secretSaveError', { fields: failed.join(', ') }));
+            this.load();
+          } else {
+            this.finishAdd(res.id);
+          }
+        };
+        for (const [fieldKey, plainValue] of secretEntries) {
+          this.http.put(`${environment.apiUrl}/credentials`, {
+            environmentResourceId: res.id,
+            sharedResourceId: null,
+            fieldKey,
+            plainValue
+          }).subscribe({
+            next: done,
+            error: () => { failed.push(schema[fieldKey]?.label ?? fieldKey); done(); }
+          });
         }
       },
       error: err => {
@@ -1412,8 +1545,11 @@ export class EnvironmentDetailComponent implements OnInit {
     this.addResourceSaving.set(false);
     this.closeAddResource();
     this.load((detail) => {
+      // Yalnızca doldurulmamış bir gizli alan kaldıysa credential penceresini aç.
       const newResource = detail.resources.find(r => r.id === newResourceId);
-      if (newResource && Object.keys(newResource.fieldSchema ?? {}).length) {
+      const missingSecret = newResource && Object.entries(newResource.fieldSchema ?? {})
+        .some(([key, def]) => def?.type === 'password' && !newResource.credentials.some(c => c.fieldKey === key));
+      if (newResource && missingSecret) {
         this.openCredModal(newResource);
       }
     });
@@ -1663,7 +1799,7 @@ export class EnvironmentDetailComponent implements OnInit {
       next: d => {
         this.env.set(d);
         this.loading.set(false);
-        this.autoRevealNonPasswordCreds(d);
+        this.resetCardReveal();
         this.loadSiblings(d.customerProductId);
         onDone?.(d);
       },
@@ -1721,7 +1857,12 @@ export class EnvironmentDetailComponent implements OnInit {
 
   schemaKeys(): string[] {
     const resource = this.credResource();
-    if (resource) return Object.keys(resource.fieldSchema ?? {});
+    // Kaynaklarda yalnızca gizli (password) alanlar credential olarak yönetilir;
+    // düz alanlar "Bağlantı Bilgilerini Düzenle" ile connectionFields'ta tutulur.
+    if (resource) {
+      const schema = resource.fieldSchema ?? {};
+      return this.orderedSchemaKeys(schema).filter(k => schema[k]?.type === 'password');
+    }
     const ep = this.credEndpoint();
     if (ep) {
       if (ep.authTypeName === 'BasicAuth') return ['username', 'password'];

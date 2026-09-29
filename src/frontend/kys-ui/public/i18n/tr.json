@@ -30,7 +30,9 @@
     "update": "Güncelle",
     "assign": "Ata",
     "adding": "Ekleniyor...",
-    "recordNotFound": "Kayıt bulunamadı."
+    "recordNotFound": "Kayıt bulunamadı.",
+    "hide": "Gizle",
+    "show": "Göster"
   },
   "status": {
     "customer": {
@@ -677,7 +679,11 @@
     "personalCredRevealError": "Kişisel credential gösterilemedi.",
     "personalCredSaveError": "Kişisel credential kaydedilemedi.",
     "personalCredDeleteConfirm": "Bu kişisel credential silinecek. Emin misiniz?",
-    "personalCredDeleteError": "Kişisel credential silinemedi."
+    "personalCredDeleteError": "Kişisel credential silinemedi.",
+    "editConnection": "Bağlantı Bilgileri",
+    "connectionSaveError": "Bağlantı bilgileri kaydedilemedi",
+    "secretSaveError": "Kaynak eklendi ancak şu gizli alanlar kaydedilemedi: {{fields}}. Credential Yönetimi'nden tekrar deneyin.",
+    "secretFieldsHint": "Şifre gibi gizli alanlar şifreli olarak \"Credential\" bölümünden yönetilir."
   },
   "account": {
     "title": "Hesabım",

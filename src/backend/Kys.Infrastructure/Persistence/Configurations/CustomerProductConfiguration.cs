@@ -20,7 +20,7 @@ public sealed class CustomerProductConfiguration : IEntityTypeConfiguration<Cust
 
         builder.Property(x => x.Notes).HasMaxLength(2000);
 
-        builder.HasIndex(x => new { x.CustomerId, x.ProductId }).IsUnique();
+        builder.HasIndex(x => new { x.CustomerId, x.ProductId }).IsUnique().HasFilter("is_deleted = false");
 
         builder.HasOne(x => x.Product)
             .WithMany()

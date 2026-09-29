@@ -20,6 +20,7 @@
   "err.forbidden.product": "You do not have permission to view this product.",
   "err.grant.scopeFieldsRequired": "ScopeType, ScopeId and Level are required for a scope grant.",
   "err.grant.capabilityRequired": "Capability is required for a capability grant.",
+  "err.grant.expiryInPast": "Expiry date cannot be in the past.",
   "err.customer.churnedDateRequired": "Service end date is required for the Churned status.",
   "err.customer.notArchived": "The customer is not archived.",
   "err.customer.alreadyArchived": "The customer is already archived.",
