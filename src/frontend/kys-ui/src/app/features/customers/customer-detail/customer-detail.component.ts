@@ -7,6 +7,7 @@ import { environment } from '../../../../environments/environment';
 import { PermissionService } from '../../../core/services/permission.service';
 import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 const CUST_STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
 const USAGE_MODE_CSS: Record<string, string> = { SaaS: 'badge--saas', Dedicated: 'badge--custom' };
@@ -930,6 +931,7 @@ interface CustomerDetail {
 })
 export class CustomerDetailComponent implements OnInit {
   private http = inject(HttpClient);
+  private confirmDialog = inject(ConfirmDialogService);
   protected perms = inject(PermissionService);
   private route = inject(ActivatedRoute);
   private transloco = inject(TranslocoService);
@@ -1216,8 +1218,8 @@ export class CustomerDetailComponent implements OnInit {
     });
   }
 
-  deleteVpn(vpn: CustomerVpnConfig) {
-    if (!confirm(this.transloco.translate('customerDetail.vpnDeleteConfirm', { name: vpn.name }))) return;
+  async deleteVpn(vpn: CustomerVpnConfig) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('customerDetail.vpnDeleteConfirm', { name: vpn.name })))) return;
     const customerId = this.customer()!.id;
     this.http.delete(`${environment.apiUrl}/customers/${customerId}/vpn-configs/${vpn.id}`).subscribe({
       next: () => this.loadCustomer(),
@@ -1255,8 +1257,8 @@ export class CustomerDetailComponent implements OnInit {
   removingProductId = signal<string | null>(null);
   removingEnvId = signal<string | null>(null);
 
-  removeProduct(customerProductId: string, productName: string) {
-    if (!confirm(this.transloco.translate('customerDetail.removeProductConfirm', { name: productName }))) return;
+  async removeProduct(customerProductId: string, productName: string) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('customerDetail.removeProductConfirm', { name: productName })))) return;
     this.removingProductId.set(customerProductId);
     const customerId = this.route.snapshot.paramMap.get('id');
     this.http.delete(`${environment.apiUrl}/customers/${customerId}/customer-products/${customerProductId}`).subscribe({
@@ -1268,8 +1270,8 @@ export class CustomerDetailComponent implements OnInit {
     });
   }
 
-  removeEnvironment(envId: string, envName: string) {
-    if (!confirm(this.transloco.translate('customerDetail.removeEnvConfirm', { name: envName }))) return;
+  async removeEnvironment(envId: string, envName: string) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('customerDetail.removeEnvConfirm', { name: envName })))) return;
     this.removingEnvId.set(envId);
     this.http.delete(`${environment.apiUrl}/environments/${envId}`).subscribe({
       next: () => {

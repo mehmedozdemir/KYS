@@ -4,6 +4,7 @@ import { SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 interface GrantDto {
   id: string;
@@ -183,6 +184,7 @@ const CAPABILITIES = [
 })
 export class AccessGrantsComponent implements OnInit {
   private http = inject(HttpClient);
+  private confirmDialog = inject(ConfirmDialogService);
   private transloco = inject(TranslocoService);
   private base = environment.apiUrl;
 
@@ -200,8 +202,11 @@ export class AccessGrantsComponent implements OnInit {
 
   ngOnInit() {
     this.load();
-    this.http.get<{ items: { id: string; firstName: string; lastName: string; email: string }[] }>(`${this.base}/people?pageSize=200`)
-      .subscribe(r => this.people.set((r.items ?? []).map(p => ({ id: p.id, label: `${p.firstName} ${p.lastName}` }))));
+    // Yetki yalnızca platforma giriş yapabilen kişilere anlamlıdır.
+    this.http.get<{ items: { id: string; firstName: string; lastName: string; email: string; isPlatformUser: boolean }[] }>(`${this.base}/people?pageSize=500`)
+      .subscribe(r => this.people.set((r.items ?? [])
+        .filter(p => p.isPlatformUser)
+        .map(p => ({ id: p.id, label: `${p.firstName} ${p.lastName}` }))));
     this.http.get<{ items: { id: string; name: string; code: string }[] }>(`${this.base}/products?pageSize=200`)
       .subscribe(r => this.products.set((r.items ?? []).map(p => ({ id: p.id, label: `${p.name} (${p.code})` }))));
     this.http.get<{ items: { id: string; name: string; code: string }[] }>(`${this.base}/customers?pageSize=200`)
@@ -254,8 +259,8 @@ export class AccessGrantsComponent implements OnInit {
     });
   }
 
-  revoke(g: GrantDto) {
-    if (!confirm(this.transloco.translate('admin.accessGrants.revokeConfirm', { name: g.personName }))) return;
+  async revoke(g: GrantDto) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('admin.accessGrants.revokeConfirm', { name: g.personName })))) return;
     this.http.delete(`${this.base}/admin/access-grants/${g.id}`).subscribe(() => this.load());
   }
 }

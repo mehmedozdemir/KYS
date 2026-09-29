@@ -5,6 +5,7 @@ import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 interface CredentialStub {
   id: string;
@@ -1205,6 +1206,7 @@ interface HostingPlatformOption {
 })
 export class EnvironmentDetailComponent implements OnInit {
   private http = inject(HttpClient);
+  private confirmDialog = inject(ConfirmDialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private transloco = inject(TranslocoService);
@@ -1531,8 +1533,8 @@ export class EnvironmentDetailComponent implements OnInit {
 
   removingResourceId = signal<string | null>(null);
 
-  removeResource(r: EnvironmentResource) {
-    if (!confirm(this.transloco.translate('environments.removeResourceConfirm', { name: r.templateName }))) return;
+  async removeResource(r: EnvironmentResource) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('environments.removeResourceConfirm', { name: r.templateName })))) return;
     this.removingResourceId.set(r.id);
     const envId = this.env()!.id;
     this.http.delete(`${environment.apiUrl}/environments/${envId}/resources/${r.id}`).subscribe({
@@ -1557,8 +1559,8 @@ export class EnvironmentDetailComponent implements OnInit {
 
   deletingEndpointId = signal<string | null>(null);
 
-  deleteEndpoint(ep: EndpointUrl) {
-    if (!confirm(this.transloco.translate('environments.deleteEndpointConfirm', { name: ep.endpointName }))) return;
+  async deleteEndpoint(ep: EndpointUrl) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('environments.deleteEndpointConfirm', { name: ep.endpointName })))) return;
     this.deletingEndpointId.set(ep.productEndpointId);
     const envId = this.env()!.id;
     this.http.delete(`${environment.apiUrl}/environments/${envId}/endpoints/${ep.productEndpointId}`).subscribe({
@@ -1754,8 +1756,8 @@ export class EnvironmentDetailComponent implements OnInit {
     });
   }
 
-  deletePersonalCred(credId: string) {
-    if (!confirm(this.transloco.translate('environments.personalCredDeleteConfirm'))) return;
+  async deletePersonalCred(credId: string) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('environments.personalCredDeleteConfirm')))) return;
     this.deletingPersonalCredId.update(m => ({ ...m, [credId]: true }));
     this.http.delete(`${environment.apiUrl}/personal-credentials/${credId}`).subscribe({
       next: () => {
@@ -1919,8 +1921,8 @@ export class EnvironmentDetailComponent implements OnInit {
     this.showNewValue = !this.isSecretField(fieldKey);
   }
 
-  deleteCredential(credId: string) {
-    if (!confirm(this.transloco.translate('environments.deleteCredConfirm'))) return;
+  async deleteCredential(credId: string) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('environments.deleteCredConfirm')))) return;
     this.deletingCredId.set(credId);
     const resourceId = this.credResource()?.id ?? null;
     const endpointId = this.credEndpoint()?.id ?? null;

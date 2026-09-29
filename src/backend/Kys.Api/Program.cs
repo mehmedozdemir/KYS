@@ -9,9 +9,12 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
+// Başlangıç logger'ı. CreateBootstrapLogger() (ReloadableLogger) ilk host'ta dondurulur ve aynı
+// süreçte ikinci host (WebApplicationFactory testleri) "logger is already frozen" ile çöker.
+// UseSerilog aşağıda asıl logger'ı kurup Log.Logger'ı değiştirir.
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .CreateBootstrapLogger();
+    .CreateLogger();
 
 try
 {

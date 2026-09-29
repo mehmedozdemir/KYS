@@ -32,7 +32,9 @@
     "adding": "Adding...",
     "recordNotFound": "No records found.",
     "hide": "Hide",
-    "show": "Show"
+    "show": "Show",
+    "confirm": "Confirm",
+    "areYouSure": "Are you sure?"
   },
   "status": {
     "customer": {
@@ -1191,6 +1193,10 @@
       "resetFailed": "Could not reset the password",
       "removeConfirm": "Remove platform access for {{name}}? (The person record is not deleted; they can no longer sign in.)",
       "accessRemoved": "Platform access removed."
+    },
+    "organization": {
+      "companyNamePh": "e.g. Example Software Inc.",
+      "shortNamePh": "e.g. Example"
     }
   }
 }

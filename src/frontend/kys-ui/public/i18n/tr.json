@@ -32,7 +32,9 @@
     "adding": "Ekleniyor...",
     "recordNotFound": "Kayıt bulunamadı.",
     "hide": "Gizle",
-    "show": "Göster"
+    "show": "Göster",
+    "confirm": "Onayla",
+    "areYouSure": "Emin misiniz?"
   },
   "status": {
     "customer": {
@@ -1191,6 +1193,10 @@
       "resetFailed": "Şifre sıfırlanamadı",
       "removeConfirm": "{{name}} kişisinin platform erişimi kaldırılsın mı? (Kişi kaydı silinmez, giriş yapamaz hale gelir.)",
       "accessRemoved": "Platform erişimi kaldırıldı."
+    },
+    "organization": {
+      "companyNamePh": "ör. Örnek Yazılım A.Ş.",
+      "shortNamePh": "ör. Örnek"
     }
   }
 }

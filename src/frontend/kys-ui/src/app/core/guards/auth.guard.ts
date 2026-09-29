@@ -23,3 +23,12 @@ export const authGuard: CanActivateFn = () => {
 
   return of(true);
 };
+
+// Oturumu açık kullanıcıyı login sayfasından uygulamaya yönlendirir.
+export const guestGuard: CanActivateFn = () => {
+  const tokenService = inject(TokenService);
+  const router = inject(Router);
+  const expiry = tokenService.getTokenExpiryMs();
+  const hasValidSession = tokenService.isLoggedIn() && (expiry === null || expiry > Date.now());
+  return hasValidSession ? router.createUrlTree(['/dashboard']) : true;
+};
