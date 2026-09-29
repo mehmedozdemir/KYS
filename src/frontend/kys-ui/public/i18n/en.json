@@ -151,7 +151,17 @@
     "tagPlaceholder": "Add tag...",
     "metaNote": "Optional: you can associate the article with a product, customer or team.",
     "publish": "Publish",
-    "saveError": "Could not save article"
+    "saveError": "Could not save article",
+    "linkedProduct": "Related Product",
+    "linkedCustomer": "Related Customer",
+    "linkedTeam": "Related Team",
+    "teamOnlyHint": "Select a team for \"Team\" visibility.",
+    "author": "Author",
+    "lastEditedBy": "Last edited by",
+    "related": "Related",
+    "relatedArticles": "Related Articles",
+    "noRelatedArticles": "No articles linked to this record.",
+    "newRelatedArticle": "Write Article"
   },
   "people": {
     "title": "People",

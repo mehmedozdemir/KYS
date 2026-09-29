@@ -19,4 +19,6 @@ public sealed record ArticleDetailDto(
     DateTime CreatedAt,
     Guid? CreatedBy,
     DateTime UpdatedAt,
-    Guid? UpdatedBy);
+    Guid? UpdatedBy,
+    string? CreatedByName,
+    string? UpdatedByName);

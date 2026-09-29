@@ -5,6 +5,7 @@ import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
+import { RelatedArticlesComponent } from '../../../shared/components/related-articles/related-articles.component';
 
 interface TeamDetail {
   id: string;
@@ -56,7 +57,7 @@ interface AddMemberRequest {
 @Component({
   selector: 'app-team-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe, FormsModule, TranslocoModule],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, TranslocoModule, RelatedArticlesComponent],
   template: `
     <div class="page-content">
       @if (loading()) {
@@ -186,6 +187,8 @@ interface AddMemberRequest {
             </table>
           }
         </div>
+
+        <app-related-articles [teamId]="team()!.id" />
       }
     </div>
 

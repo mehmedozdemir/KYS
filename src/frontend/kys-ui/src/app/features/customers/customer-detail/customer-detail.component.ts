@@ -9,6 +9,7 @@ import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/comp
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { SECTOR_SUGGESTIONS, COUNTRY_SUGGESTIONS, TR_CITY_SUGGESTIONS } from '../../../shared/customer-lookups';
+import { RelatedArticlesComponent } from '../../../shared/components/related-articles/related-articles.component';
 
 const CUST_STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
 const USAGE_MODE_CSS: Record<string, string> = { SaaS: 'badge--saas', Dedicated: 'badge--custom' };
@@ -106,7 +107,7 @@ interface CustomerDetail {
 @Component({
   selector: 'app-customer-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent, TranslocoModule],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent, TranslocoModule, RelatedArticlesComponent],
   template: `
     <div class="page-content">
       @if (loading()) {
@@ -218,6 +219,8 @@ interface CustomerDetail {
               [defs]="customFieldDefs()"
               [values]="customer()!.customFields ?? {}"
               mode="view" />
+
+            <app-related-articles [customerId]="customer()!.id" />
 
             @if (customer()!.primaryContactName) {
               <div class="contact-card">

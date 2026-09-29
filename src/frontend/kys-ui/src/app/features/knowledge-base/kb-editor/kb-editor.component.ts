@@ -77,6 +77,32 @@ interface ArticleDetail {
             </select>
           </div>
 
+          <!-- İlişkili kayıtlar: makale ilgili müşteri/ürün/ekip sayfalarında da listelenir -->
+          <div class="meta-section">
+            <label>{{ 'kb.linkedProduct' | transloco }}</label>
+            <select [(ngModel)]="form.productId">
+              <option [ngValue]="null">—</option>
+              @for (p of products(); track p.id) { <option [ngValue]="p.id">{{ p.name }}</option> }
+            </select>
+          </div>
+          <div class="meta-section">
+            <label>{{ 'kb.linkedCustomer' | transloco }}</label>
+            <select [(ngModel)]="form.customerId">
+              <option [ngValue]="null">—</option>
+              @for (c of customers(); track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }
+            </select>
+          </div>
+          <div class="meta-section">
+            <label>{{ 'kb.linkedTeam' | transloco }}</label>
+            <select [(ngModel)]="form.teamId">
+              <option [ngValue]="null">—</option>
+              @for (t of teams(); track t.id) { <option [ngValue]="t.id">{{ t.name }}</option> }
+            </select>
+            @if (form.visibility === 'TeamOnly' && !form.teamId) {
+              <span class="meta-hint">{{ 'kb.teamOnlyHint' | transloco }}</span>
+            }
+          </div>
+
           <div class="meta-section">
             <label>{{ 'kb.tags' | transloco }}</label>
             <div class="tag-input-row">
@@ -143,6 +169,7 @@ interface ArticleDetail {
     }
 
     .meta-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .meta-hint { font-size: 0.75rem; color: var(--warning-strong, var(--text-muted)); }
     .meta-section { display: flex; flex-direction: column; gap: 0.5rem; label { font-size: 0.8125rem; font-weight: 600; color: var(--text); } select,input { padding: 0.5rem 0.625rem; border: 1px solid var(--border-strong); border-radius: 0.375rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box; &:focus { outline: none; border-color: var(--primary); } } }
     .tag-input-row { display: flex; gap: 0.5rem; input { flex: 1; } }
     .btn-add-tag { background: var(--primary); color: white; border: none; border-radius: 0.375rem; padding: 0 0.625rem; cursor: pointer; font-size: 0.875rem; flex-shrink: 0; &:hover { background: var(--primary-hover); } }
@@ -182,7 +209,24 @@ export class KbEditorComponent implements OnInit {
     teamId: null as string | null,
   };
 
+  products = signal<{ id: string; name: string }[]>([]);
+  customers = signal<{ id: string; name: string }[]>([]);
+  teams = signal<{ id: string; name: string }[]>([]);
+
+  private loadLinkOptions() {
+    type Paged = { items: { id: string; name: string }[] };
+    this.http.get<Paged>(`${environment.apiUrl}/products?pageSize=200`).subscribe({ next: r => this.products.set(r.items) });
+    this.http.get<Paged>(`${environment.apiUrl}/customers?pageSize=200`).subscribe({ next: r => this.customers.set(r.items) });
+    this.http.get<Paged>(`${environment.apiUrl}/teams?pageSize=200`).subscribe({ next: r => this.teams.set(r.items) });
+  }
+
   ngOnInit() {
+    this.loadLinkOptions();
+    // Müşteri/ürün sayfasından "yeni makale" ile gelindiyse ilişkiyi önceden doldur
+    const qp = this.route.snapshot.queryParamMap;
+    this.form.productId = qp.get('productId');
+    this.form.customerId = qp.get('customerId');
+    this.form.teamId = qp.get('teamId');
     const id = this.route.snapshot.paramMap.get('id');
     if (id && id !== 'new') {
       this.isEdit.set(true);
