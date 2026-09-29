@@ -496,7 +496,7 @@ interface HostingPlatformOption {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'environments.addResource' | transloco }}</h2>
-            <button type="button" class="modal-close" (click)="closeAddResource()"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="closeAddResource()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (addResourceError()) {
@@ -700,7 +700,7 @@ interface HostingPlatformOption {
               <h2>{{ 'environments.editConnection' | transloco }}</h2>
               <p class="modal-subtitle">{{ cr.templateName }} · {{ cr.resourceTypeName }}</p>
             </div>
-            <button type="button" class="modal-close" (click)="closeConnEdit()"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="closeConnEdit()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (connEditError()) { <div class="alert-error">{{ connEditError() }}</div> }
@@ -737,7 +737,7 @@ interface HostingPlatformOption {
               <h2>{{ (editingEp()!.baseUrl ? 'environments.editEndpointUrl' : 'environments.setEndpointUrl') | transloco }}</h2>
               <p class="modal-subtitle">{{ editingEp()!.endpointName }} · {{ 'type.endpoint.' + editingEp()!.endpointType | transloco }}</p>
             </div>
-            <button type="button" class="modal-close" (click)="closeEpModal()"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="closeEpModal()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (epSaveError()) {
@@ -789,7 +789,7 @@ interface HostingPlatformOption {
               <h2>{{ 'environments.personalCredsMgmt' | transloco }}</h2>
               <p class="modal-subtitle">{{ personalCredResource()!.templateName }} · {{ personalCredResource()!.resourceTypeName }}</p>
             </div>
-            <button type="button" class="modal-close" (click)="closePersonalCredModal()"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="closePersonalCredModal()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
 
@@ -888,7 +888,7 @@ interface HostingPlatformOption {
                     [(ngModel)]="personalCredForm.value"
                     [placeholder]="'environments.enterValue' | transloco"
                     [class.input-error]="personalCredSubmitted() && !personalCredForm.value.trim()" />
-                  <button type="button" class="pw-toggle" (click)="togglePersonalCredValue()">
+                  <button type="button" class="pw-toggle" (click)="togglePersonalCredValue()" [attr.aria-label]="'common.showHide' | transloco">
                     <i class="pi" [class]="personalCredShowValue() ? 'pi-eye-slash' : 'pi-eye'"></i>
                   </button>
                 </div>
@@ -922,7 +922,7 @@ interface HostingPlatformOption {
                                   : (credEndpoint()!.endpointName + ' · ' + authTypeLabel(credEndpoint()!.authTypeName)) }}
               </p>
             </div>
-            <button type="button" class="modal-close" (click)="closeCredModal()"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="closeCredModal()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
 
@@ -1023,7 +1023,7 @@ interface HostingPlatformOption {
                     [placeholder]="'environments.enterValue' | transloco"
                     [class.input-error]="credSubmitted() && !credForm.value.trim()" />
                   @if (isSecretField(activeFieldKey())) {
-                    <button type="button" class="pw-toggle" (click)="showNewValue = !showNewValue">
+                    <button type="button" class="pw-toggle" (click)="showNewValue = !showNewValue" [attr.aria-label]="'common.showHide' | transloco">
                       <i class="pi" [class]="showNewValue ? 'pi-eye-slash' : 'pi-eye'"></i>
                     </button>
                   }

@@ -24,5 +24,8 @@ public sealed record AuditLogDto(
     Guid? ChangedBy,
     string? ChangedByName,
     DateTime ChangedAt,
-    string? IpAddress
+    string? IpAddress,
+    string? Context,
+    Dictionary<string, object?>? OldValues,
+    Dictionary<string, object?>? NewValues
 );

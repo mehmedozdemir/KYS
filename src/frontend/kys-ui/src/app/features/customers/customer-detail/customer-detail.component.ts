@@ -463,7 +463,7 @@ interface CustomerDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'customerDetail.changeProductStatus' | transloco }} — {{ cpt.productName }}</h2>
-            <button class="modal-close" (click)="cpStatusTarget.set(null)"><i class="pi pi-times"></i></button>
+            <button class="modal-close" (click)="cpStatusTarget.set(null)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (cpStatusError()) { <div class="alert-error">{{ cpStatusError() }}</div> }
@@ -505,7 +505,7 @@ interface CustomerDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'customerDetail.addProduct' | transloco }}</h2>
-            <button class="modal-close" (click)="showAddProductModal.set(false)"><i class="pi pi-times"></i></button>
+            <button class="modal-close" (click)="showAddProductModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <div class="form-group">
@@ -555,7 +555,7 @@ interface CustomerDetail {
         <div class="modal modal--wide" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'customerDetail.editTitle' | transloco }}</h2>
-            <button type="button" class="modal-close" (click)="showEditModal.set(false)"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="showEditModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (editError()) {
@@ -632,7 +632,7 @@ interface CustomerDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'customerDetail.statusTitle' | transloco }}</h2>
-            <button type="button" class="modal-close" (click)="showStatusModal.set(false)"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="showStatusModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (statusChangeError()) {
@@ -675,7 +675,7 @@ interface CustomerDetail {
         <div class="modal modal--wide" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'customerDetail.vpnEditTitle' | transloco }}</h2>
-            <button type="button" class="modal-close" (click)="showVpnModal.set(false)"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="showVpnModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (vpnFormError()) {
@@ -727,7 +727,7 @@ interface CustomerDetail {
                 <div style="position:relative">
                   <input [type]="showVpnPasswordInForm() ? 'text' : 'password'" [(ngModel)]="vpnForm.password"
                     [placeholder]="'customerDetail.vpnPasswordPh' | transloco" style="padding-right:2.5rem" />
-                  <button type="button" class="btn-eye" (click)="showVpnPasswordInForm.set(!showVpnPasswordInForm())">
+                  <button type="button" class="btn-eye" (click)="showVpnPasswordInForm.set(!showVpnPasswordInForm())" [attr.aria-label]="'common.showHide' | transloco">
                     <i class="pi" [ngClass]="showVpnPasswordInForm() ? 'pi-eye-slash' : 'pi-eye'"></i>
                   </button>
                 </div>
@@ -760,7 +760,7 @@ interface CustomerDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'customerDetail.envTitle' | transloco }}</h2>
-            <button class="modal-close" (click)="showEnvModal.set(false)"><i class="pi pi-times"></i></button>
+            <button class="modal-close" (click)="showEnvModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <div class="form-group">

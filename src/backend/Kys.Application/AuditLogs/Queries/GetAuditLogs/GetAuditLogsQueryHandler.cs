@@ -41,7 +41,10 @@ public sealed class GetAuditLogsQueryHandler(
             l.ChangedBy,
             l.ChangedBy.HasValue && nameMap.TryGetValue(l.ChangedBy.Value, out var name) ? name : null,
             l.ChangedAt,
-            l.IpAddress
+            l.IpAddress,
+            l.Context,
+            l.OldValues,
+            l.NewValues
         )).ToList();
 
         return new GetAuditLogsResult(dtos, total, request.Page, request.PageSize);

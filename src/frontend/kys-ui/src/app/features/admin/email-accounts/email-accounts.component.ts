@@ -79,7 +79,7 @@ const PRESETS: Record<string, { host: string; port: number; security: string }> 
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ (editId() ? 'admin.emailAccounts.editModalTitle' : 'admin.emailAccounts.newModalTitle') | transloco }}</h2>
-            <button class="close-btn" (click)="showModal.set(false)"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="showModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (error()) { <div class="alert-error">{{ error() }}</div> }

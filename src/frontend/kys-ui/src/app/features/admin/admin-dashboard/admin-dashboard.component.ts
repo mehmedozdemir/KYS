@@ -227,11 +227,11 @@ interface AuditLogList {
             </table>
             @if (auditTotalCount() > auditPageSize) {
               <div class="pagination">
-                <button class="page-btn" [disabled]="auditPage() === 1" (click)="goAuditPage(auditPage() - 1)">
+                <button class="page-btn" [disabled]="auditPage() === 1" (click)="goAuditPage(auditPage() - 1)" [attr.aria-label]="'common.previous' | transloco">
                   <i class="pi pi-chevron-left"></i>
                 </button>
                 <span class="page-info">{{ auditPage() }} / {{ auditTotalPages() }}</span>
-                <button class="page-btn" [disabled]="auditPage() === auditTotalPages()" (click)="goAuditPage(auditPage() + 1)">
+                <button class="page-btn" [disabled]="auditPage() === auditTotalPages()" (click)="goAuditPage(auditPage() + 1)" [attr.aria-label]="'common.next' | transloco">
                   <i class="pi pi-chevron-right"></i>
                 </button>
               </div>

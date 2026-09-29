@@ -81,7 +81,7 @@ interface EnvType {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ (editingId() ? 'admin.environmentTypes.editModal' : 'admin.environmentTypes.newModal') | transloco }}</h2>
-            <button class="close-btn" (click)="closeModal()"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="closeModal()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (saveError()) {
@@ -140,7 +140,7 @@ interface EnvType {
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'admin.environmentTypes.deleteModal' | transloco }}</h2>
-            <button class="close-btn" (click)="deletingType.set(null)"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="deletingType.set(null)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (deleteError()) {

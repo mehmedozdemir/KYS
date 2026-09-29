@@ -81,14 +81,14 @@ interface ArticleDetail {
             <label>{{ 'kb.tags' | transloco }}</label>
             <div class="tag-input-row">
               <input type="text" [(ngModel)]="tagInput" [placeholder]="'kb.tagPlaceholder' | transloco" (keydown.enter)="addTag(); $event.preventDefault()" />
-              <button class="btn-add-tag" (click)="addTag()"><i class="pi pi-plus"></i></button>
+              <button class="btn-add-tag" (click)="addTag()" [attr.aria-label]="'common.add' | transloco"><i class="pi pi-plus"></i></button>
             </div>
             @if (form.tags.length) {
               <div class="tag-list">
                 @for (tag of form.tags; track tag) {
                   <span class="tag">
                     {{ tag }}
-                    <button (click)="removeTag(tag)"><i class="pi pi-times"></i></button>
+                    <button (click)="removeTag(tag)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
                   </span>
                 }
               </div>

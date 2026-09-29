@@ -77,7 +77,7 @@ const CAPABILITIES = [
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'admin.accessGrants.modalTitle' | transloco }}</h2>
-            <button class="close-btn" (click)="showModal.set(false)"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="showModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (error()) { <div class="alert-error">{{ error() }}</div> }

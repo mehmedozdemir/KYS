@@ -113,7 +113,7 @@ interface Customer {
                 </td>
                 <td class="actions-cell" (click)="$event.stopPropagation()">
                   <div class="kebab-wrap">
-                    <button class="kebab-btn" (click)="toggleMenu(c.id)"><i class="pi pi-ellipsis-v"></i></button>
+                    <button class="kebab-btn" (click)="toggleMenu(c.id)" [attr.aria-label]="'common.moreActions' | transloco"><i class="pi pi-ellipsis-v"></i></button>
                     @if (openMenuId === c.id) {
                       <div class="kebab-menu">
                         <button class="km-item km-danger" (click)="confirmDelete(c)">
@@ -138,7 +138,7 @@ interface Customer {
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'customers.deleteTitle' | transloco }}</h2>
-            <button type="button" class="modal-close" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="cancelDelete()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <p style="margin:0;color:var(--text)" [innerHTML]="'customers.deleteConfirm' | transloco:{ name: deleteTarget!.name }"></p>
@@ -160,7 +160,7 @@ interface Customer {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'customers.new' | transloco }}</h2>
-            <button type="button" class="modal-close" (click)="closeModal()"><i class="pi pi-times"></i></button>
+            <button type="button" class="modal-close" (click)="closeModal()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <div class="form-row">

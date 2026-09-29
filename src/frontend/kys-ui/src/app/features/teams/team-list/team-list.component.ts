@@ -104,7 +104,7 @@ interface CreateTeamRequest {
                   </td>
                   <td class="actions-cell" (click)="$event.stopPropagation()">
                     <div class="kebab-wrap">
-                      <button class="kebab-btn" (click)="toggleMenu(team.id)"><i class="pi pi-ellipsis-v"></i></button>
+                      <button class="kebab-btn" (click)="toggleMenu(team.id)" [attr.aria-label]="'common.moreActions' | transloco"><i class="pi pi-ellipsis-v"></i></button>
                       @if (openMenuId() === team.id) {
                         <div class="kebab-menu">
                           <button class="km-item km-danger" (click)="confirmDelete(team)">
@@ -120,11 +120,11 @@ interface CreateTeamRequest {
           </table>
           @if (totalCount() > pageSize) {
             <div class="pagination">
-              <button class="page-btn" [disabled]="page() === 1" (click)="goToPage(page() - 1)">
+              <button class="page-btn" [disabled]="page() === 1" (click)="goToPage(page() - 1)" [attr.aria-label]="'common.previous' | transloco">
                 <i class="pi pi-chevron-left"></i>
               </button>
               <span class="page-info">{{ page() }} / {{ totalPages() }}</span>
-              <button class="page-btn" [disabled]="page() === totalPages()" (click)="goToPage(page() + 1)">
+              <button class="page-btn" [disabled]="page() === totalPages()" (click)="goToPage(page() + 1)" [attr.aria-label]="'common.next' | transloco">
                 <i class="pi pi-chevron-right"></i>
               </button>
             </div>
@@ -138,7 +138,7 @@ interface CreateTeamRequest {
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'teams.deleteTitle' | transloco }}</h2>
-            <button class="close-btn" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="cancelDelete()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <p style="margin:0;color:var(--text)" [innerHTML]="'teams.deleteConfirm' | transloco:{ name: deleteTarget()!.name }"></p>
@@ -159,7 +159,7 @@ interface CreateTeamRequest {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'teams.new' | transloco }}</h2>
-            <button class="close-btn" (click)="closeModal()"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="closeModal()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (createError()) {

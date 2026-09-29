@@ -16,7 +16,15 @@ interface AuditLogEntry {
   changedByName: string | null;
   changedAt: string;
   ipAddress: string | null;
+  context: string | null;
+  oldValues: Record<string, unknown> | null;
+  newValues: Record<string, unknown> | null;
 }
+
+interface FieldChange { field: string; old: string; new: string; }
+
+// Değişiklik listesinde gösterilmeyecek teknik alanlar
+const HIDDEN_FIELDS = new Set(['Id', 'CreatedAt', 'CreatedBy', 'UpdatedAt', 'UpdatedBy', 'DeletedAt', 'DeletedBy', 'IsDeleted']);
 
 interface AuditLogsResult {
   items: AuditLogEntry[];
@@ -30,12 +38,17 @@ const ACTION_CSS: Record<string, string> = {
   Updated: 'action--updated',
   Deleted: 'action--deleted',
   Restored: 'action--restored',
-  CredentialRevealed: 'action--credential'
+  CredentialRevealed: 'action--credential',
+  VpnPasswordRevealed: 'action--credential',
+  PersonalCredentialRevealed: 'action--credential'
 };
 
 const ENTITY_TYPE_KEYS = [
-  'Customer', 'Product', 'Team', 'Person', 'CustomerEnvironment',
-  'EnvironmentResource', 'KbArticle', 'TeamMembership', 'CustomerProduct', 'SystemRole'
+  'Customer', 'CustomerProduct', 'CustomerEnvironment', 'EnvironmentResource', 'CustomerEnvironmentEndpoint',
+  'ResourceCredential', 'PersonalCredential', 'CustomerVpnConfig', 'SharedResource',
+  'Product', 'ProductEndpoint', 'ProductResourceTemplate', 'ProductTeam', 'ProductAssignment',
+  'Team', 'TeamMembership', 'Person', 'AccessGrant', 'SystemRole',
+  'KbArticle', 'CustomFieldDefinition', 'OrganizationProfile', 'EnvironmentType', 'HostingPlatform', 'ResourceType'
 ];
 
 @Component({
@@ -67,6 +80,8 @@ const ENTITY_TYPE_KEYS = [
           <option value="Deleted">{{ 'admin.auditLog.action.Deleted' | transloco }}</option>
           <option value="Restored">{{ 'admin.auditLog.action.Restored' | transloco }}</option>
           <option value="CredentialRevealed">{{ 'admin.auditLog.action.CredentialRevealed' | transloco }}</option>
+          <option value="VpnPasswordRevealed">{{ 'admin.auditLog.action.VpnPasswordRevealed' | transloco }}</option>
+          <option value="PersonalCredentialRevealed">{{ 'admin.auditLog.action.PersonalCredentialRevealed' | transloco }}</option>
         </select>
         <input type="date" [(ngModel)]="filterFrom" (ngModelChange)="onFilter()" class="date-input" />
         <input type="date" [(ngModel)]="filterTo" (ngModelChange)="onFilter()" class="date-input" />
@@ -94,8 +109,17 @@ const ENTITY_TYPE_KEYS = [
             </thead>
             <tbody>
               @for (log of logs(); track log.id) {
-                <tr [class.credential-row]="log.action === 'CredentialRevealed'">
-                  <td class="time-cell">{{ log.changedAt | date:'dd.MM.yyyy HH:mm:ss' }}</td>
+                @let changes = fieldChanges(log);
+                <tr [class.credential-row]="log.action.endsWith('Revealed')"
+                    [class.expandable]="changes.length > 0"
+                    [attr.aria-expanded]="changes.length ? expandedId() === log.id : null"
+                    (click)="changes.length && toggle(log.id)">
+                  <td class="time-cell">
+                    @if (changes.length) {
+                      <i class="pi expand-icon" [ngClass]="expandedId() === log.id ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                    }
+                    {{ log.changedAt | date:'dd.MM.yyyy HH:mm:ss' }}
+                  </td>
                   <td>
                     <span class="action-badge" [ngClass]="actionCss(log.action)">
                       {{ actionLabel(log.action) }}
@@ -104,11 +128,39 @@ const ENTITY_TYPE_KEYS = [
                   <td class="entity-type">{{ entityTypeLabel(log.entityType) }}</td>
                   <td>
                     <span class="entity-name">{{ log.entityName ?? '—' }}</span>
-                    <span class="entity-id">{{ log.entityId | slice:0:8 }}...</span>
+                    @if (log.context) {
+                      <span class="entity-context" [title]="log.context">{{ log.context }}</span>
+                    } @else {
+                      <span class="entity-id">{{ log.entityId | slice:0:8 }}...</span>
+                    }
                   </td>
                   <td>{{ log.changedByName ?? '—' }}</td>
                   <td class="ip-cell">{{ log.ipAddress ?? '—' }}</td>
                 </tr>
+                @if (expandedId() === log.id) {
+                  <tr class="changes-row">
+                    <td colspan="6">
+                      <table class="changes-table">
+                        <thead>
+                          <tr>
+                            <th>{{ 'admin.auditLog.field' | transloco }}</th>
+                            @if (log.action !== 'Created') { <th>{{ 'admin.auditLog.oldValue' | transloco }}</th> }
+                            @if (log.action !== 'Deleted') { <th>{{ 'admin.auditLog.newValue' | transloco }}</th> }
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (c of changes; track c.field) {
+                            <tr>
+                              <td class="field-name">{{ c.field }}</td>
+                              @if (log.action !== 'Created') { <td class="old-val">{{ c.old }}</td> }
+                              @if (log.action !== 'Deleted') { <td class="new-val">{{ c.new }}</td> }
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>
@@ -116,11 +168,11 @@ const ENTITY_TYPE_KEYS = [
           <!-- Pagination -->
           @if (totalCount() > pageSize) {
             <div class="pagination">
-              <button type="button" class="page-btn" [disabled]="page() === 1" (click)="goToPage(page() - 1)">
+              <button type="button" class="page-btn" [disabled]="page() === 1" (click)="goToPage(page() - 1)" [attr.aria-label]="'common.previous' | transloco">
                 <i class="pi pi-chevron-left"></i>
               </button>
               <span class="page-info">{{ page() }} / {{ totalPages() }} ({{ 'admin.auditLog.recordCount' | transloco:{ count: totalCount() } }})</span>
-              <button type="button" class="page-btn" [disabled]="page() === totalPages()" (click)="goToPage(page() + 1)">
+              <button type="button" class="page-btn" [disabled]="page() === totalPages()" (click)="goToPage(page() + 1)" [attr.aria-label]="'common.next' | transloco">
                 <i class="pi pi-chevron-right"></i>
               </button>
             </div>
@@ -152,6 +204,17 @@ const ENTITY_TYPE_KEYS = [
     .entity-type { color: var(--text-muted); }
     .entity-name { display: block; font-weight: 500; color: var(--text-strong); }
     .entity-id { display: block; font-size: 0.7rem; color: var(--text-subtle); font-family: monospace; }
+    .entity-context { display: block; font-size: 0.75rem; color: var(--text-muted); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    tr.expandable { cursor: pointer; }
+    tr.expandable:hover td { background: var(--surface-2); }
+    .expand-icon { font-size: 0.7rem; color: var(--text-subtle); margin-right: 0.25rem; }
+    .changes-row > td { background: var(--surface-2); padding: 0.75rem 1rem 1rem 2.5rem; }
+    .changes-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem;
+      th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); padding: 0.375rem 0.5rem; border-bottom: 1px solid var(--border); background: transparent; }
+      td { padding: 0.375rem 0.5rem; border-bottom: 1px solid var(--border-light); vertical-align: top; word-break: break-word; }
+      .field-name { font-family: monospace; color: var(--text-muted); white-space: nowrap; }
+      .old-val { color: var(--danger); }
+      .new-val { color: var(--success-strong, var(--text-strong)); } }
     .ip-cell { font-family: monospace; font-size: 0.75rem; color: var(--text-subtle); }
 
     .action-badge { display: inline-flex; align-items: center; padding: 0.2rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -171,6 +234,28 @@ export class AuditLogComponent implements OnInit {
   private transloco = inject(TranslocoService);
 
   logs = signal<AuditLogEntry[]>([]);
+  expandedId = signal<string | null>(null);
+
+  toggle(id: string) {
+    this.expandedId.set(this.expandedId() === id ? null : id);
+  }
+
+  // Eski/yeni değerleri alan bazında karşılaştırır; teknik alanlar ve değişmeyenler gizlenir.
+  fieldChanges(log: AuditLogEntry): FieldChange[] {
+    const oldV = log.oldValues ?? {};
+    const newV = log.newValues ?? {};
+    const keys = [...new Set([...Object.keys(oldV), ...Object.keys(newV)])].filter(k => !HIDDEN_FIELDS.has(k));
+    return keys
+      .map(field => ({ field, old: this.fmt(oldV[field]), new: this.fmt(newV[field]) }))
+      .filter(c => log.action !== 'Updated' || c.old !== c.new)
+      .filter(c => log.action === 'Updated' || (log.action === 'Created' ? c.new !== '—' : c.old !== '—'));
+  }
+
+  private fmt(v: unknown): string {
+    if (v === null || v === undefined || v === '') return '—';
+    if (typeof v === 'object') return JSON.stringify(v);
+    return String(v);
+  }
   loading = signal(true);
   totalCount = signal(0);
   page = signal(1);

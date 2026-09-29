@@ -11,6 +11,7 @@ public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.EntityType).IsRequired().HasMaxLength(100);
         builder.Property(x => x.EntityName).HasMaxLength(300);
+        builder.Property(x => x.Context).HasMaxLength(500);
         builder.Property(x => x.Action).IsRequired().HasMaxLength(50);
         builder.Property(x => x.IpAddress).HasMaxLength(45);
 

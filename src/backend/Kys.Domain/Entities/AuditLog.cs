@@ -6,6 +6,8 @@ public sealed class AuditLog
     public string EntityType { get; set; } = string.Empty;
     public Guid EntityId { get; set; }
     public string? EntityName { get; set; }
+    // Kaydın bağlı olduğu hiyerarşi, ör. "Anadolu Katılım / NovaBank Core / Production / Ana Veritabanı"
+    public string? Context { get; set; }
     public string Action { get; set; } = string.Empty;  // Created|Updated|Deleted|Restored|CredentialRevealed
     public Guid? ChangedBy { get; set; }
     public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
