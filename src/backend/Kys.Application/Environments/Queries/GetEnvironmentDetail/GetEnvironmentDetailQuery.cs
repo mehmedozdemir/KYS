@@ -24,7 +24,9 @@ public sealed record EnvironmentDetailDto(
     string? Notes,
     IReadOnlyList<EnvironmentResourceDto> Resources,
     IReadOnlyList<EndpointUrlDto> Endpoints,
-    IReadOnlyList<AvailableResourceTemplateDto> AvailableTemplates);
+    IReadOnlyList<AvailableResourceTemplateDto> AvailableTemplates,
+    string? DeployedVersion,
+    string? ProductVersion);
 
 public sealed record AvailableResourceTemplateDto(
     Guid Id,

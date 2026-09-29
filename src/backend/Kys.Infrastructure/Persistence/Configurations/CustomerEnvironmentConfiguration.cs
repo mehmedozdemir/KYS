@@ -11,6 +11,7 @@ public sealed class CustomerEnvironmentConfiguration : IEntityTypeConfiguration<
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name).IsRequired().HasMaxLength(200);
         builder.Property(x => x.Notes).HasMaxLength(1000);
+        builder.Property(x => x.DeployedVersion).HasMaxLength(50);
 
         builder.HasOne(x => x.CustomerProduct)
             .WithMany()

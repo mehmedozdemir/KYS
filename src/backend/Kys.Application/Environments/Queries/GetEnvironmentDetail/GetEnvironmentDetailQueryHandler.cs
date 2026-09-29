@@ -89,6 +89,8 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
             env.Notes,
             resources,
             endpoints,
-            availableTemplates);
+            availableTemplates,
+            env.DeployedVersion,
+            env.CustomerProduct.Product.Version);
     }
 }

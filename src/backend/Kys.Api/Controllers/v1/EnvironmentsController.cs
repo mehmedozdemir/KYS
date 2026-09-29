@@ -1,3 +1,4 @@
+using Kys.Application.Deployments;
 using Asp.Versioning;
 using Kys.Application.Environments.Commands.AddResourceToEnvironment;
 using Kys.Application.Environments.Commands.CreateCustomerEnvironment;
@@ -64,6 +65,15 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> SetHostingPlatform(Guid environmentId, SetHostingPlatformRequest request, CancellationToken ct)
     {
         await mediator.Send(new SetEnvironmentHostingPlatformCommand(environmentId, request.HostingPlatformId), ct);
+        return NoContent();
+    }
+
+    [HttpPut("{environmentId:guid}/deployed-version")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [RequirePermission(Capabilities.EnvironmentWrite)]
+    public async Task<IActionResult> SetDeployedVersion(Guid environmentId, SetDeployedVersionRequest request, CancellationToken ct)
+    {
+        await mediator.Send(new SetDeployedVersionCommand(environmentId, request.DeployedVersion), ct);
         return NoContent();
     }
 
@@ -173,3 +183,5 @@ public sealed record SetEnvironmentEndpointUrlRequest(
     Kys.Domain.Enumerations.AuthType? AuthType,
     Dictionary<string, object?> AuthConfig,
     string? Notes);
+
+public sealed record SetDeployedVersionRequest(string? DeployedVersion);

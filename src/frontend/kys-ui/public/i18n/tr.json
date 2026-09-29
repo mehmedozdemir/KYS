@@ -387,7 +387,8 @@
     "templateDeleteErr": "Şablon silinemedi.",
     "editEndpoint": "Endpoint Düzenle",
     "healthCheckUrl": "Sağlık Kontrolü URL",
-    "endpointDescription": "Açıklama"
+    "endpointDescription": "Açıklama",
+    "tabCustomers": "Müşteriler"
   },
   "products": {
     "title": "Ürünler",
@@ -513,7 +514,9 @@
     "usageModeFixed": "Kullanım modu ürün tipine göre belirlenir.",
     "changeProductStatus": "Ürün Durumu",
     "goLiveHint": "Müşterinin canlıya geçiş tarihi, ürünlerin en erken canlıya geçiş tarihidir.",
-    "discontinuedAt": "Kapatılma Tarihi"
+    "discontinuedAt": "Kapatılma Tarihi",
+    "targetGoLive": "Hedef canlı tarihi",
+    "targetGoLiveHint": "Planlanan canlıya geçiş; geçerse gecikme olarak işaretlenir."
   },
   "customers": {
     "title": "Müşteriler",
@@ -571,7 +574,8 @@
     "emailSettings": "Mail Ayarları",
     "customFields": "Özel Alanlar",
     "auditLog": "Audit Log",
-    "organizationRoles": "Organizasyon Rolleri"
+    "organizationRoles": "Organizasyon Rolleri",
+    "deploymentMatrix": "Kurulum Matrisi"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -597,7 +601,8 @@
       "goLives": "Son Canlıya Geçişler (12 ay)",
       "noGoLives": "Son 12 ayda canlıya geçiş yok.",
       "adoption": "Ürün Yaygınlığı",
-      "customersLive": "{{total}} müşteri · {{live}} canlı"
+      "customersLive": "{{total}} müşteri · {{live}} canlı",
+      "matrixLink": "Kurulum matrisi"
     }
   },
   "workspace": {
@@ -747,7 +752,10 @@
     "editConnection": "Bağlantı Bilgileri",
     "connectionSaveError": "Bağlantı bilgileri kaydedilemedi",
     "secretSaveError": "Kaynak eklendi ancak şu gizli alanlar kaydedilemedi: {{fields}}. Credential Yönetimi'nden tekrar deneyin.",
-    "secretFieldsHint": "Şifre gibi gizli alanlar şifreli olarak \"Credential\" bölümünden yönetilir."
+    "secretFieldsHint": "Şifre gibi gizli alanlar şifreli olarak \"Credential\" bölümünden yönetilir.",
+    "deployedVersion": "Kurulu sürüm",
+    "addDeployedVersion": "Sürüm ekle",
+    "productVersionIs": "Ürünün güncel sürümü v{{version}}"
   },
   "account": {
     "title": "Hesabım",
@@ -1272,5 +1280,41 @@
   },
   "customFields": {
     "title": "Özel Alanlar"
+  },
+  "deployment": {
+    "stage": {
+      "NotUsed": "Kullanmıyor",
+      "Planned": "Planlandı",
+      "Installing": "Kurulumda",
+      "ProdReady": "Canlıya hazır",
+      "Live": "Canlıda",
+      "Inactive": "Pasif",
+      "Discontinued": "Sonlandı"
+    },
+    "overdue": "Gecikmiş",
+    "overdueDays": "{{days}} gün gecikti",
+    "daysInStage": "{{days}} gündür bu aşamada",
+    "prodVersions": "Prod sürümleri:",
+    "currentVersion": "Güncel sürüm",
+    "productVersion": "Ürün sürümü: v{{version}}",
+    "outdated": "Güncel sürümün gerisinde",
+    "endedOn": "Bitiş",
+    "noRows": "Kayıt yok.",
+    "scopedNote": "Yalnızca yetkili olduğunuz müşteriler listelenir; ürünü kullanmayan müşteriler gösterilmez.",
+    "col": {
+      "customer": "Müşteri",
+      "stage": "Durum",
+      "environments": "Ortamlar",
+      "prodVersion": "Prod sürümü",
+      "target": "Hedef tarih",
+      "goLive": "Canlı tarihi"
+    },
+    "matrix": {
+      "title": "Kurulum Matrisi",
+      "subtitle": "Hangi müşteride hangi ürün hangi aşamada — tüm ürünler × aktif müşteriler",
+      "searchCustomer": "Müşteri ara…",
+      "onlyInProgress": "Yalnızca süreci devam edenler",
+      "liveTotal": "Canlı / kullanan"
+    }
   }
 }

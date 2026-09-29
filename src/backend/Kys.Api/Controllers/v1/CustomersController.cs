@@ -1,3 +1,4 @@
+using Kys.Application.Deployments;
 using Asp.Versioning;
 using Kys.Application.Customers.Commands.AddProductToCustomer;
 using Kys.Application.Customers.Commands.RemoveCustomerProduct;
@@ -149,6 +150,21 @@ public sealed class CustomersController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpPatch("{customerId:guid}/products/{productId:guid}/target-go-live")]
+    [RequirePermission(Capabilities.CustomerWrite)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> SetTargetGoLive(Guid customerId, Guid productId, [FromBody] SetTargetGoLiveRequest request, CancellationToken ct)
+    {
+        await mediator.Send(new SetTargetGoLiveCommand(customerId, productId, request.TargetGoLiveAt), ct);
+        return NoContent();
+    }
+
+    // Tüm ürünler × tüm müşteriler kurulum matrisi (global okuma yetkisi)
+    [HttpGet("deployment-matrix")]
+    [ProducesResponseType(typeof(DeploymentMatrixDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetDeploymentMatrix(CancellationToken ct)
+        => Ok(await mediator.Send(new GetDeploymentMatrixQuery(), ct));
+
     // --- VPN Configs ---
 
     [HttpGet("{customerId:guid}/vpn-configs")]
@@ -220,3 +236,5 @@ public sealed record UpdateVpnConfigRequest(
     Guid? CustomerEnvironmentId, string Name, VpnType VpnType,
     string ServerHost, int? ServerPort, string? Username, string? PlainPassword,
     string? Notes, bool IsActive, int SortOrder);
+
+public sealed record SetTargetGoLiveRequest(DateOnly? TargetGoLiveAt);

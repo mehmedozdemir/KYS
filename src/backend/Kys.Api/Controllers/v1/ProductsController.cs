@@ -1,3 +1,4 @@
+using Kys.Application.Deployments;
 using Asp.Versioning;
 using Kys.Application.Products.Commands.AssignPersonToProduct;
 using Kys.Application.Products.Commands.AssignTeamToProduct;
@@ -124,6 +125,12 @@ public sealed class ProductsController(IMediator mediator) : ControllerBase
     }
 
     // --- Endpoints ---
+
+    // Ürünün müşterilerdeki kurulum durumu (aşama, ortamlar, sürüm, hedef tarih)
+    [HttpGet("{productId:guid}/deployments")]
+    [ProducesResponseType(typeof(ProductDeploymentsDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetDeployments(Guid productId, CancellationToken ct)
+        => Ok(await mediator.Send(new GetProductDeploymentsQuery(productId), ct));
 
     [HttpPost("{productId:guid}/endpoints")]
     [ProducesResponseType(StatusCodes.Status201Created)]

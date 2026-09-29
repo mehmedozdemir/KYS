@@ -11,6 +11,9 @@ public sealed class CustomerEnvironment : AuditableEntity
     public string? Notes { get; set; }
     public bool IsActive { get; set; } = true;
 
+    // Bu ortamda kurulu ürün sürümü (ör. 5.8.2); sürüm dağılımı ve güncelleme takibi için
+    public string? DeployedVersion { get; set; }
+
     // Navigation
     public CustomerProduct CustomerProduct { get; set; } = null!;
     public EnvironmentType EnvironmentType { get; set; } = null!;

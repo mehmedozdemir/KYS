@@ -11,6 +11,8 @@ interface NavItem {
   icon: string;
   route: string;
   exact?: boolean;
+  /** Görünmesi için gereken yetki (ör. scope:global) */
+  permission?: string;
 }
 
 interface NavGroup {
@@ -219,6 +221,7 @@ export class SidebarComponent {
       items: [
         { label: 'menu.customers', icon: 'pi-building', route: '/customers' },
         { label: 'menu.products', icon: 'pi-box', route: '/products' },
+        { label: 'menu.deploymentMatrix', icon: 'pi-th-large', route: '/deployment-matrix', permission: 'scope:global' },
         { label: 'menu.teams', icon: 'pi-users', route: '/teams' },
         { label: 'menu.people', icon: 'pi-user', route: '/people' },
         { label: 'menu.knowledgeBase', icon: 'pi-book', route: '/knowledge-base' }
@@ -260,7 +263,9 @@ export class SidebarComponent {
 
   visibleGroups(): NavGroup[] {
     const isAdmin = this.permissions.isAdmin();
-    return this.groups.filter(g => !g.adminOnly || isAdmin);
+    return this.groups
+      .filter(g => !g.adminOnly || isAdmin)
+      .map(g => ({ ...g, items: g.items.filter(i => !i.permission || this.permissions.has(i.permission)) }));
   }
 
   isExpanded(header: string): boolean { return this.expanded().has(header); }

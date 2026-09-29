@@ -27,7 +27,7 @@ public sealed class GetCustomerDetailQueryHandler(ICustomerRepository customerRe
             customer.PrimaryContactName, customer.PrimaryContactEmail, customer.PrimaryContactPhone,
             customer.Products.Select(cp => new CustomerProductDto(
                 cp.Id, cp.ProductId, cp.Product.Name, cp.Product.Code,
-                cp.UsageMode, cp.Status, cp.GoLiveAt
+                cp.UsageMode, cp.Status, cp.GoLiveAt, cp.TargetGoLiveAt
             )).ToList(),
             customer.CustomFields,
             customer.VpnConfigs.Select(v => new CustomerVpnConfigDto(
