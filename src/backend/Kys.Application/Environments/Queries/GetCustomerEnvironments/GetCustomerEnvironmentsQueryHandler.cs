@@ -14,6 +14,9 @@ public sealed class GetCustomerEnvironmentsQueryHandler(IEnvironmentRepository r
             throw new ForbiddenException("err.forbidden.productEnvironments");
 
         var envs = await repository.GetByCustomerProductAsync(request.CustomerProductId, ct);
+        // Ürünün zorunlu kaynak şablonları; ortamda karşılığı olmayanlar "eksik" sayılır
+        var requiredTemplateIds = envs.FirstOrDefault()?.CustomerProduct.Product.ResourceTemplates
+            .Where(t => t.IsRequired).Select(t => t.Id).ToList() ?? [];
         return envs.Select(e => new CustomerEnvironmentSummaryDto(
             e.Id,
             e.Name,
@@ -27,6 +30,7 @@ public sealed class GetCustomerEnvironmentsQueryHandler(IEnvironmentRepository r
             e.HostingPlatform?.Name,
             e.HostingPlatform?.Icon,
             e.HostingPlatform?.Color,
-            e.DeployedVersion)).ToList();
+            e.DeployedVersion,
+            requiredTemplateIds.Count(id => e.Resources.All(r => r.ProductResourceTemplateId != id)))).ToList();
     }
 }

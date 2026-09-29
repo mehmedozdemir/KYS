@@ -18,4 +18,5 @@ public sealed record CustomerEnvironmentSummaryDto(
     string? HostingPlatformName,
     string? HostingPlatformIcon,
     string? HostingPlatformColor,
-    string? DeployedVersion);
+    string? DeployedVersion,
+    int MissingRequiredResourceCount);
