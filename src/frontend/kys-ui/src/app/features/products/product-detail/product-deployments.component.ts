@@ -8,14 +8,14 @@ import { STAGE_META, STAGE_ORDER, DeploymentStage } from '../../../shared/deploy
 
 interface DeploymentEnv {
   id: string; name: string; typeCode: string; typeName: string; typeColor: string | null;
-  platformName: string | null; deployedVersion: string | null; isActive: boolean;
+  platformName: string | null; deployedVersion: string | null; isActive: boolean; missingRequiredCount: number;
 }
 interface DeploymentRow {
   customerId: string; customerName: string; customerCode: string; customerStatus: string; customerArchived: boolean;
   customerProductId: string | null; stage: DeploymentStage; stageSince: string | null;
   isOverdue: boolean; overdueDays: number | null; usageMode: string | null;
   installationStartedAt: string | null; goLiveAt: string | null; targetGoLiveAt: string | null; discontinuedAt: string | null;
-  prodVersion: string | null; isOutdated: boolean; environments: DeploymentEnv[];
+  prodVersion: string | null; isOutdated: boolean; environments: DeploymentEnv[]; missingRequiredResources: number;
 }
 interface ProductDeployments {
   productId: string; productName: string; currentVersion: string | null;
@@ -47,6 +47,14 @@ interface ProductDeployments {
             <i class="pi pi-exclamation-triangle"></i>
             <span class="chip-count">{{ d.overdueCount }}</span>
             <span>{{ 'deployment.overdue' | transloco }}</span>
+          </button>
+        }
+        @if (missingCount()) {
+          <button type="button" class="chip chip--missing" [class.chip--active]="filter() === 'missing'"
+                  [attr.aria-pressed]="filter() === 'missing'" (click)="toggleFilter('missing')">
+            <i class="pi pi-box"></i>
+            <span class="chip-count">{{ missingCount() }}</span>
+            <span>{{ 'deployment.missingFilter' | transloco }}</span>
           </button>
         }
         <span class="spacer"></span>
@@ -94,14 +102,20 @@ interface ProductDeployments {
                   } @else if (r.stageSince && inProgress(r.stage)) {
                     <span class="sub">{{ 'deployment.daysInStage' | transloco:{ days: daysSince(r.stageSince) } }}</span>
                   }
+                  @if (r.missingRequiredResources) {
+                    <span class="missing"><i class="pi pi-box"></i> {{ 'deployment.missingResources' | transloco:{ count: r.missingRequiredResources } }}</span>
+                  }
                 </td>
                 <td>
                   <div class="envs">
                     @for (e of r.environments; track e.id) {
                       <a class="env" [routerLink]="['/environments', e.id]" [class.env--inactive]="!e.isActive"
-                         [title]="e.typeName + (e.platformName ? ' · ' + e.platformName : '') + (e.deployedVersion ? ' · v' + e.deployedVersion : '')">
+                         [title]="e.typeName + (e.platformName ? ' · ' + e.platformName : '') + (e.deployedVersion ? ' · v' + e.deployedVersion : '') + (e.missingRequiredCount && e.isActive ? ' · ' + ('deployment.missingResources' | transloco:{ count: e.missingRequiredCount }) : '')">
                         <span class="env-dot" [style.background]="e.typeColor ?? 'var(--text-subtle)'"></span>{{ e.typeCode }}
                         @if (e.deployedVersion) { <span class="env-ver">{{ e.deployedVersion }}</span> }
+                        @if (e.missingRequiredCount && e.isActive) {
+                          <i class="pi pi-exclamation-triangle env-warn" [attr.aria-label]="'deployment.missingResources' | transloco:{ count: e.missingRequiredCount }"></i>
+                        }
                       </a>
                     } @empty {
                       <span class="sub">—</span>
@@ -143,6 +157,9 @@ interface ProductDeployments {
       &:hover { border-color: var(--border-strong); } }
     .chip--active { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft-bg); }
     .chip-count { font-weight: 700; color: var(--text-strong); }
+    .chip--missing { color: var(--warning-strong, var(--warning)); }
+    .missing { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; font-weight: 600; color: var(--warning-strong, var(--warning)); margin-top: 0.125rem; i { font-size: 0.7rem; } }
+    .env-warn { font-size: 0.65rem; color: var(--warning-strong, var(--warning)); }
     .chip--overdue { color: var(--danger); border-color: var(--danger-border, var(--danger)); }
     .btn-export { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 0.5rem; cursor: pointer;
       border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-size: 0.8125rem; }
@@ -189,7 +206,9 @@ export class ProductDeploymentsComponent implements OnChanges {
   readonly meta = STAGE_META;
   data = signal<ProductDeployments | null>(null);
   loading = signal(true);
-  filter = signal<DeploymentStage | 'overdue' | null>(null);
+  filter = signal<DeploymentStage | 'overdue' | 'missing' | null>(null);
+
+  missingCount = computed(() => (this.data()?.rows ?? []).filter(r => r.missingRequiredResources > 0).length);
 
   // "Kullanmıyor" yalnızca global yetkide gelir; sayacı olmayan aşamalar gizlenir (Canlı/Kurulum her zaman görünür)
   visibleStages = computed(() => {
@@ -202,7 +221,9 @@ export class ProductDeploymentsComponent implements OnChanges {
     const rows = this.data()?.rows ?? [];
     const f = this.filter();
     if (!f) return rows;
-    return f === 'overdue' ? rows.filter(r => r.isOverdue) : rows.filter(r => r.stage === f);
+    if (f === 'overdue') return rows.filter(r => r.isOverdue);
+    if (f === 'missing') return rows.filter(r => r.missingRequiredResources > 0);
+    return rows.filter(r => r.stage === f);
   });
 
   ngOnChanges() {
@@ -213,7 +234,7 @@ export class ProductDeploymentsComponent implements OnChanges {
     });
   }
 
-  toggleFilter(f: DeploymentStage | 'overdue') { this.filter.set(this.filter() === f ? null : f); }
+  toggleFilter(f: DeploymentStage | 'overdue' | 'missing') { this.filter.set(this.filter() === f ? null : f); }
 
   inProgress(s: DeploymentStage) { return s === 'Planned' || s === 'Installing' || s === 'ProdReady'; }
 
@@ -236,7 +257,8 @@ export class ProductDeploymentsComponent implements OnChanges {
     const header = ['customer', 'stage', 'environments', 'prodVersion', 'target', 'goLive'].map(k => t('deployment.col.' + k));
     const lines = this.filteredRows().map(r => [
       r.customerName,
-      t('deployment.stage.' + r.stage) + (r.isOverdue ? ` (${t('deployment.overdue')} ${r.overdueDays})` : ''),
+      t('deployment.stage.' + r.stage) + (r.isOverdue ? ` (${t('deployment.overdue')} ${r.overdueDays})` : '')
+        + (r.missingRequiredResources ? ` (${this.transloco.translate('deployment.missingResources', { count: r.missingRequiredResources })})` : ''),
       r.environments.filter(e => e.isActive).map(e => e.typeCode + (e.deployedVersion ? ' ' + e.deployedVersion : '')).join(' | '),
       r.prodVersion ?? '', r.targetGoLiveAt ?? '', r.goLiveAt ?? ''
     ]);

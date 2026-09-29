@@ -10,13 +10,15 @@ namespace Kys.Application.Deployments;
 // ── DTO'lar ────────────────────────────────────────────────────────────────
 
 public sealed record DeploymentEnvironmentDto(
-    Guid Id, string Name, string TypeCode, string TypeName, string? TypeColor, string? PlatformName, string? DeployedVersion, bool IsActive);
+    Guid Id, string Name, string TypeCode, string TypeName, string? TypeColor, string? PlatformName, string? DeployedVersion, bool IsActive,
+    int MissingRequiredCount);
 
 public sealed record ProductDeploymentRowDto(
     Guid CustomerId, string CustomerName, string CustomerCode, CustomerStatus CustomerStatus, bool CustomerArchived,
     Guid? CustomerProductId, DeploymentStage Stage, DateOnly? StageSince, bool IsOverdue, int? OverdueDays,
     UsageMode? UsageMode, DateOnly? InstallationStartedAt, DateOnly? GoLiveAt, DateOnly? TargetGoLiveAt, DateOnly? DiscontinuedAt,
-    string? ProdVersion, bool IsOutdated, IReadOnlyList<DeploymentEnvironmentDto> Environments);
+    string? ProdVersion, bool IsOutdated, IReadOnlyList<DeploymentEnvironmentDto> Environments,
+    int MissingRequiredResources);
 
 public sealed record VersionShareDto(string Version, int CustomerCount, bool IsCurrent);
 
@@ -27,7 +29,8 @@ public sealed record ProductDeploymentsDto(
 
 public sealed record MatrixProductDto(Guid Id, string Name, string Code);
 public sealed record MatrixCustomerDto(Guid Id, string Name, string Code, CustomerStatus Status);
-public sealed record MatrixCellDto(Guid CustomerId, Guid ProductId, DeploymentStage Stage, bool IsOverdue, string? ProdVersion);
+public sealed record MatrixCellDto(
+    Guid CustomerId, Guid ProductId, DeploymentStage Stage, bool IsOverdue, string? ProdVersion, int MissingRequiredResources);
 public sealed record DeploymentMatrixDto(
     IReadOnlyList<MatrixProductDto> Products, IReadOnlyList<MatrixCustomerDto> Customers, IReadOnlyList<MatrixCellDto> Cells);
 
@@ -44,8 +47,13 @@ internal static class DeploymentCalculator
             HasProdEnvironment: active.Any(IsProd),
             DateOnly.FromDateTime(link.CreatedAt),
             link.InstallationStartedAt, link.TestReadyAt, link.ProdReadyAt,
-            link.GoLiveAt, link.TargetGoLiveAt, link.DiscontinuedAt), today);
+            link.GoLiveAt, link.TargetGoLiveAt, link.DiscontinuedAt,
+            ProdMissingRequiredResources: active.Any(e => IsProd(e) && e.MissingRequiredCount > 0)), today);
     }
+
+    // Aktif ortamlardaki toplam eksik zorunlu kaynak sayısı (ortam başına ayrı sayılır)
+    public static int MissingRequired(IReadOnlyList<DeploymentEnvironmentRow> envs)
+        => envs.Where(e => e.IsActive).Sum(e => e.MissingRequiredCount);
 
     public static bool IsProd(DeploymentEnvironmentRow e) => string.Equals(e.TypeCode, "PROD", StringComparison.OrdinalIgnoreCase);
 
@@ -107,13 +115,14 @@ public sealed class GetProductDeploymentsQueryHandler(IDeploymentRepository repo
                     prodVersion,
                     IsOutdated: prodVersion is not null && product.Version is not null && prodVersion != product.Version.Trim(),
                     envs.Select(e => new DeploymentEnvironmentDto(e.Id, e.Name, e.TypeCode, e.TypeName, e.TypeColor,
-                        e.PlatformName, e.DeployedVersion, e.IsActive)).ToList()));
+                        e.PlatformName, e.DeployedVersion, e.IsActive, e.MissingRequiredCount)).ToList(),
+                    DeploymentCalculator.MissingRequired(envs)));
             }
             else if (includeNonUsers && !c.IsArchived)
             {
                 rows.Add(new ProductDeploymentRowDto(
                     c.Id, c.Name, c.Code, c.Status, c.IsArchived, null, DeploymentStage.NotUsed, null, false, null,
-                    null, null, null, null, null, null, false, []));
+                    null, null, null, null, null, null, false, [], 0));
             }
         }
 
@@ -161,7 +170,8 @@ public sealed class GetDeploymentMatrixQueryHandler(IDeploymentRepository reposi
         {
             var envs = envsByLink.GetValueOrDefault(l.Id) ?? [];
             var a = DeploymentCalculator.Assess(l, envs, today);
-            return new MatrixCellDto(l.CustomerId, l.ProductId, a.Stage, a.IsOverdue, DeploymentCalculator.ProdVersion(envs));
+            return new MatrixCellDto(l.CustomerId, l.ProductId, a.Stage, a.IsOverdue, DeploymentCalculator.ProdVersion(envs),
+                DeploymentCalculator.MissingRequired(envs));
         }).ToList();
 
         return new DeploymentMatrixDto(
