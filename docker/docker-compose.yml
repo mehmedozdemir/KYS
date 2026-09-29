@@ -1,4 +1,7 @@
-version: '3.9'
+# Yerel tam yığın: PostgreSQL + API + UI (nginx).
+# Çalıştırma:  docker compose --env-file .env -f docker/docker-compose.yml up -d --build
+# Uygulama:    http://localhost:8088   (Swagger: http://localhost:8088/swagger)
+# restart: unless-stopped → Docker Desktop açıldığında konteynerler otomatik başlar.
 
 services:
   db:
@@ -36,15 +39,31 @@ services:
       - Jwt__Audience=kys-clients
       - Encryption__Key=${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
       - Encryption__IV=${ENCRYPTION_IV:?ENCRYPTION_IV is required}
+      - Cors__AllowedOrigins__0=http://localhost:8088
+      - Cors__AllowedOrigins__1=http://localhost:4200
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/live || exit 1"]
+      # aspnet imajında curl yok; bash /dev/tcp ile port kontrolü
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  ui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ui
+    container_name: kys-ui
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    volumes:
+      - ./nginx.local.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
 
 volumes:
   postgres_data:

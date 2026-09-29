@@ -1,0 +1,17 @@
+# Build context: repo kökü (docker/Dockerfile.api, docker/Dockerfile.ui)
+.git
+.github
+.vs
+.vscode
+.idea
+.claude
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.angular
+**/logs
+**/*.user
+.env
+.env.*
+!.env.example
