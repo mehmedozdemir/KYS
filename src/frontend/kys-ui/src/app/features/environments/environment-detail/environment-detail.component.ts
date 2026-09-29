@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { NgClass, DatePipe } from '@angular/common';
+import { NgClass, DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
@@ -94,6 +94,17 @@ interface EnvironmentSummary {
   environmentTypeCode: string;
   environmentTypeColor: string | null;
   isActive: boolean;
+  deployedVersion: string | null;
+}
+
+interface VpnSummary {
+  id: string;
+  customerEnvironmentId: string | null;
+  name: string;
+  vpnType: string;
+  serverHost: string;
+  serverPort: number | null;
+  isActive: boolean;
 }
 
 interface EnvironmentDetail {
@@ -129,8 +140,9 @@ interface HostingPlatformOption {
 
 @Component({
   selector: 'app-environment-detail',
+  host: { '(document:keydown.escape)': 'openMenuId.set(null)' },
   standalone: true,
-  imports: [RouterLink, NgClass, FormsModule, DatePipe, TranslocoModule],
+  imports: [RouterLink, NgClass, NgTemplateOutlet, FormsModule, DatePipe, TranslocoModule],
   template: `
     <div class="page-content">
       @if (loading()) {
@@ -143,10 +155,17 @@ interface HostingPlatformOption {
           <span>/</span>
           <a [routerLink]="['/customers', env()!.customerId]">{{ env()!.customerName }}</a>
           <span>/</span>
-          <span>{{ env()!.productName }}</span>
+          <a [routerLink]="['/products', env()!.productId]" [queryParams]="{ tab: 'customers' }"
+             [title]="'environments.productLinkTitle' | transloco">{{ env()!.productName }}</a>
           <span>/</span>
           <span>{{ env()!.name }}</span>
         </div>
+
+        @if (isProd()) {
+          <div class="prod-banner" role="note">
+            <i class="pi pi-exclamation-triangle"></i> {{ 'environments.prodWarning' | transloco }}
+          </div>
+        }
 
         <!-- Header -->
         <div class="header-card">
@@ -154,19 +173,25 @@ interface HostingPlatformOption {
             <div class="env-icon" [style.background]="envColor(0.15)" [style.color]="env()!.environmentTypeColor ?? '#6B7280'">
               <i class="pi pi-server"></i>
             </div>
-            <div>
+            <div class="header-main">
               <div class="header-title-row">
                 <h1>{{ env()!.name }}</h1>
-                <span class="type-badge" [style.background]="envColor(0.15)" [style.color]="env()!.environmentTypeColor ?? '#6B7280'">
-                  {{ env()!.environmentTypeName }}
-                </span>
+                <!-- Ad zaten tipi söylüyorsa (ör. "Production") tip rozeti tekrar etmesin -->
+                @if (showTypeBadge()) {
+                  <span class="type-badge" [style.background]="envColor(0.15)" [style.color]="env()!.environmentTypeColor ?? '#6B7280'">
+                    {{ env()!.environmentTypeName }}
+                  </span>
+                }
+                @if (!env()!.isActive) {
+                  <span class="badge badge--inactive">{{ 'environments.inactive' | transloco }}</span>
+                }
+              </div>
+              <div class="header-meta-row">
                 <div class="plat-picker">
                   @if (env()!.hostingPlatformName) {
                     <button type="button" class="plat-badge plat-badge--btn"
-                      [style.background]="hexAlpha(env()!.hostingPlatformColor, 0.15)"
-                      [style.color]="env()!.hostingPlatformColor ?? '#6B7280'"
                       (click)="togglePlatformMenu($event)" [title]="'environments.changePlatform' | transloco">
-                      <i class="pi" [ngClass]="env()!.hostingPlatformIcon ?? 'pi-server'"></i>
+                      <i class="pi" [ngClass]="env()!.hostingPlatformIcon ?? 'pi-server'" [style.color]="env()!.hostingPlatformColor ?? null"></i>
                       {{ env()!.hostingPlatformName }}
                       @if (platformSaving()) { <i class="pi pi-spin pi-spinner"></i> }
                       @else { <i class="pi pi-chevron-down plat-caret"></i> }
@@ -203,16 +228,13 @@ interface HostingPlatformOption {
                     </div>
                   }
                 </div>
-                @if (!env()!.isActive) {
-                  <span class="badge badge--inactive">{{ 'environments.inactive' | transloco }}</span>
-                }
                 <!-- Ortamda kurulu ürün sürümü (kurulum takibi) -->
                 @if (versionEditing()) {
                   <span class="ver-edit">
                     <input type="text" maxlength="50" [(ngModel)]="versionDraft" (keydown.enter)="saveVersion()" (keydown.escape)="versionEditing.set(false)"
                       [placeholder]="env()!.productVersion ?? '1.0.0'" [attr.aria-label]="'environments.deployedVersion' | transloco" />
-                    <button type="button" class="ver-btn" (click)="saveVersion()" [disabled]="versionSaving()" [title]="'common.save' | transloco"><i class="pi pi-check"></i></button>
-                    <button type="button" class="ver-btn" (click)="versionEditing.set(false)" [title]="'common.cancel' | transloco"><i class="pi pi-times"></i></button>
+                    <button type="button" class="ver-btn" (click)="saveVersion()" [disabled]="versionSaving()" [attr.aria-label]="'common.save' | transloco"><i class="pi pi-check"></i></button>
+                    <button type="button" class="ver-btn" (click)="versionEditing.set(false)" [attr.aria-label]="'common.cancel' | transloco"><i class="pi pi-times"></i></button>
                   </span>
                 } @else if (env()!.deployedVersion) {
                   <button type="button" class="ver-badge" [class.ver-badge--old]="isOutdated()" (click)="editVersion()"
@@ -227,45 +249,47 @@ interface HostingPlatformOption {
               @if (env()!.notes) {
                 <p class="header-notes">{{ env()!.notes }}</p>
               }
-              @if (siblings().length > 1) {
-                <div class="env-switcher">
-                  @for (s of siblings(); track s.id) {
-                    <button type="button"
-                      class="env-pill"
-                      [class.env-pill--active]="s.id === env()!.id"
-                      [style.background]="s.id === env()!.id ? siblingColor(s, 0.15) : ''"
-                      [style.color]="s.id === env()!.id ? (s.environmentTypeColor ?? '#6B7280') : ''"
-                      [style.border-color]="s.id === env()!.id ? (s.environmentTypeColor ?? '#6B7280') + '66' : ''"
-                      [title]="s.environmentTypeName"
-                      (click)="s.id !== env()!.id && navigateToSibling(s.id)">
-                      <span class="env-pill-dot"
-                        [style.background]="s.environmentTypeColor ?? '#6B7280'">
-                      </span>
-                      {{ s.name }}
-                      @if (!s.isActive) {
-                        <span class="env-pill-inactive">{{ 'environments.inactive' | transloco }}</span>
-                      }
-                    </button>
-                  }
+            </div>
+          </div>
+
+          <!-- Erişim: bu ortama bağlanmak için gereken VPN(ler) -->
+          @if (vpns().length) {
+            <div class="access-box">
+              <div class="access-title"><i class="pi pi-shield"></i> {{ 'environments.vpnRequired' | transloco }}</div>
+              @for (v of vpns(); track v.id) {
+                <div class="access-item">
+                  <span class="access-name">{{ v.name }}</span>
+                  <span class="access-sub">
+                    {{ 'status.vpnType.' + v.vpnType | transloco }} · <code>{{ v.serverHost }}{{ v.serverPort ? ':' + v.serverPort : '' }}</code>
+                    @if (!v.customerEnvironmentId) { · {{ 'environments.vpnCustomerWide' | transloco }} }
+                  </span>
                 </div>
               }
+              <a class="access-link" [routerLink]="['/customers', env()!.customerId]" [queryParams]="{ tab: 'vpn' }">
+                {{ 'environments.vpnManage' | transloco }} <i class="pi pi-arrow-right"></i>
+              </a>
             </div>
-          </div>
-          <div class="header-stats">
-            <div class="stat">
-              <span class="stat-val">{{ env()!.resources.length }}</span>
-              <span class="stat-lbl">{{ 'environments.statResources' | transloco }}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-val">{{ env()!.endpoints.length }}</span>
-              <span class="stat-lbl">{{ 'environments.statEndpoints' | transloco }}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-val">{{ totalCredentialCount() }}</span>
-              <span class="stat-lbl">{{ 'environments.statCredentials' | transloco }}</span>
-            </div>
-          </div>
+          }
         </div>
+
+        <!-- Aynı müşteri-ürünün ortamları arasında geçiş -->
+        @if (siblings().length > 1) {
+          <nav class="env-tabs" role="tablist" [attr.aria-label]="'environments.resources' | transloco">
+            @for (s of siblings(); track s.id) {
+              <button type="button" role="tab" class="env-tab"
+                [class.env-tab--active]="s.id === env()!.id"
+                [attr.aria-selected]="s.id === env()!.id"
+                [style.border-bottom-color]="s.id === env()!.id ? (s.environmentTypeColor ?? 'var(--primary)') : null"
+                [title]="s.environmentTypeName"
+                (click)="s.id !== env()!.id && navigateToSibling(s.id)">
+                <span class="env-tab-dot" [style.background]="s.environmentTypeColor ?? '#6B7280'"></span>
+                {{ s.name }}
+                @if (s.deployedVersion) { <span class="env-tab-ver">{{ s.deployedVersion }}</span> }
+                @if (!s.isActive) { <span class="env-pill-inactive">{{ 'environments.inactive' | transloco }}</span> }
+              </button>
+            }
+          </nav>
+        }
 
         <!-- Resources -->
         <div class="section">
@@ -302,32 +326,44 @@ interface HostingPlatformOption {
                       }
                     </div>
                     <div class="resource-actions">
-                      @if (r.credentials.length) {
-                        <span class="cred-count">{{ 'environments.credentialCount' | transloco:{ count: r.credentials.length } }}</span>
+                      @if (connectionString(r); as cs) {
+                        <button type="button" class="btn-cred" (click)="copyText(cs, 'conn-' + r.id)" [title]="cs">
+                          <i class="pi" [ngClass]="copiedKey() === 'conn-' + r.id ? 'pi-check' : 'pi-copy'"></i>
+                          {{ (copiedKey() === 'conn-' + r.id ? 'environments.copied' : 'environments.copyConnection') | transloco }}
+                        </button>
                       }
                       @if (hasPlainFields(r)) {
                         <button type="button" class="btn-cred" (click)="openConnEdit(r)">
                           <i class="pi pi-pencil"></i> {{ 'environments.editConnection' | transloco }}
                         </button>
                       }
-                      <button type="button" class="btn-cred" (click)="openCredModal(r)">
-                        <i class="pi pi-key"></i> {{ 'environments.manageCredential' | transloco }}
-                      </button>
-                      <button type="button" class="btn-personal-cred" (click)="openPersonalCredModal(r)">
-                        <i class="pi pi-user"></i> {{ 'environments.myPersonalCreds' | transloco }}
-                        @if ((personalCreds()[r.id]?.length ?? 0) > 0) {
-                          <span class="personal-cred-badge">{{ personalCreds()[r.id].length }}</span>
+                      <!-- Seyrek kullanılan ve yıkıcı işlemler menüde; sil en altta ayrı durur -->
+                      <div class="more-wrap">
+                        <button type="button" class="btn-more" aria-haspopup="menu"
+                          [attr.aria-expanded]="openMenuId() === r.id"
+                          [attr.aria-label]="'environments.moreActions' | transloco" [title]="'environments.moreActions' | transloco"
+                          (click)="toggleMenu(r.id, $event)">
+                          @if (removingResourceId() === r.id) { <i class="pi pi-spin pi-spinner"></i> }
+                          @else { <i class="pi pi-ellipsis-v"></i> }
+                        </button>
+                        @if (openMenuId() === r.id) {
+                          <div class="menu-backdrop" (click)="openMenuId.set(null)"></div>
+                          <div class="more-menu" role="menu">
+                            <button type="button" role="menuitem" (click)="openMenuId.set(null); openCredModal(r)">
+                              <i class="pi pi-key"></i> {{ 'environments.manageCredential' | transloco }}
+                              @if (r.credentials.length) { <span class="menu-count">{{ r.credentials.length }}</span> }
+                            </button>
+                            <button type="button" role="menuitem" (click)="openMenuId.set(null); openPersonalCredModal(r)">
+                              <i class="pi pi-user"></i> {{ 'environments.myPersonalCreds' | transloco }}
+                              @if ((personalCreds()[r.id]?.length ?? 0) > 0) { <span class="menu-count">{{ personalCreds()[r.id].length }}</span> }
+                            </button>
+                            <div class="menu-sep" role="separator"></div>
+                            <button type="button" role="menuitem" class="menu-danger" (click)="openMenuId.set(null); removeResource(r)">
+                              <i class="pi pi-trash"></i> {{ 'environments.removeResourceTitle' | transloco }}
+                            </button>
+                          </div>
                         }
-                      </button>
-                      <button type="button" class="btn-remove-resource" [title]="'environments.removeResourceTitle' | transloco"
-                        [disabled]="removingResourceId() === r.id"
-                        (click)="removeResource(r)">
-                        @if (removingResourceId() === r.id) {
-                          <i class="pi pi-spin pi-spinner"></i>
-                        } @else {
-                          <i class="pi pi-trash"></i>
-                        }
-                      </button>
+                      </div>
                     </div>
                   </div>
                   @if (r.notes) {
@@ -340,72 +376,86 @@ interface HostingPlatformOption {
                     @if (inheritedConn.length || r.sharedCredentials.length) {
                       <div class="inherited-box">
                         <div class="inherited-title"><i class="pi pi-share-alt"></i> {{ 'environments.sharedValues' | transloco:{ name: r.sharedResourceName } }}</div>
-                        <div class="cred-kv-grid">
+                        <dl class="kv-table">
                           @for (entry of inheritedConn; track entry.key) {
-                            <div class="cred-kv-item">
-                              <span class="cred-kv-label">{{ entry.label }}</span>
-                              <span class="cred-kv-value">{{ entry.value }}</span>
+                            <div class="kv-row">
+                              <dt>{{ entry.label }}</dt>
+                              <dd><span class="kv-value">{{ entry.value }}</span></dd>
+                              <div class="kv-actions">
+                                <button type="button" class="kv-btn" (click)="copyText(entry.value, 'sh-' + r.id + entry.key)"
+                                  [attr.aria-label]="('common.copy' | transloco) + ': ' + entry.label">
+                                  <i class="pi" [ngClass]="copiedKey() === 'sh-' + r.id + entry.key ? 'pi-check' : 'pi-copy'"></i>
+                                </button>
+                              </div>
                             </div>
                           }
                           @for (stub of r.sharedCredentials; track stub.id) {
-                            <div class="cred-kv-item">
-                              <span class="cred-kv-label">{{ sharedCredLabel(r, stub.fieldKey) }}</span>
-                              <span class="cred-kv-value cred-kv-pw">
-                                {{ cardVisiblePasswords()[stub.id] ? (cardRevealedValues()[stub.id] ?? '••••••') : '••••••' }}
-                              </span>
-                              <button type="button" class="cred-kv-eye"
-                                [disabled]="cardRevealingIds()[stub.id]"
-                                (click)="toggleCardPassword(stub.id)">
-                                @if (cardRevealingIds()[stub.id]) {
-                                  <i class="pi pi-spin pi-spinner"></i>
-                                } @else {
-                                  <i class="pi" [ngClass]="cardVisiblePasswords()[stub.id] ? 'pi-eye-slash' : 'pi-eye'"></i>
-                                }
-                              </button>
+                            <div class="kv-row">
+                              <dt>{{ sharedCredLabel(r, stub.fieldKey) }}</dt>
+                              <dd><span class="kv-value kv-secret">{{ cardVisiblePasswords()[stub.id] ? (cardRevealedValues()[stub.id] ?? '••••••') : '••••••' }}</span></dd>
+                              <div class="kv-actions">
+                                <ng-container *ngTemplateOutlet="secretActions; context: { $implicit: stub.id, label: sharedCredLabel(r, stub.fieldKey) }" />
+                              </div>
                             </div>
                           }
-                        </div>
+                        </dl>
                       </div>
                     }
                   }
 
                   @let schemaEntries = resourceOwnSchemaEntries(r);
                   @if (schemaEntries.length) {
-                    <div class="cred-kv-grid">
+                    <dl class="kv-table">
                       @for (entry of schemaEntries; track entry.key) {
                         @let stub = credStubForKey(r, entry.key);
                         @let plain = entry.type !== 'password' ? plainFieldValue(r, entry.key) : null;
-                        <div class="cred-kv-item" [class.cred-kv-missing]="!stub && plain === null">
-                          <span class="cred-kv-label">{{ entry.label }}</span>
+                        <div class="kv-row" [class.kv-missing]="!stub && plain === null">
+                          <dt>{{ entry.label }}</dt>
                           @if (plain !== null) {
-                            <span class="cred-kv-value">{{ plain }}</span>
+                            <dd><span class="kv-value">{{ plain }}</span></dd>
+                            <div class="kv-actions">
+                              <button type="button" class="kv-btn" (click)="copyText(plain, r.id + entry.key)"
+                                [attr.aria-label]="('common.copy' | transloco) + ': ' + entry.label">
+                                <i class="pi" [ngClass]="copiedKey() === r.id + entry.key ? 'pi-check' : 'pi-copy'"></i>
+                              </button>
+                            </div>
                           } @else if (!stub) {
-                            <span class="cred-kv-value cred-kv-empty">—</span>
+                            <dd><span class="kv-value kv-empty">—</span></dd>
+                            <div class="kv-actions"></div>
                           } @else {
                             <!-- Şifre alanları ve eski sürümde şifreli saklanmış düz alanlar: yalnızca istek üzerine açılır -->
-                            <span class="cred-kv-value cred-kv-pw">
-                              {{ cardVisiblePasswords()[stub.id] ? (cardRevealedValues()[stub.id] ?? '••••••') : '••••••' }}
-                            </span>
-                            <button type="button" class="cred-kv-eye"
-                              [title]="(cardVisiblePasswords()[stub.id] ? 'common.hide' : 'common.show') | transloco"
-                              [disabled]="cardRevealingIds()[stub.id]"
-                              (click)="toggleCardPassword(stub.id)">
-                              @if (cardRevealingIds()[stub.id]) {
-                                <i class="pi pi-spin pi-spinner"></i>
-                              } @else {
-                                <i class="pi" [ngClass]="cardVisiblePasswords()[stub.id] ? 'pi-eye-slash' : 'pi-eye'"></i>
-                              }
-                            </button>
+                            <dd><span class="kv-value kv-secret">{{ cardVisiblePasswords()[stub.id] ? (cardRevealedValues()[stub.id] ?? '••••••') : '••••••' }}</span></dd>
+                            <div class="kv-actions">
+                              <ng-container *ngTemplateOutlet="secretActions; context: { $implicit: stub.id, label: entry.label }" />
+                            </div>
                           }
                         </div>
                       }
-                    </div>
+                    </dl>
                   }
                 </div>
               }
             </div>
           }
         </div>
+
+        <!-- Gizli değer: göster/gizle + (açıkken) kopyala -->
+        <ng-template #secretActions let-id let-label="label">
+          @if (cardVisiblePasswords()[id] && cardRevealedValues()[id] !== undefined) {
+            <button type="button" class="kv-btn" (click)="copyText(cardRevealedValues()[id], 'sec-' + id)"
+              [attr.aria-label]="('common.copy' | transloco) + ': ' + label">
+              <i class="pi" [ngClass]="copiedKey() === 'sec-' + id ? 'pi-check' : 'pi-copy'"></i>
+            </button>
+          }
+          <button type="button" class="kv-btn"
+            [attr.aria-label]="((cardVisiblePasswords()[id] ? 'common.hide' : 'common.show') | transloco) + ': ' + label"
+            [title]="(cardVisiblePasswords()[id] ? 'common.hide' : 'common.show') | transloco"
+            [disabled]="cardRevealingIds()[id]"
+            (click)="toggleCardPassword(id)">
+            @if (cardRevealingIds()[id]) { <i class="pi pi-spin pi-spinner"></i> }
+            @else { <i class="pi" [ngClass]="cardVisiblePasswords()[id] ? 'pi-eye-slash' : 'pi-eye'"></i> }
+          </button>
+        </ng-template>
 
         <!-- Endpoint URLs -->
         <div class="section">
@@ -418,92 +468,82 @@ interface HostingPlatformOption {
               <p>{{ 'environments.noEndpoints' | transloco }}</p>
             </div>
           } @else {
-            <div class="endpoint-grid">
-              @for (ep of env()!.endpoints; track ep.productEndpointId) {
-                <div class="endpoint-card" [class.inactive-card]="!ep.isActive" [class.ep-no-url]="!ep.baseUrl">
-                  <div class="ep-header">
-                    <div class="ep-icon">
-                      <i class="pi" [ngClass]="epTypeIcon(ep.endpointType)"></i>
+            @let configured = endpointsWithUrl();
+            @let missing = endpointsWithoutUrl();
+            @if (configured.length) {
+              <div class="ep-list">
+                @for (ep of configured; track ep.productEndpointId) {
+                  <div class="ep-row" [class.inactive-card]="!ep.isActive">
+                    <div class="ep-id">
+                      <div class="ep-icon"><i class="pi" [ngClass]="epTypeIcon(ep.endpointType)"></i></div>
+                      <div class="ep-title">
+                        <div class="ep-name">{{ ep.endpointName }}</div>
+                        <div class="ep-type">{{ 'type.endpoint.' + ep.endpointType | transloco }}</div>
+                        <div class="ep-badges">
+                          @if (!ep.isActive) {
+                            <span class="badge badge--inactive">{{ 'environments.inactive' | transloco }}</span>
+                          }
+                          @if (ep.authTypeName && ep.authTypeName !== 'None') {
+                            <span class="badge badge--auth"><i class="pi pi-lock"></i> {{ authTypeLabel(ep.authTypeName) }}</span>
+                          }
+                          @if (ep.credentials.length) {
+                            <span class="ep-cred-count">{{ 'environments.credShort' | transloco:{ count: ep.credentials.length } }}</span>
+                          }
+                        </div>
+                      </div>
                     </div>
-                    <div class="ep-title">
-                      <div class="ep-name">{{ ep.endpointName }}</div>
-                      <div class="ep-type">{{ 'type.endpoint.' + ep.endpointType | transloco }}</div>
-                    </div>
-                    <div class="ep-badges">
-                      @if (!ep.isActive) {
-                        <span class="badge badge--inactive">{{ 'environments.inactive' | transloco }}</span>
-                      }
-                      @if (ep.authTypeName && ep.authTypeName !== 'None') {
-                        <span class="badge badge--auth">
-                          <i class="pi pi-lock"></i> {{ authTypeLabel(ep.authTypeName) }}
-                        </span>
-                      }
-                      @if (ep.credentials.length) {
-                        <span class="ep-cred-count">{{ 'environments.credShort' | transloco:{ count: ep.credentials.length } }}</span>
+                    <div class="ep-urls">
+                      @for (u of urlRows(ep); track u.label) {
+                        <div class="url-row">
+                          <span class="url-lbl">{{ u.label }}</span>
+                          <a [href]="u.url" target="_blank" rel="noopener" class="url-link">{{ u.url }}</a>
+                          <span class="url-actions">
+                            <button type="button" class="kv-btn" (click)="copyText(u.url, ep.productEndpointId + u.label)"
+                              [attr.aria-label]="('common.copy' | transloco) + ': ' + u.label">
+                              <i class="pi" [ngClass]="copiedKey() === ep.productEndpointId + u.label ? 'pi-check' : 'pi-copy'"></i>
+                            </button>
+                            <a class="kv-btn" [href]="u.url" target="_blank" rel="noopener" [attr.aria-label]="u.label + ' ↗'">
+                              <i class="pi pi-external-link"></i>
+                            </a>
+                          </span>
+                        </div>
                       }
                     </div>
                     <div class="ep-actions">
                       @if (ep.id) {
-                        <button type="button" class="btn-ep-auth" (click)="openEpCredModal(ep)" [title]="'environments.manageAuth' | transloco">
+                        <button type="button" class="kv-btn" (click)="openEpCredModal(ep)"
+                          [title]="'environments.manageAuth' | transloco" [attr.aria-label]="'environments.manageAuth' | transloco">
                           <i class="pi pi-key"></i>
                         </button>
                       }
-                      <button type="button" class="btn-ep-edit" (click)="openEndpointEdit(ep)" [title]="'environments.editUrl' | transloco">
+                      <button type="button" class="kv-btn" (click)="openEndpointEdit(ep)"
+                        [title]="'environments.editUrl' | transloco" [attr.aria-label]="'environments.editUrl' | transloco">
                         <i class="pi pi-pencil"></i>
                       </button>
                       @if (ep.id) {
-                        <button type="button" class="btn-ep-delete"
+                        <button type="button" class="kv-btn kv-btn--danger"
                           [disabled]="deletingEndpointId() === ep.productEndpointId"
-                          (click)="deleteEndpoint(ep)" [title]="'environments.deleteUrlTitle' | transloco">
-                          @if (deletingEndpointId() === ep.productEndpointId) {
-                            <i class="pi pi-spin pi-spinner"></i>
-                          } @else {
-                            <i class="pi pi-trash"></i>
-                          }
+                          (click)="deleteEndpoint(ep)" [title]="'environments.deleteUrlTitle' | transloco" [attr.aria-label]="'environments.deleteUrlTitle' | transloco">
+                          @if (deletingEndpointId() === ep.productEndpointId) { <i class="pi pi-spin pi-spinner"></i> }
+                          @else { <i class="pi pi-trash"></i> }
                         </button>
                       }
                     </div>
                   </div>
-                  @if (ep.baseUrl) {
-                    <div class="ep-urls">
-                      <div class="url-row">
-                        <span class="url-lbl">Base URL</span>
-                        <a [href]="ep.baseUrl" target="_blank" class="url-link" title="{{ ep.baseUrl }}">
-                          {{ ep.baseUrl }}<i class="pi pi-external-link"></i>
-                        </a>
-                        <button type="button" class="copy-btn" (click)="copy(ep.baseUrl)" [title]="'common.copy' | transloco">
-                          <i class="pi pi-copy"></i>
-                        </button>
-                      </div>
-                      @if (ep.swaggerUrl) {
-                        <div class="url-row">
-                          <span class="url-lbl">Swagger</span>
-                          <a [href]="ep.swaggerUrl" target="_blank" class="url-link">
-                            {{ ep.swaggerUrl }}<i class="pi pi-external-link"></i>
-                          </a>
-                          <button type="button" class="copy-btn" (click)="copy(ep.swaggerUrl!)" [title]="'common.copy' | transloco">
-                            <i class="pi pi-copy"></i>
-                          </button>
-                        </div>
-                      }
-                      @if (ep.healthCheckUrl) {
-                        <div class="url-row">
-                          <span class="url-lbl">Health</span>
-                          <a [href]="ep.healthCheckUrl" target="_blank" class="url-link">
-                            {{ ep.healthCheckUrl }}<i class="pi pi-external-link"></i>
-                          </a>
-                        </div>
-                      }
-                    </div>
-                  } @else {
-                    <div class="ep-no-url-hint">
-                      <i class="pi pi-info-circle"></i> {{ 'environments.urlNotSet' | transloco }}
-                      <button type="button" class="btn-set-url" (click)="openEndpointEdit(ep)">{{ 'environments.setUrl' | transloco }}</button>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
+                }
+              </div>
+            }
+            <!-- URL'si girilmemiş endpoint'ler tek satırda: tıklayınca URL belirleme açılır -->
+            @if (missing.length) {
+              <div class="ep-missing">
+                <span class="ep-missing-lbl"><i class="pi pi-info-circle"></i> {{ 'environments.urlMissingList' | transloco }}</span>
+                @for (ep of missing; track ep.productEndpointId) {
+                  <button type="button" class="ep-missing-item" (click)="openEndpointEdit(ep)" [title]="'environments.setUrl' | transloco">
+                    <i class="pi" [ngClass]="epTypeIcon(ep.endpointType)"></i> {{ ep.endpointName }} <i class="pi pi-plus"></i>
+                  </button>
+                }
+              </div>
+            }
           }
         </div>
       }
@@ -1075,6 +1115,7 @@ interface HostingPlatformOption {
     .header-title-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; h1 { font-size: 1.25rem; font-weight: 700; color: var(--text-strong); } }
     .type-badge { display: inline-flex; align-items: center; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
     .plat-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; i { font-size: 0.7rem; } }
+    .plat-badge--btn { background: var(--surface-3); color: var(--text); }
     .header-notes { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem; }
 
     .plat-picker { position: relative; display: inline-flex; }
@@ -1093,15 +1134,7 @@ interface HostingPlatformOption {
     .plat-menu-icon--clear { background: var(--surface-3); color: var(--text-muted); }
     .plat-menu-name { flex: 1; }
     .plat-menu-clear { color: var(--text-muted); border-top: 1px solid var(--border-light); margin-top: 1px; padding-top: 0.45rem; }
-    .env-switcher { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.625rem; }
-    .env-pill { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border: 1px solid var(--border); border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background: var(--surface); color: var(--text-muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; &:hover:not(.env-pill--active) { background: var(--surface-3); border-color: var(--border-strong); color: var(--text); } }
-    .env-pill--active { font-weight: 600; cursor: default; }
-    .env-pill-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex-shrink: 0; }
     .env-pill-inactive { font-size: 0.65rem; color: var(--text-subtle); font-weight: 400; }
-    .header-stats { display: flex; gap: 1.5rem; flex-shrink: 0; }
-    .stat { text-align: center; }
-    .stat-val { display: block; font-size: 1.5rem; font-weight: 700; color: var(--text-strong); }
-    .stat-lbl { font-size: 0.75rem; color: var(--text-subtle); }
 
     .section { margin-bottom: 1.5rem; }
     .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
@@ -1123,17 +1156,8 @@ interface HostingPlatformOption {
     .resource-actions { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
     .cred-count { font-size: 0.75rem; color: var(--text-muted); background: var(--surface-3); padding: 0.125rem 0.5rem; border-radius: 9999px; }
     .btn-cred { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: 0.375rem; padding: 0.25rem 0.75rem; font-size: 0.8125rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.375rem; &:hover { border-color: var(--warning); color: var(--warning-soft-text); background: var(--warning-faint-bg); } }
-    .btn-remove-resource { background: none; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.25rem 0.5rem; font-size: 0.8125rem; cursor: pointer; color: var(--text-subtle); display: inline-flex; align-items: center; &:hover { border-color: var(--danger-soft-text); color: var(--danger); background: var(--danger-faint-bg); } &:disabled { opacity: 0.5; cursor: not-allowed; } }
     .resource-notes { font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.5rem; }
     /* Key:value credential grid in resource cards */
-    .cred-kv-grid { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.625rem; }
-    .cred-kv-item { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.5rem 0.25rem 0.625rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 0.375rem; font-size: 0.75rem; }
-    .cred-kv-item.cred-kv-missing { background: var(--warning-faint-bg); border-color: var(--warning-border); }
-    .cred-kv-label { color: var(--text-muted); font-weight: 500; }
-    .cred-kv-value { color: var(--text-strong); font-family: monospace; font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .cred-kv-pw { letter-spacing: 0.05em; }
-    .cred-kv-empty { color: var(--warning-strong); font-family: inherit; }
-    .cred-kv-eye { background: none; border: none; cursor: pointer; color: var(--text-subtle); padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-size: 0.75rem; display: inline-flex; align-items: center; flex-shrink: 0; &:hover:not(:disabled) { color: var(--text); background: var(--border); } &:disabled { opacity: 0.5; cursor: default; } }
 
     /* Dynamic credential fields in add-resource modal */
     .cred-fields-section { background: var(--primary-soft-bg); border: 1px solid var(--primary-soft-bg-2); border-radius: 0.5rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
@@ -1148,10 +1172,6 @@ interface HostingPlatformOption {
     .field-key-badge { background: var(--primary-soft-bg); color: var(--primary-strong); padding: 0.1rem 0.375rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.7rem; margin-left: 0.25rem; }
 
     /* Endpoint grid */
-    .endpoint-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 0.75rem; }
-    .endpoint-card { background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-    .ep-no-url { border-style: dashed; background: var(--surface-2); }
-    .ep-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
     .ep-icon { width: 2rem; height: 2rem; background: var(--indigo-soft-bg); color: var(--indigo-strong); border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.875rem; }
     .ep-title { flex: 1; min-width: 0; }
     .ep-name { font-weight: 600; color: var(--text-strong); font-size: 0.875rem; }
@@ -1160,11 +1180,6 @@ interface HostingPlatformOption {
     .ep-actions { display: flex; align-items: center; gap: 0.375rem; flex-shrink: 0; }
     .ep-cred-count { font-size: 0.7rem; color: var(--text-muted); background: var(--surface-3); padding: 0.1rem 0.4rem; border-radius: 9999px; }
     .badge--auth { background: var(--warning-soft-bg); color: var(--warning-soft-text); }
-    .btn-ep-auth { background: none; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: var(--text-subtle); font-size: 0.75rem; flex-shrink: 0; &:hover { border-color: var(--warning); color: var(--warning-soft-text); background: var(--warning-faint-bg); } }
-    .btn-ep-edit { background: none; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: var(--text-subtle); font-size: 0.75rem; flex-shrink: 0; &:hover { background: var(--surface-3); color: var(--text); border-color: var(--border-strong); } }
-    .btn-ep-delete { background: none; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; color: var(--text-subtle); font-size: 0.75rem; flex-shrink: 0; &:hover { border-color: var(--danger-soft-text); color: var(--danger); background: var(--danger-faint-bg); } &:disabled { opacity: 0.5; cursor: not-allowed; } }
-    .ep-no-url-hint { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: var(--text-subtle); padding: 0.5rem 0; i { font-size: 0.75rem; } }
-    .btn-set-url { background: none; border: 1px solid var(--border-strong); border-radius: 0.375rem; padding: 0.2rem 0.625rem; font-size: 0.8125rem; cursor: pointer; color: var(--text); margin-left: 0.25rem; &:hover { border-color: var(--primary); color: var(--primary-hover); background: var(--primary-soft-bg); } }
     .ep-urls { display: flex; flex-direction: column; gap: 0.5rem; }
     .url-row { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
     .url-lbl { font-size: 0.7rem; font-weight: 600; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; width: 3.5rem; }
@@ -1223,9 +1238,67 @@ interface HostingPlatformOption {
     .btn-save-cred { background: var(--warning); color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1.25rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.375rem; align-self: flex-start; &:hover { background: var(--warning-strong); } &:disabled { opacity: 0.6; cursor: not-allowed; } }
 
     /* Personal credentials */
-    .btn-personal-cred { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: 0.375rem; padding: 0.25rem 0.75rem; font-size: 0.8125rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.375rem; &:hover { border-color: var(--indigo-strong); color: var(--indigo-strong); background: var(--indigo-soft-bg); } }
-    .personal-cred-badge { background: var(--indigo-soft-bg); color: var(--indigo-strong); border-radius: 9999px; padding: 0.05rem 0.4rem; font-size: 0.7rem; font-weight: 700; }
     .personal-creds-info-box { display: flex; align-items: flex-start; gap: 0.625rem; padding: 0.75rem 1rem; background: var(--indigo-soft-bg); border: 1px solid var(--indigo-soft-bg-2, #c7d2fe); border-radius: 0.5rem; font-size: 0.8125rem; color: var(--indigo-strong, #4338ca); i { flex-shrink: 0; margin-top: 0.1rem; } }
+    .prod-banner { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.875rem; margin-bottom: 0.75rem; border-radius: 0.5rem;
+      background: var(--danger-faint-bg); border: 1px solid var(--danger-border, var(--danger-soft-text)); color: var(--danger-strong, var(--danger)); font-size: 0.8125rem; font-weight: 500; }
+    .header-main { min-width: 0; }
+    .header-meta-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .access-box { flex: 0 1 22rem; min-width: 16rem; border: 1px solid var(--border); border-radius: 0.625rem; padding: 0.75rem 0.875rem; background: var(--surface-2); display: flex; flex-direction: column; gap: 0.375rem; }
+    .access-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); display: flex; align-items: center; gap: 0.375rem; }
+    .access-item { display: flex; flex-direction: column; }
+    .access-name { font-size: 0.875rem; font-weight: 600; color: var(--text-strong); }
+    .access-sub { font-size: 0.75rem; color: var(--text-muted); code { font-size: 0.75rem; } }
+    .access-link { font-size: 0.75rem; color: var(--primary); text-decoration: none; margin-top: 0.125rem; &:hover { text-decoration: underline; } i { font-size: 0.65rem; } }
+    .env-tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--border); margin: -0.5rem 0 1.5rem; overflow-x: auto; }
+    .env-tab { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.625rem 0.875rem; background: none; border: none; border-bottom: 2px solid transparent;
+      font-size: 0.875rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; &:hover:not(.env-tab--active) { color: var(--text); } }
+    .env-tab--active { color: var(--text-strong); font-weight: 600; cursor: default; }
+    .env-tab-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex-shrink: 0; }
+    .env-tab-ver { font-size: 0.7rem; color: var(--text-subtle); font-weight: 400; font-variant-numeric: tabular-nums; }
+    .more-wrap { position: relative; }
+    .btn-more { width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 0.375rem; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-muted); cursor: pointer; &:hover { color: var(--text); border-color: var(--border-strong); } }
+    .menu-backdrop { position: fixed; inset: 0; z-index: 40; }
+    .more-menu { position: absolute; right: 0; top: calc(100% + 0.25rem); z-index: 41; min-width: 15rem; padding: 0.25rem; border-radius: 0.5rem;
+      background: var(--surface); border: 1px solid var(--border-strong); box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      button { width: 100%; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.625rem; border: none; background: none; border-radius: 0.375rem;
+        font-size: 0.8125rem; color: var(--text); cursor: pointer; text-align: left; &:hover { background: var(--surface-3); } i { width: 1rem; color: var(--text-muted); } } }
+    .menu-count { margin-left: auto; font-size: 0.7rem; font-weight: 700; background: var(--surface-3); color: var(--text-muted); border-radius: 9999px; padding: 0.05rem 0.45rem; }
+    .menu-sep { height: 1px; background: var(--border); margin: 0.25rem 0; }
+    .more-menu button.menu-danger { color: var(--danger); i { color: var(--danger); } &:hover { background: var(--danger-faint-bg); } }
+    .kv-table { margin: 0.75rem 0 0; max-width: 52rem; border: 1px solid var(--border); border-radius: 0.5rem; overflow: hidden; }
+    .kv-row { display: grid; grid-template-columns: minmax(8rem, 13rem) 1fr auto; align-items: center; gap: 0.75rem; padding: 0.125rem 0.375rem 0.125rem 0.75rem; min-height: 2.25rem;
+      border-bottom: 1px solid var(--surface-3); &:last-child { border-bottom: none; }
+      dt { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4; } dd { margin: 0; min-width: 0; line-height: 1.4; } }
+    .kv-row.kv-missing { background: var(--warning-faint-bg); }
+    .kv-value { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.8125rem; color: var(--text-strong); word-break: break-all; }
+    .kv-secret { letter-spacing: 0.08em; }
+    .kv-empty { color: var(--warning-strong); font-family: inherit; }
+    .kv-actions, .url-actions { display: inline-flex; gap: 0.25rem; justify-content: flex-end; min-width: 2rem; }
+    .kv-btn { width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 0.375rem; border: 1px solid transparent;
+      background: none; color: var(--text-subtle); cursor: pointer; font-size: 0.8125rem; text-decoration: none; flex-shrink: 0;
+      &:hover:not(:disabled) { color: var(--text); background: var(--surface-3); border-color: var(--border); } &:disabled { opacity: 0.5; cursor: default; } }
+    .kv-btn--danger:hover:not(:disabled) { color: var(--danger); background: var(--danger-faint-bg); }
+    .ep-list { background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; }
+    .ep-row { display: grid; grid-template-columns: minmax(12rem, 16rem) 1fr auto; gap: 1rem; align-items: start; padding: 0.875rem 1rem; border-bottom: 1px solid var(--surface-3);
+      &:last-child { border-bottom: none; } }
+    .ep-id { display: flex; gap: 0.75rem; align-items: flex-start; min-width: 0; }
+    .ep-badges { margin-top: 0.375rem; }
+    .url-row { display: grid; grid-template-columns: 4.5rem 1fr auto; align-items: center; gap: 0.5rem; min-width: 0; }
+    .url-lbl { font-size: 0.7rem; font-weight: 600; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .url-link { font-size: 0.8125rem; color: var(--primary); text-decoration: none; word-break: break-all; &:hover { text-decoration: underline; } }
+    .ep-missing { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.75rem; font-size: 0.8125rem; color: var(--text-muted); }
+    .ep-missing-lbl { display: inline-flex; align-items: center; gap: 0.375rem; i { font-size: 0.75rem; } }
+    .ep-missing-item { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.3rem 0.625rem; border-radius: 9999px; border: 1px dashed var(--border-strong);
+      background: none; color: var(--text); font-size: 0.8125rem; cursor: pointer; i { font-size: 0.7rem; color: var(--text-subtle); }
+      &:hover { border-color: var(--primary); color: var(--primary); i { color: var(--primary); } } }
+    @media (max-width: 900px) {
+      .ep-row { grid-template-columns: 1fr; }
+      .ep-actions { justify-content: flex-start; }
+      .kv-row { grid-template-columns: 1fr auto; dt { grid-column: 1 / -1; } }
+      .access-box { flex-basis: 100%; }
+      .resource-actions { flex-wrap: wrap; flex-shrink: 1; gap: 0.5rem; }
+    }
   `]
 })
 export class EnvironmentDetailComponent implements OnInit {
@@ -1855,6 +1928,7 @@ export class EnvironmentDetailComponent implements OnInit {
         this.loading.set(false);
         this.resetCardReveal();
         this.loadSiblings(d.customerProductId);
+        this.loadVpns(d.customerId, d.id);
         onDone?.(d);
       },
       error: () => this.loading.set(false)
@@ -1881,8 +1955,72 @@ export class EnvironmentDetailComponent implements OnInit {
     return c + Math.round(alpha * 255).toString(16).padStart(2, '0');
   }
 
-  totalCredentialCount(): number {
-    return this.env()?.resources.reduce((sum, r) => sum + r.credentials.length, 0) ?? 0;
+  // --- Başlık ---
+  isProd() { return this.env()?.environmentTypeCode?.toUpperCase() === 'PROD'; }
+
+  // Ortam adı tipi zaten söylüyorsa ("Production" / "PROD") tip rozeti gösterilmez
+  showTypeBadge(): boolean {
+    const e = this.env();
+    if (!e) return false;
+    const name = e.name.trim().toLocaleLowerCase('tr-TR');
+    return name !== e.environmentTypeName.trim().toLocaleLowerCase('tr-TR') && name !== e.environmentTypeCode.trim().toLocaleLowerCase('tr-TR');
+  }
+
+  // Bu ortama erişim için VPN: ortama bağlı olanlar + müşteri geneli (ortam seçilmemiş) aktif kayıtlar
+  vpns = signal<VpnSummary[]>([]);
+
+  private loadVpns(customerId: string, environmentId: string) {
+    this.http.get<VpnSummary[]>(`${environment.apiUrl}/customers/${customerId}/vpn-configs`).subscribe({
+      next: list => this.vpns.set(list.filter(v => v.isActive && (!v.customerEnvironmentId || v.customerEnvironmentId === environmentId))),
+      error: () => this.vpns.set([])
+    });
+  }
+
+  // --- Kaynak kartı "diğer işlemler" menüsü ---
+  openMenuId = signal<string | null>(null);
+
+  toggleMenu(id: string, event: MouseEvent) {
+    event.stopPropagation();
+    this.openMenuId.set(this.openMenuId() === id ? null : id);
+  }
+
+  // --- Kopyalama (kısa süreli "kopyalandı" geri bildirimi) ---
+  copiedKey = signal<string | null>(null);
+
+  copyText(text: string, key: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedKey.set(key);
+      setTimeout(() => { if (this.copiedKey() === key) this.copiedKey.set(null); }, 1500);
+    });
+  }
+
+  // Düz alanlardan "host:port/servis" biçiminde bağlantı adresi (şifreli alanlar dahil edilmez)
+  connectionString(r: EnvironmentResource): string | null {
+    const values: Record<string, string> = {};
+    for (const [k, v] of Object.entries({ ...(r.sharedConnectionFields ?? {}), ...(r.connectionFields ?? {}) })) {
+      if (v != null && v !== '') values[k] = String(v);
+    }
+    const find = (re: RegExp) => Object.keys(values).find(k => re.test(k));
+    const hostKey = find(/^(host|hostname|server|server_?host|address|endpoint|endpoint_?url|url)$/i);
+    if (!hostKey) return null;
+    const portKey = find(/^port$/i);
+    const dbKey = find(/^(service_?name|sid|database|db|db_?name|db_?index|schema)$/i);
+    let cs = values[hostKey];
+    if (portKey && !/:\d+$/.test(cs)) cs += ':' + values[portKey];
+    if (dbKey) cs += '/' + values[dbKey];
+    return cs;
+  }
+
+  // --- Endpoint listesi ---
+  endpointsWithUrl() { return (this.env()?.endpoints ?? []).filter(e => !!e.baseUrl); }
+  endpointsWithoutUrl() { return (this.env()?.endpoints ?? []).filter(e => !e.baseUrl); }
+
+  urlRows(ep: EndpointUrl): { label: string; url: string }[] {
+    const rows: { label: string; url: string }[] = [];
+    if (ep.baseUrl) rows.push({ label: 'Base URL', url: ep.baseUrl });
+    if (ep.swaggerUrl) rows.push({ label: 'Swagger', url: ep.swaggerUrl });
+    if (ep.healthCheckUrl) rows.push({ label: 'Health', url: ep.healthCheckUrl });
+    return rows;
   }
 
   openCredModal(r: EnvironmentResource) {

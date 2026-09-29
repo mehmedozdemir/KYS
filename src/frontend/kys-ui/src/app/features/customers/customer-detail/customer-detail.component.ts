@@ -1493,6 +1493,8 @@ export class CustomerDetailComponent implements OnInit {
 
   ngOnInit() {
     const cpId = this.route.snapshot.queryParamMap.get('cp');
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab) this.activeTab.set(tab);
     this.loadCustomFieldDefs();
     this.loadCustomer();
     if (cpId) {
