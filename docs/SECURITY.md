@@ -455,6 +455,17 @@ app.UseHsts();  // HTTP Strict Transport Security
 
 ---
 
+## 9a. Sunucu Taraflı İstekler (Endpoint Sağlık İzleme)
+
+Ortam endpoint'lerinin health URL'leri kullanıcı girdisidir ve API sunucusundan istek atılır (SSRF riski). `EndpointHealthChecker` kuralları:
+
+- Yalnızca `http`/`https`; yönlendirmeler izlenmez, proxy kullanılmaz, 5 sn zaman aşımı
+- Bağlanılacak IP **bağlantı anında** (DNS rebinding'e karşı) kontrol edilir; loopback, `0.0.0.0/8`, link-local `169.254.0.0/16` (bulut metadata dahil), multicast/ayrılmış aralıklar ve IPv6 link-local/multicast engellenir
+- Özel ağ aralıkları (10/8, 172.16/12, 192.168/16) müşteri iç ağlarını izleyebilmek için **engellenmez**; bu nedenle API konteyneri, hassas iç servislerle aynı ağda yalnızca gerekli portlara erişecek şekilde konumlandırılmalıdır
+- Yanıt gövdesi okunmaz; yalnızca durum kodu, süre ve hata kategorisi (`timeout`, `tls-error`, `blocked-address`…) saklanır
+- Anlık kontrol (`POST /environments/{id}/endpoints/{productEndpointId}/health-check`) `EnvironmentWrite` yetkisi ister; periyodik izleme `HealthMonitoring:Enabled=false` ile kapatılabilir
+- Sağlık sonuçları izleme verisidir, `INotAudited` ile audit log dışında tutulur
+
 ## 10. Production Güvenlik Kontrol Listesi
 
 ```

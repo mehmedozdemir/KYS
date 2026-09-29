@@ -14,6 +14,7 @@ using Kys.Application.Environments.Queries.GetEnvironmentTypes;
 using Kys.Application.Environments.Queries.GetHostingPlatforms;
 using Kys.Api.Authorization;
 using Kys.Domain.Authorization;
+using Kys.Application.Environments.Commands.CheckEndpointHealth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -67,6 +68,12 @@ public sealed class EnvironmentsController(IMediator mediator) : ControllerBase
         await mediator.Send(new SetEnvironmentHostingPlatformCommand(environmentId, request.HostingPlatformId), ct);
         return NoContent();
     }
+
+    // Health URL'ine sunucudan anlık istek atar (SSRF korumalı, bkz. EndpointHealthChecker)
+    [HttpPost("{environmentId:guid}/endpoints/{productEndpointId:guid}/health-check")]
+    [RequirePermission(Capabilities.EnvironmentWrite)]
+    public async Task<IActionResult> CheckEndpointHealth(Guid environmentId, Guid productEndpointId, CancellationToken ct)
+        => Ok(await mediator.Send(new CheckEndpointHealthCommand(environmentId, productEndpointId), ct));
 
     [HttpPut("{environmentId:guid}/deployed-version")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

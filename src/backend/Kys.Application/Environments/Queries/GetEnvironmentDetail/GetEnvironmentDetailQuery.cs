@@ -1,3 +1,5 @@
+using Kys.Domain.Entities;
+using Kys.Domain.Enumerations;
 using MediatR;
 
 namespace Kys.Application.Environments.Queries.GetEnvironmentDetail;
@@ -71,4 +73,12 @@ public sealed record EndpointUrlDto(
     string? HealthCheckUrl,
     string? AuthTypeName,
     bool IsActive,
-    IReadOnlyList<CredentialStubDto> Credentials);
+    IReadOnlyList<CredentialStubDto> Credentials,
+    EndpointHealthDto? Health);
+
+/// <summary>Son sağlık kontrolü sonucu.</summary>
+public sealed record EndpointHealthDto(
+    EndpointHealthStatus Status, int? StatusCode, int? LatencyMs, string? Error, DateTime CheckedAt, DateTime StatusSince)
+{
+    public static EndpointHealthDto From(EndpointHealth h) => new(h.Status, h.StatusCode, h.LatencyMs, h.Error, h.CheckedAt, h.StatusSince);
+}

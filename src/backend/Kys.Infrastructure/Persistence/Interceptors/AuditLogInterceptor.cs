@@ -99,7 +99,7 @@ public sealed class AuditLogInterceptor(ICurrentUserService currentUserService) 
         var logs = new List<AuditLog>();
         foreach (var entry in context.ChangeTracker.Entries().ToList())
         {
-            if (entry.Entity is AuditLog) continue;
+            if (entry.Entity is AuditLog or Kys.Domain.Entities.Base.INotAudited) continue;
             if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted)) continue;
 
             var entityId = GetGuidKey(entry);

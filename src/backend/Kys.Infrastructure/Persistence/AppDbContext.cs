@@ -40,6 +40,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<AccessGrant> AccessGrants => Set<AccessGrant>();
     public DbSet<EmailAccount> EmailAccounts => Set<EmailAccount>();
     public DbSet<OrganizationProfile> OrganizationProfiles => Set<OrganizationProfile>();
+    public DbSet<EndpointHealth> EndpointHealths => Set<EndpointHealth>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

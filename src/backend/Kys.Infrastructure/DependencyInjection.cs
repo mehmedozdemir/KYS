@@ -64,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();
         services.AddScoped<IDeploymentRepository, DeploymentRepository>();
+        services.AddScoped<IEndpointHealthRepository, EndpointHealthRepository>();
         services.AddScoped<ISearchRepository, SearchRepository>();
         services.AddScoped<IKbRepository, KbRepository>();
         services.AddScoped<IAuditLogQueryRepository, AuditLogQueryRepository>();
@@ -79,6 +80,11 @@ public static class DependencyInjection
         services.AddSingleton<EmailQueue>();
         services.AddSingleton<IEmailQueue>(sp => sp.GetRequiredService<EmailQueue>());
         services.AddHostedService<EmailBackgroundService>();
+
+        // Endpoint sağlık izleme (HealthMonitoring:Enabled=false ile kapatılabilir)
+        services.Configure<HealthMonitoringOptions>(configuration.GetSection(HealthMonitoringOptions.Section));
+        EndpointHealthChecker.Register(services);
+        services.AddHostedService<EndpointHealthBackgroundService>();
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
         services.AddSingleton<ILocalizer, Localization.JsonLocalizer>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();

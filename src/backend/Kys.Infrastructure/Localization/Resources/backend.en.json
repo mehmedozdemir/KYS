@@ -9,7 +9,6 @@
   "error.validationOccurred": "One or more validation errors occurred.",
   "error.unexpected": "An unexpected error occurred.",
   "error.notFound": "The requested record was not found.",
-
   "err.branding.companyNameRequired": "Company name is required.",
   "err.branding.logoTooLarge": "The logo can be at most 2 MB.",
   "err.branding.unsupportedFileType": "Unsupported file type. Upload PNG, JPEG, SVG, WEBP or GIF.",
@@ -72,13 +71,11 @@
   "err.smtp.rejected": "The SMTP server rejected the request: {0}",
   "err.smtp.protocolError": "SMTP protocol error: {0} (you may be connecting to the wrong port).",
   "err.smtp.sendFailed": "Could not send the email ({0}:{1}): {2}",
-
   "err.vpnConfig.notFound": "VPN configuration not found.",
   "err.vpnConfig.noPassword": "This VPN configuration has no password set.",
   "err.vpnConfig.forbiddenReveal": "You do not have permission to reveal this VPN password.",
   "val.vpnConfig.nameRequired": "VPN name is required.",
   "val.vpnConfig.serverHostRequired": "Server host is required.",
-
   "val.credential.targetRequired": "EnvironmentResourceId, SharedResourceId or EndpointUrlId must be provided.",
   "val.personalCredential.fieldKeyRequired": "Field key is required.",
   "val.personalCredential.valueRequired": "Value is required.",
@@ -99,7 +96,6 @@
   "val.sharedResource.scope": "Environment scope must be one of: Dev, Test, Prod, All.",
   "val.product.codeFormat": "Code must contain only uppercase letters, digits, hyphens, and underscores.",
   "val.kb.maxTags": "Maximum 10 tags allowed.",
-
   "val.cf.required": "'{0}' is required.",
   "val.cf.invalidOption": "Invalid option for '{0}': '{1}'. Valid options: {2}.",
   "val.cf.number": "'{0}' must be a numeric value.",
@@ -111,7 +107,6 @@
   "val.cf.minLength": "'{0}' must be at least {1} characters.",
   "val.cf.maxLength": "'{0}' can be at most {1} characters.",
   "val.cf.regex": "'{0}' does not match the expected format.",
-
   "email.greeting": "Hello {0},",
   "email.footer": "This email was sent automatically by KYS.",
   "email.rowPlatform": "Platform",
@@ -128,5 +123,6 @@
   "email.reset.securityNote": "For your security, we recommend changing your password after your first sign-in. If you did not request this, contact your administrator.",
   "email.test.subject": "KYS — Test Email",
   "email.test.heading": "KYS — Test Email",
-  "email.test.body": "This is a test email. If you received this message, your SMTP configuration is working correctly. ✅"
+  "email.test.body": "This is a test email. If you received this message, your SMTP configuration is working correctly. ✅",
+  "err.endpoint.noHealthUrl": "No health URL is defined for this endpoint."
 }
