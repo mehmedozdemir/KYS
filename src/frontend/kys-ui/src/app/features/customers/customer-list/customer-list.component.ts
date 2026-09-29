@@ -6,6 +6,7 @@ import { NgClass, DatePipe } from '@angular/common';
 import { environment } from '../../../../environments/environment';
 import { PermissionService } from '../../../core/services/permission.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { SECTOR_SUGGESTIONS, COUNTRY_SUGGESTIONS, TR_CITY_SUGGESTIONS } from '../../../shared/customer-lookups';
 
 const STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
 const VPN_TYPES = ['OpenVPN','WireGuard','CiscoAnyConnect','Fortinet','PulseSecure','SonicWall','MicrosoftVpn','Other'];
@@ -186,17 +187,17 @@ interface Customer {
               </div>
               <div class="form-group">
                 <label>{{ 'customers.sector' | transloco }}</label>
-                <input type="text" [(ngModel)]="form.sector" [placeholder]="'customers.sectorPlaceholder' | transloco" />
+                <input type="text" [(ngModel)]="form.sector" list="cl-sectors" autocomplete="off" [placeholder]="'customers.sectorPlaceholder' | transloco" />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label>{{ 'customers.country' | transloco }}</label>
-                <input type="text" [(ngModel)]="form.country" [placeholder]="'customers.countryPlaceholder' | transloco" />
+                <input type="text" [(ngModel)]="form.country" list="cl-countries" autocomplete="off" [placeholder]="'customers.countryPlaceholder' | transloco" />
               </div>
               <div class="form-group">
                 <label>{{ 'customers.city' | transloco }}</label>
-                <input type="text" [(ngModel)]="form.city" [placeholder]="'customers.cityPlaceholder' | transloco" />
+                <input type="text" [(ngModel)]="form.city" list="cl-cities" autocomplete="off" [placeholder]="'customers.cityPlaceholder' | transloco" />
               </div>
             </div>
             <div class="form-group">
@@ -304,6 +305,9 @@ interface Customer {
         </div>
       </div>
     }
+      <datalist id="cl-sectors">@for (x of sectorSuggestions; track x) { <option [value]="x"></option> }</datalist>
+    <datalist id="cl-countries">@for (x of countrySuggestions; track x) { <option [value]="x"></option> }</datalist>
+    <datalist id="cl-cities">@for (x of citySuggestions; track x) { <option [value]="x"></option> }</datalist>
   `,
   styles: [`
     .filter-bar {
@@ -412,6 +416,10 @@ interface Customer {
   `]
 })
 export class CustomerListComponent implements OnInit {
+  readonly sectorSuggestions = SECTOR_SUGGESTIONS;
+  readonly countrySuggestions = COUNTRY_SUGGESTIONS;
+  readonly citySuggestions = TR_CITY_SUGGESTIONS;
+
   private http = inject(HttpClient);
   protected perms = inject(PermissionService);
   private router = inject(Router);
