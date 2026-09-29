@@ -24,6 +24,8 @@ interface ArticleDetail {
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  createdByName: string | null;
+  updatedByName: string | null;
 }
 
 @Component({
@@ -103,13 +105,22 @@ interface ArticleDetail {
             }
 
             <div class="sidebar-section meta-dates">
+              @if (article()!.createdByName) {
+                <div>
+                  <span class="meta-lbl">{{ 'kb.author' | transloco }}</span>
+                  <span class="meta-val">{{ article()!.createdByName }}</span>
+                </div>
+              }
               <div>
                 <span class="meta-lbl">{{ 'kb.createdAt' | transloco }}</span>
                 <span class="meta-val">{{ article()!.createdAt | date:'dd.MM.yyyy' }}</span>
               </div>
               <div>
                 <span class="meta-lbl">{{ 'kb.updatedAt' | transloco }}</span>
-                <span class="meta-val">{{ article()!.updatedAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                <span class="meta-val">
+                  {{ article()!.updatedAt | date:'dd.MM.yyyy HH:mm' }}
+                  @if (article()!.updatedByName && article()!.updatedByName !== article()!.createdByName) { · {{ article()!.updatedByName }} }
+                </span>
               </div>
             </div>
 

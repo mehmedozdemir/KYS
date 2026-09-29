@@ -8,6 +8,7 @@ import { PermissionService } from '../../../core/services/permission.service';
 import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { RelatedArticlesComponent } from '../../../shared/components/related-articles/related-articles.component';
 
 // API enum'ları string döner (JsonStringEnumConverter); eski sayısal değerler de normalize edilir.
 const PRODUCT_TYPES = ['SaaS', 'CustomerBased', 'Hybrid'];
@@ -43,7 +44,7 @@ interface ProductDetail {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent, TranslocoModule],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent, TranslocoModule, RelatedArticlesComponent],
   template: `
     <div class="page-content">
       @if (loading()) {
@@ -175,6 +176,7 @@ interface ProductDetail {
               [defs]="customFieldDefs()"
               [values]="product()!.customFields ?? {}"
               mode="view" />
+            <app-related-articles [productId]="product()!.id" />
           </div>
         }
 

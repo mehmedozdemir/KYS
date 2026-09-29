@@ -151,7 +151,17 @@
     "tagPlaceholder": "Etiket ekle...",
     "metaNote": "İsteğe bağlı: makaleyi bir ürün, müşteri veya ekiple ilişkilendirebilirsiniz.",
     "publish": "Yayınla",
-    "saveError": "Makale kaydedilemedi"
+    "saveError": "Makale kaydedilemedi",
+    "linkedProduct": "İlgili Ürün",
+    "linkedCustomer": "İlgili Müşteri",
+    "linkedTeam": "İlgili Ekip",
+    "teamOnlyHint": "\"Ekip\" görünürlüğü için bir ekip seçin.",
+    "author": "Yazar",
+    "lastEditedBy": "Son düzenleyen",
+    "related": "İlgili",
+    "relatedArticles": "İlgili Makaleler",
+    "noRelatedArticles": "Bu kayda bağlı makale yok.",
+    "newRelatedArticle": "Makale Yaz"
   },
   "people": {
     "title": "Kişiler",
