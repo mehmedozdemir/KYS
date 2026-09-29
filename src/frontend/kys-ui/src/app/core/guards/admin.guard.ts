@@ -9,3 +9,11 @@ export const adminGuard: CanActivateFn = () => {
 
   return permissions.isAdmin() ? true : router.createUrlTree(['/dashboard']);
 };
+
+/** Belirtilen yetkiye (capability) sahip olmayanları dashboard'a yönlendirir. */
+export const permissionGuard = (capability: string): CanActivateFn => () => {
+  const permissions = inject(PermissionService);
+  const router = inject(Router);
+
+  return permissions.has(capability) ? true : router.createUrlTree(['/dashboard']);
+};

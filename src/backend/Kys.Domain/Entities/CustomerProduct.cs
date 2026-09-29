@@ -18,6 +18,9 @@ public sealed class CustomerProduct : AuditableEntity
     public DateOnly? GoLiveAt { get; set; }
     public DateOnly? DiscontinuedAt { get; set; }
 
+    // Planlanan canlıya geçiş; geçilmeden aşılırsa gecikme olarak raporlanır
+    public DateOnly? TargetGoLiveAt { get; set; }
+
     public string? Notes { get; set; }
 
     // Navigation

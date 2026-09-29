@@ -39,5 +39,6 @@ public sealed record CustomerProductDto(
     string ProductCode,
     UsageMode UsageMode,
     CustomerProductStatus Status,
-    DateOnly? GoLiveAt
+    DateOnly? GoLiveAt,
+    DateOnly? TargetGoLiveAt
 );

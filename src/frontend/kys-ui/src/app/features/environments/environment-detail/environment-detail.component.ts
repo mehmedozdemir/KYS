@@ -113,6 +113,8 @@ interface EnvironmentDetail {
   hostingPlatformColor: string | null;
   isActive: boolean;
   notes: string | null;
+  deployedVersion: string | null;
+  productVersion: string | null;
   resources: EnvironmentResource[];
   endpoints: EndpointUrl[];
   availableTemplates: AvailableTemplate[];
@@ -203,6 +205,23 @@ interface HostingPlatformOption {
                 </div>
                 @if (!env()!.isActive) {
                   <span class="badge badge--inactive">{{ 'environments.inactive' | transloco }}</span>
+                }
+                <!-- Ortamda kurulu ürün sürümü (kurulum takibi) -->
+                @if (versionEditing()) {
+                  <span class="ver-edit">
+                    <input type="text" maxlength="50" [(ngModel)]="versionDraft" (keydown.enter)="saveVersion()" (keydown.escape)="versionEditing.set(false)"
+                      [placeholder]="env()!.productVersion ?? '1.0.0'" [attr.aria-label]="'environments.deployedVersion' | transloco" />
+                    <button type="button" class="ver-btn" (click)="saveVersion()" [disabled]="versionSaving()" [title]="'common.save' | transloco"><i class="pi pi-check"></i></button>
+                    <button type="button" class="ver-btn" (click)="versionEditing.set(false)" [title]="'common.cancel' | transloco"><i class="pi pi-times"></i></button>
+                  </span>
+                } @else if (env()!.deployedVersion) {
+                  <button type="button" class="ver-badge" [class.ver-badge--old]="isOutdated()" (click)="editVersion()"
+                    [title]="('environments.deployedVersion' | transloco) + (isOutdated() ? ' · ' + ('environments.productVersionIs' | transloco:{ version: env()!.productVersion }) : '')">
+                    <i class="pi pi-tag"></i> v{{ env()!.deployedVersion }}
+                    @if (isOutdated()) { <i class="pi pi-arrow-up"></i> <span class="ver-new">v{{ env()!.productVersion }}</span> }
+                  </button>
+                } @else {
+                  <button type="button" class="plat-add-btn" (click)="editVersion()"><i class="pi pi-tag"></i> {{ 'environments.addDeployedVersion' | transloco }}</button>
                 }
               </div>
               @if (env()!.notes) {
@@ -1061,6 +1080,11 @@ interface HostingPlatformOption {
     .plat-picker { position: relative; display: inline-flex; }
     .plat-badge--btn { border: none; cursor: pointer; transition: filter 0.12s; &:hover { filter: brightness(0.95); } }
     .plat-caret { opacity: 0.7; font-size: 0.6rem !important; }
+    .ver-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; color: var(--text); background: var(--surface-3); border: 1px solid transparent; font-variant-numeric: tabular-nums; &:hover { border-color: var(--primary); } i { font-size: 0.7rem; } }
+    .ver-btn { display: inline-flex; align-items: center; justify-content: center; width: 1.625rem; height: 1.625rem; border-radius: 0.375rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; &:hover { color: var(--primary); border-color: var(--primary); } i { font-size: 0.7rem; } }
+    .ver-badge--old { color: var(--warning-strong, var(--warning)); }
+    .ver-new { font-weight: 500; }
+    .ver-edit { display: inline-flex; align-items: center; gap: 0.25rem; input { width: 8rem; padding: 0.2rem 0.5rem; font-size: 0.75rem; border: 1px solid var(--border-strong); border-radius: 0.375rem; background: var(--surface); color: var(--text); } }
     .plat-add-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; cursor: pointer; color: var(--text-muted); background: transparent; border: 1px dashed var(--border-strong); &:hover { border-color: var(--primary); color: var(--primary); } i { font-size: 0.7rem; } }
     .plat-menu-backdrop { position: fixed; inset: 0; z-index: 90; }
     .plat-menu { position: absolute; top: calc(100% + 0.375rem); left: 0; z-index: 100; min-width: 220px; background: var(--surface); border: 1px solid var(--border); border-radius: 0.625rem; box-shadow: var(--shadow-lg); padding: 0.375rem; display: flex; flex-direction: column; gap: 1px; }
@@ -1216,6 +1240,34 @@ export class EnvironmentDetailComponent implements OnInit {
   siblings = signal<EnvironmentSummary[]>([]);
   hostingPlatforms = signal<HostingPlatformOption[]>([]);
   platformSaving = signal(false);
+
+  // Kurulu sürüm
+  versionEditing = signal(false);
+  versionSaving = signal(false);
+  versionDraft = '';
+
+  isOutdated() {
+    const e = this.env();
+    // Test/UAT ortamlarında yeni sürümün denenmesi olağan; "geride" uyarısı yalnızca Prod için anlamlı
+    return e?.environmentTypeCode?.toUpperCase() === 'PROD'
+      && !!e.deployedVersion && !!e.productVersion && e.deployedVersion !== e.productVersion.trim();
+  }
+
+  editVersion() {
+    this.versionDraft = this.env()?.deployedVersion ?? this.env()?.productVersion ?? '';
+    this.versionEditing.set(true);
+  }
+
+  saveVersion() {
+    const e = this.env();
+    if (!e) return;
+    const value = this.versionDraft.trim() || null;
+    this.versionSaving.set(true);
+    this.http.put(`${environment.apiUrl}/environments/${e.id}/deployed-version`, { deployedVersion: value }).subscribe({
+      next: () => { this.env.set({ ...e, deployedVersion: value }); this.versionSaving.set(false); this.versionEditing.set(false); },
+      error: () => this.versionSaving.set(false)
+    });
+  }
   showPlatformMenu = signal(false);
 
   // Add resource modal state

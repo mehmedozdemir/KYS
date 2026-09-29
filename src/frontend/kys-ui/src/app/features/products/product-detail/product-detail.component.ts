@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ProductDeploymentsComponent } from './product-deployments.component';
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
@@ -44,7 +45,7 @@ interface ProductDetail {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent, TranslocoModule, RelatedArticlesComponent],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, CustomFieldInputsComponent, TranslocoModule, RelatedArticlesComponent, ProductDeploymentsComponent],
   template: `
     <div class="page-content">
       @if (loading()) {
@@ -313,6 +314,13 @@ interface ProductDetail {
             }
           </div>
         }
+        <!-- Tab: Müşteriler (kurulum durumu) -->
+        @if (activeTab() === 'customers') {
+          <div class="tab-content">
+            <app-product-deployments [productId]="product()!.id" />
+          </div>
+        }
+
         <!-- Tab: Kaynak Şablonları -->
         @if (activeTab() === 'resources') {
           <div class="tab-content">
@@ -899,6 +907,7 @@ export class ProductDetailComponent implements OnInit {
   }
   readonly tabs = [
     { key: 'info', label: 'productDetail.tabInfo' },
+    { key: 'customers', label: 'productDetail.tabCustomers' },
     { key: 'endpoints', label: 'productDetail.tabEndpoints' },
     { key: 'teams', label: 'productDetail.tabTeams' },
     { key: 'assignments', label: 'productDetail.tabAssignments' },
@@ -915,6 +924,8 @@ export class ProductDetailComponent implements OnInit {
   endpointIcon(t: string | number) { return ENDPOINT_ICON[enumName(ENDPOINT_TYPES, t)] ?? 'pi-server'; }
 
   ngOnInit() {
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab && this.tabs.some(t => t.key === tab)) this.activeTab.set(tab);
     const id = this.route.snapshot.paramMap.get('id');
     this.http.get<ProductDetail>(`${environment.apiUrl}/products/${id}`).subscribe({
       next: p => { this.product.set(p); this.loading.set(false); this.loadCustomFieldDefs(); },

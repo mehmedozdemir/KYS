@@ -387,7 +387,8 @@
     "templateDeleteErr": "Could not delete template.",
     "editEndpoint": "Edit Endpoint",
     "healthCheckUrl": "Health Check URL",
-    "endpointDescription": "Description"
+    "endpointDescription": "Description",
+    "tabCustomers": "Customers"
   },
   "products": {
     "title": "Products",
@@ -513,7 +514,9 @@
     "usageModeFixed": "Usage mode is determined by the product type.",
     "changeProductStatus": "Product Status",
     "goLiveHint": "The customer go-live date is the earliest go-live date among its products.",
-    "discontinuedAt": "Discontinued On"
+    "discontinuedAt": "Discontinued On",
+    "targetGoLive": "Target go-live date",
+    "targetGoLiveHint": "Planned go-live; flagged as overdue once passed."
   },
   "customers": {
     "title": "Customers",
@@ -571,7 +574,8 @@
     "emailSettings": "Mail Settings",
     "customFields": "Custom Fields",
     "auditLog": "Audit Log",
-    "organizationRoles": "Organization Roles"
+    "organizationRoles": "Organization Roles",
+    "deploymentMatrix": "Deployment Matrix"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -597,7 +601,8 @@
       "goLives": "Recent Go-lives (12 months)",
       "noGoLives": "No go-lives in the last 12 months.",
       "adoption": "Product Adoption",
-      "customersLive": "{{total}} customers · {{live}} live"
+      "customersLive": "{{total}} customers · {{live}} live",
+      "matrixLink": "Deployment matrix"
     }
   },
   "workspace": {
@@ -747,7 +752,10 @@
     "editConnection": "Connection Details",
     "connectionSaveError": "Could not save connection details",
     "secretSaveError": "Resource added but these secret fields could not be saved: {{fields}}. Retry from Credential Management.",
-    "secretFieldsHint": "Secret fields such as passwords are managed encrypted under \"Credential\"."
+    "secretFieldsHint": "Secret fields such as passwords are managed encrypted under \"Credential\".",
+    "deployedVersion": "Deployed version",
+    "addDeployedVersion": "Add version",
+    "productVersionIs": "Current product version is v{{version}}"
   },
   "account": {
     "title": "My Account",
@@ -1272,5 +1280,41 @@
   },
   "customFields": {
     "title": "Custom Fields"
+  },
+  "deployment": {
+    "stage": {
+      "NotUsed": "Not used",
+      "Planned": "Planned",
+      "Installing": "Installing",
+      "ProdReady": "Ready for prod",
+      "Live": "Live",
+      "Inactive": "Inactive",
+      "Discontinued": "Discontinued"
+    },
+    "overdue": "Overdue",
+    "overdueDays": "{{days}} days overdue",
+    "daysInStage": "{{days}} days in this stage",
+    "prodVersions": "Prod versions:",
+    "currentVersion": "Current version",
+    "productVersion": "Product version: v{{version}}",
+    "outdated": "Behind current version",
+    "endedOn": "Ended",
+    "noRows": "No records.",
+    "scopedNote": "Only customers you are authorized for are listed; customers not using the product are hidden.",
+    "col": {
+      "customer": "Customer",
+      "stage": "Status",
+      "environments": "Environments",
+      "prodVersion": "Prod version",
+      "target": "Target date",
+      "goLive": "Go-live date"
+    },
+    "matrix": {
+      "title": "Deployment Matrix",
+      "subtitle": "Which product is at which stage for which customer — all products × active customers",
+      "searchCustomer": "Search customer…",
+      "onlyInProgress": "Only in-progress",
+      "liveTotal": "Live / using"
+    }
   }
 }

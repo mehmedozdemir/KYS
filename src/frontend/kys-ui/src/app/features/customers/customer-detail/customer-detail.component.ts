@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { Observable, concat, last } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass, DatePipe } from '@angular/common';
@@ -61,6 +62,7 @@ interface CustomerProduct {
   usageMode: string;
   status: string;
   goLiveAt: string | null;
+  targetGoLiveAt: string | null;
 }
 
 interface CustomerVpnConfig {
@@ -282,6 +284,12 @@ interface CustomerDetail {
                     </div>
                     @if (cp.goLiveAt) {
                       <p class="pc-date">{{ 'customerDetail.goLive' | transloco }}: {{ cp.goLiveAt | date:'dd.MM.yyyy' }}</p>
+                    } @else if (cp.status === 'Onboarding' && cp.targetGoLiveAt) {
+                      <p class="pc-date" [class.pc-date--overdue]="isOverdue(cp.targetGoLiveAt)">
+                        @if (isOverdue(cp.targetGoLiveAt)) { <i class="pi pi-exclamation-triangle"></i> }
+                        {{ 'customerDetail.targetGoLive' | transloco }}: {{ cp.targetGoLiveAt | date:'dd.MM.yyyy' }}
+                        @if (isOverdue(cp.targetGoLiveAt)) { · {{ 'deployment.overdue' | transloco }} }
+                      </p>
                     }
                   </div>
                 }
@@ -490,6 +498,13 @@ interface CustomerDetail {
               <div class="form-group">
                 <label>{{ 'customerDetail.discontinuedAt' | transloco }}</label>
                 <input type="date" [(ngModel)]="cpStatusForm.date" />
+              </div>
+            }
+            @if (cpStatusForm.status === 'Onboarding') {
+              <div class="form-group">
+                <label for="cp-target">{{ 'customerDetail.targetGoLive' | transloco }}</label>
+                <input id="cp-target" type="date" [(ngModel)]="cpStatusForm.target" />
+                <span class="field-hint">{{ 'customerDetail.targetGoLiveHint' | transloco }}</span>
               </div>
             }
           </div>
@@ -848,6 +863,7 @@ interface CustomerDetail {
     .code-sm { background: var(--border); color: var(--text-muted); padding: 0 0.375rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.75rem; margin-left: 0.25rem; }
     .pc-badges { display: flex; gap: 0.375rem; flex-wrap: wrap; margin-bottom: 0.375rem; }
     .pc-date { font-size: 0.75rem; color: var(--text-subtle); margin-top: 0.375rem; }
+    .pc-date--overdue { color: var(--danger); font-weight: 600; }
 
     .timeline { display: flex; flex-direction: column; gap: 0; }
     .timeline-step { display: flex; align-items: flex-start; gap: 1rem; padding: 0.875rem 0; position: relative; &:not(:last-child)::before { content: ''; position: absolute; left: 0.5625rem; top: 2.25rem; bottom: 0; width: 2px; background: var(--border); } }
@@ -1318,10 +1334,10 @@ export class CustomerDetailComponent implements OnInit {
   cpStatusTarget = signal<CustomerProduct | null>(null);
   cpStatusSaving = signal(false);
   cpStatusError = signal('');
-  cpStatusForm = { status: 'Onboarding', date: '' };
+  cpStatusForm = { status: 'Onboarding', date: '', target: '' };
 
   openCpStatus(cp: CustomerProduct) {
-    this.cpStatusForm = { status: cp.status, date: cp.goLiveAt ?? new Date().toISOString().slice(0, 10) };
+    this.cpStatusForm = { status: cp.status, date: cp.goLiveAt ?? new Date().toISOString().slice(0, 10), target: cp.targetGoLiveAt ?? '' };
     this.cpStatusError.set('');
     this.cpStatusTarget.set(cp);
   }
@@ -1330,14 +1346,24 @@ export class CustomerDetailComponent implements OnInit {
     const cp = this.cpStatusTarget();
     if (!cp) return;
     const customerId = this.customer()!.id;
-    const { status, date } = this.cpStatusForm;
+    const { status, date, target } = this.cpStatusForm;
+    const base = `${environment.apiUrl}/customers/${customerId}/products/${cp.productId}`;
+    const calls: Observable<unknown>[] = [];
+    if (status !== cp.status || status !== 'Onboarding') {
+      calls.push(this.http.patch(`${base}/status`, {
+        newStatus: status,
+        goLiveAt: status === 'Active' && date ? date : null,
+        discontinuedAt: status === 'Discontinued' && date ? date : null
+      }));
+    }
+    // Hedef tarih yalnızca kurulum sürecinde anlamlı; değiştiyse ayrıca kaydedilir
+    if (status === 'Onboarding' && (target || null) !== cp.targetGoLiveAt) {
+      calls.push(this.http.patch(`${base}/target-go-live`, { targetGoLiveAt: target || null }));
+    }
+    if (!calls.length) { this.cpStatusTarget.set(null); return; }
     this.cpStatusSaving.set(true);
     this.cpStatusError.set('');
-    this.http.patch(`${environment.apiUrl}/customers/${customerId}/products/${cp.productId}/status`, {
-      newStatus: status,
-      goLiveAt: status === 'Active' && date ? date : null,
-      discontinuedAt: status === 'Discontinued' && date ? date : null
-    }).subscribe({
+    concat(...calls).pipe(last()).subscribe({
       next: () => {
         this.cpStatusSaving.set(false);
         this.cpStatusTarget.set(null);
@@ -1349,6 +1375,8 @@ export class CustomerDetailComponent implements OnInit {
       }
     });
   }
+
+  isOverdue(date: string) { return date < new Date().toISOString().slice(0, 10); }
 
   lifecycleSteps() {
     const c = this.customer()!;

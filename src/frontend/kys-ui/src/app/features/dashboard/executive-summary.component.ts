@@ -126,10 +126,13 @@ const PIPELINE_ORDER = ['Prospect', 'Onboarding', 'Active', 'Inactive', 'Churned
 
         <!-- Ürün yaygınlığı: tek seri, tek renk, değer etiketi çubuğun yanında -->
         <div class="card">
-          <h3>{{ 'dashboard.exec.adoption' | transloco }}</h3>
+          <div class="card-head">
+            <h3>{{ 'dashboard.exec.adoption' | transloco }}</h3>
+            <a class="card-link" routerLink="/deployment-matrix">{{ 'dashboard.exec.matrixLink' | transloco }} <i class="pi pi-arrow-right"></i></a>
+          </div>
           <div class="bars" role="table" [attr.aria-label]="'dashboard.exec.adoption' | transloco">
             @for (p of d.productAdoption; track p.productId) {
-              <a class="bar-row" role="row" [routerLink]="['/products', p.productId]"
+              <a class="bar-row" role="row" [routerLink]="['/products', p.productId]" [queryParams]="{ tab: 'customers' }"
                  [title]="p.name + ': ' + p.customerCount + ' / ' + p.liveCount">
                 <span class="bar-label" role="rowheader">{{ p.name }}</span>
                 <span class="bar-track" role="cell">
@@ -151,6 +154,8 @@ const PIPELINE_ORDER = ['Prospect', 'Onboarding', 'Active', 'Inactive', 'Churned
     .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem 1.25rem; min-width: 0;
       h3 { font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 0.75rem; } }
+    .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; h3 { margin-bottom: 0.75rem; } }
+    .card-link { font-size: 0.75rem; color: var(--primary); text-decoration: none; white-space: nowrap; &:hover { text-decoration: underline; } }
     .pipeline { grid-column: span 2; }
     @media (max-width: 720px) { .pipeline { grid-column: auto; } }
     .pipeline-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }

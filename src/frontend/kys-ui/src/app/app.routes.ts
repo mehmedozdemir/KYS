@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
-import { adminGuard } from './core/guards/admin.guard';
+import { adminGuard, permissionGuard } from './core/guards/admin.guard';
 import { setupGuard, initializedGuard } from './core/guards/setup.guard';
 
 export const routes: Routes = [
@@ -31,6 +31,11 @@ export const routes: Routes = [
       {
         path: 'products',
         loadChildren: () => import('./features/products/products.routes').then(m => m.PRODUCTS_ROUTES)
+      },
+      {
+        path: 'deployment-matrix',
+        canActivate: [permissionGuard('scope:global')],
+        loadComponent: () => import('./features/deployment-matrix/deployment-matrix.component').then(m => m.DeploymentMatrixComponent)
       },
       {
         path: 'teams',
