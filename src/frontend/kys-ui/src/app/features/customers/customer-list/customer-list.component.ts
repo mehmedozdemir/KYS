@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgClass, DatePipe } from '@angular/common';
 import { environment } from '../../../../environments/environment';
@@ -423,6 +423,7 @@ export class CustomerListComponent implements OnInit {
   private http = inject(HttpClient);
   protected perms = inject(PermissionService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private transloco = inject(TranslocoService);
   readonly vpnTypes = VPN_TYPES;
 
@@ -485,6 +486,12 @@ export class CustomerListComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    // Dashboard'daki müşteri hattından ?status=... ile gelinebilir; ayrılanlar arşivdedir.
+    const status = this.route.snapshot.queryParamMap.get('status');
+    if (status) {
+      this.statusFilter = status;
+      if (status === 'Churned') this.includeArchived = true;
+    }
     this.load();
   }
 

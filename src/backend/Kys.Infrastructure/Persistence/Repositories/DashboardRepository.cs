@@ -89,4 +89,92 @@ public sealed class DashboardRepository(NpgsqlDataSource dataSource, AppDbContex
             .AsSplitQuery()
             .ToListAsync(ct);
     }
+
+    public async Task<ExecutiveSummaryResult> GetExecutiveSummaryAsync(CancellationToken ct = default)
+    {
+        await using var conn = dataSource.CreateConnection();
+        await conn.OpenAsync(ct);
+
+        var pipeline = await conn.QueryAsync<StatusCountResult>("""
+            SELECT status, COUNT(*)::int AS count
+            FROM customers WHERE is_deleted = false
+            GROUP BY status
+            """);
+
+        var onboarding = await conn.QueryAsync<OnboardingCustomerResult>("""
+            SELECT id, name, code, onboarding_started_at, test_env_ready_at, prod_env_ready_at
+            FROM customers
+            WHERE is_deleted = false AND status = 'Onboarding'
+            ORDER BY onboarding_started_at NULLS LAST, name
+            """);
+
+        var goLives = await conn.QueryAsync<GoLiveResult>("""
+            SELECT c.id AS customer_id, c.name AS customer_name, p.name AS product_name, cp.go_live_at
+            FROM customer_products cp
+            JOIN customers c ON c.id = cp.customer_id AND c.is_deleted = false
+            JOIN products p ON p.id = cp.product_id
+            WHERE cp.is_deleted = false AND cp.go_live_at >= current_date - INTERVAL '12 months'
+            ORDER BY cp.go_live_at DESC
+            LIMIT 10
+            """);
+
+        var adoption = await conn.QueryAsync<ProductAdoptionResult>("""
+            SELECT p.id AS product_id, p.name, p.code,
+                   COUNT(cp.id) FILTER (WHERE c.id IS NOT NULL AND NOT c.is_archived)::int AS customer_count,
+                   COUNT(cp.id) FILTER (WHERE cp.status = 'Active' AND c.id IS NOT NULL AND NOT c.is_archived)::int AS live_count
+            FROM products p
+            LEFT JOIN customer_products cp ON cp.product_id = p.id AND cp.is_deleted = false
+            LEFT JOIN customers c ON c.id = cp.customer_id AND c.is_deleted = false
+            WHERE p.is_deleted = false
+            GROUP BY p.id, p.name, p.code
+            ORDER BY customer_count DESC, p.name
+            """);
+
+        // Müşteri özel alanlarından (tipi Date) önümüzdeki 12 ay içindeki tarihler — ör. sözleşme bitişi.
+        // Alan anahtarları koda gömülmez; tanımlardan okunur. Geçersiz metinler cast edilmeden elenir.
+        var upcoming = await conn.QueryAsync<UpcomingDateResult>("""
+            SELECT customer_id, customer_name, field_name, value_date AS date
+            FROM (
+                SELECT c.id AS customer_id, c.name AS customer_name, d.display_name AS field_name,
+                       CASE WHEN (c.custom_fields ->> d.field_key) ~ '^\d{4}-\d{2}-\d{2}'
+                            THEN substring(c.custom_fields ->> d.field_key from 1 for 10)::date END AS value_date
+                FROM customers c
+                JOIN custom_field_definitions d ON d.entity_type = 'Customer' AND d.field_type = 'Date' AND d.is_active
+                WHERE c.is_deleted = false AND NOT c.is_archived
+            ) x
+            WHERE value_date BETWEEN current_date AND current_date + INTERVAL '12 months'
+            ORDER BY value_date
+            LIMIT 10
+            """);
+
+        // Sayısal müşteri özel alanlarının (ör. yıllık sözleşme bedeli) aktif/devreye alınan müşterilerdeki toplamı
+        var totals = await conn.QueryAsync<NumberTotalResult>("""
+            SELECT d.display_name AS field_name,
+                   COALESCE(SUM(CASE WHEN (c.custom_fields ->> d.field_key) ~ '^-?\d+(\.\d+)?$'
+                                     THEN (c.custom_fields ->> d.field_key)::numeric END), 0) AS total,
+                   COUNT(*) FILTER (WHERE (c.custom_fields ->> d.field_key) ~ '^-?\d+(\.\d+)?$')::int AS customer_count
+            FROM custom_field_definitions d
+            LEFT JOIN customers c ON c.is_deleted = false AND c.status IN ('Active', 'Onboarding')
+            WHERE d.entity_type = 'Customer' AND d.field_type = 'Number' AND d.is_active
+            GROUP BY d.display_name, d.display_order
+            ORDER BY d.display_order
+            """);
+
+        var security = await conn.QuerySingleAsync<(int Reveals, int Changes)>("""
+            SELECT
+                COUNT(*) FILTER (WHERE action LIKE '%Revealed' AND changed_at >= now() - INTERVAL '30 days')::int,
+                COUNT(*) FILTER (WHERE action IN ('Created', 'Updated', 'Deleted', 'Restored') AND changed_at >= now() - INTERVAL '7 days')::int
+            FROM audit_logs
+            """);
+
+        return new ExecutiveSummaryResult(
+            pipeline.ToList(),
+            onboarding.ToList(),
+            goLives.ToList(),
+            adoption.ToList(),
+            upcoming.ToList(),
+            totals.ToList(),
+            security.Reveals,
+            security.Changes);
+    }
 }
