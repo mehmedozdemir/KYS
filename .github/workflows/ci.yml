@@ -18,15 +18,16 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      # Çözüm dosyası API + tüm test projelerini içerir. Önceki "dotnet test tests/" klasörde
+      # proje bulamıyordu ve continue-on-error hatayı gizliyordu; artık testler CI'ı kırar.
       - name: Restore
-        run: dotnet restore src/backend/Kys.Api/Kys.Api.csproj
+        run: dotnet restore src/backend/Kys.slnx
 
       - name: Build
-        run: dotnet build src/backend/Kys.Api/Kys.Api.csproj --no-restore -c Release
+        run: dotnet build src/backend/Kys.slnx --no-restore -c Release
 
       - name: Test
-        run: dotnet test tests/ --no-build -c Release --verbosity normal
-        continue-on-error: true
+        run: dotnet test src/backend/Kys.slnx --no-build -c Release --verbosity normal
 
   frontend:
     name: Build Frontend

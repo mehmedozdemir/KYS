@@ -5,6 +5,7 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 import { BrandingService, Branding } from '../../../core/services/branding.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-organization-profile',
@@ -49,11 +50,11 @@ import { NotificationService } from '../../../core/services/notification.service
           <div class="form-grid">
             <div class="form-group span-2">
               <label>{{ 'admin.orgProfile.companyName' | transloco }} <span class="req">*</span></label>
-              <input type="text" [(ngModel)]="form.companyName" placeholder="Asis Elektronik A.Ş." />
+              <input type="text" [(ngModel)]="form.companyName" [placeholder]="'admin.organization.companyNamePh' | transloco" />
             </div>
             <div class="form-group">
               <label>{{ 'admin.orgProfile.shortName' | transloco }}</label>
-              <input type="text" [(ngModel)]="form.shortName" placeholder="Asis" />
+              <input type="text" [(ngModel)]="form.shortName" [placeholder]="'admin.organization.shortNamePh' | transloco" />
             </div>
             <div class="form-group">
               <label>{{ 'admin.orgProfile.website' | transloco }}</label>
@@ -113,6 +114,7 @@ import { NotificationService } from '../../../core/services/notification.service
 })
 export class OrganizationProfileComponent implements OnInit {
   private http = inject(HttpClient);
+  private confirmDialog = inject(ConfirmDialogService);
   private branding = inject(BrandingService);
   private notify = inject(NotificationService);
   private transloco = inject(TranslocoService);
@@ -170,8 +172,8 @@ export class OrganizationProfileComponent implements OnInit {
     input.value = '';
   }
 
-  removeLogo() {
-    if (!confirm(this.transloco.translate('admin.orgProfile.removeLogoConfirm'))) return;
+  async removeLogo() {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('admin.orgProfile.removeLogoConfirm')))) return;
     this.http.delete(`${this.base}/logo`).subscribe({
       next: () => { this.hasLogo.set(false); this.notify.success(this.transloco.translate('admin.orgProfile.logoRemoved')); this.branding.load(); }
     });

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 interface EmailAccount {
   id: string;
@@ -186,6 +187,7 @@ const PRESETS: Record<string, { host: string; port: number; security: string }> 
 })
 export class EmailAccountsComponent implements OnInit {
   private http = inject(HttpClient);
+  private confirmDialog = inject(ConfirmDialogService);
   private notify = inject(NotificationService);
   private transloco = inject(TranslocoService);
   private base = environment.apiUrl + '/admin/email-accounts';
@@ -282,8 +284,8 @@ export class EmailAccountsComponent implements OnInit {
     this.http.post(`${this.base}/${a.id}/activate`, {}).subscribe(() => this.load());
   }
 
-  remove(a: EmailAccount) {
-    if (!confirm(this.transloco.translate('admin.emailAccounts.deleteConfirm', { name: a.name }))) return;
+  async remove(a: EmailAccount) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('admin.emailAccounts.deleteConfirm', { name: a.name })))) return;
     this.http.delete(`${this.base}/${a.id}`).subscribe(() => this.load());
   }
 

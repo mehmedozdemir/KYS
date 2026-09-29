@@ -3,6 +3,7 @@ using Kys.Application.Services;
 using Kys.Domain.Entities;
 using Kys.Domain.Enumerations;
 using Kys.Domain.Interfaces.Repositories;
+using Kys.Domain.Interfaces.Services;
 using NSubstitute;
 
 namespace Kys.Application.Tests.CustomFields;
@@ -14,7 +15,10 @@ public sealed class CustomFieldValidatorServiceTests
 
     public CustomFieldValidatorServiceTests()
     {
-        _service = new CustomFieldValidatorService(_repository);
+        // Localizer anahtarı döndürür: testler mesaj metnine değil, doğru anahtara bakar.
+        var localizer = Substitute.For<ILocalizer>();
+        localizer.Get(Arg.Any<string>(), Arg.Any<object[]>()).Returns(ci => ci.ArgAt<string>(0));
+        _service = new CustomFieldValidatorService(_repository, localizer);
     }
 
     [Fact]
@@ -26,7 +30,7 @@ public sealed class CustomFieldValidatorServiceTests
 
         errors.Should().HaveCount(1);
         errors[0].FieldKey.Should().Be("company_name");
-        errors[0].Message.Should().Contain("zorunlu");
+        errors[0].Message.Should().Be("val.cf.required");
     }
 
     [Fact]
@@ -50,7 +54,7 @@ public sealed class CustomFieldValidatorServiceTests
 
         errors.Should().HaveCount(1);
         errors[0].FieldKey.Should().Be("region");
-        errors[0].Message.Should().Contain("geçersiz seçenek");
+        errors[0].Message.Should().Be("val.cf.invalidOption");
     }
 
     [Fact]
@@ -86,7 +90,7 @@ public sealed class CustomFieldValidatorServiceTests
 
         errors.Should().HaveCount(1);
         errors[0].FieldKey.Should().Be("score");
-        errors[0].Message.Should().Contain("en fazla");
+        errors[0].Message.Should().Be("val.cf.max");
     }
 
     [Fact]

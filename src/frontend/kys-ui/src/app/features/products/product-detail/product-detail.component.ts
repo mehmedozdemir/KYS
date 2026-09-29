@@ -7,6 +7,7 @@ import { environment } from '../../../../environments/environment';
 import { PermissionService } from '../../../core/services/permission.service';
 import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 // API enum'ları string döner (JsonStringEnumConverter); eski sayısal değerler de normalize edilir.
 const PRODUCT_TYPES = ['SaaS', 'CustomerBased', 'Hybrid'];
@@ -814,6 +815,7 @@ interface ProductDetail {
 })
 export class ProductDetailComponent implements OnInit {
   private http = inject(HttpClient);
+  private confirmDialog = inject(ConfirmDialogService);
   protected perms = inject(PermissionService);
   private route = inject(ActivatedRoute);
   private transloco = inject(TranslocoService);
@@ -1006,8 +1008,8 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
-  deleteEndpoint(endpointId: string) {
-    if (!confirm(this.transloco.translate('productDetail.deleteEndpointConfirm'))) return;
+  async deleteEndpoint(endpointId: string) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('productDetail.deleteEndpointConfirm')))) return;
     const id = this.route.snapshot.paramMap.get('id');
     this.http.delete(`${environment.apiUrl}/products/${id}/endpoints/${endpointId}`).subscribe({
       next: () => this.reload()
@@ -1056,8 +1058,8 @@ export class ProductDetailComponent implements OnInit {
   }
 
   removingTeamId = signal<string | null>(null);
-  removeTeam(teamId: string, teamName: string) {
-    if (!confirm(this.transloco.translate('productDetail.removeTeamConfirm', { name: teamName }))) return;
+  async removeTeam(teamId: string, teamName: string) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('productDetail.removeTeamConfirm', { name: teamName })))) return;
     this.removingTeamId.set(teamId);
     const id = this.route.snapshot.paramMap.get('id');
     this.http.delete(`${environment.apiUrl}/products/${id}/teams/${teamId}`).subscribe({
@@ -1120,8 +1122,8 @@ export class ProductDetailComponent implements OnInit {
   }
 
   removingPersonId = signal<string | null>(null);
-  removePerson(personId: string, fullName: string) {
-    if (!confirm(this.transloco.translate('productDetail.removeAssignmentConfirm', { name: fullName }))) return;
+  async removePerson(personId: string, fullName: string) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('productDetail.removeAssignmentConfirm', { name: fullName })))) return;
     this.removingPersonId.set(personId);
     const id = this.route.snapshot.paramMap.get('id');
     this.http.delete(`${environment.apiUrl}/products/${id}/assignments/${personId}`).subscribe({
@@ -1240,8 +1242,8 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
-  deleteTemplate(templateId: string, templateName: string) {
-    if (!confirm(this.transloco.translate('productDetail.deleteTemplateConfirm', { name: templateName }))) return;
+  async deleteTemplate(templateId: string, templateName: string) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('productDetail.deleteTemplateConfirm', { name: templateName })))) return;
     this.deletingTemplateId.set(templateId);
     const productId = this.route.snapshot.paramMap.get('id');
     this.http.delete(`${environment.apiUrl}/products/${productId}/resource-templates/${templateId}`).subscribe({

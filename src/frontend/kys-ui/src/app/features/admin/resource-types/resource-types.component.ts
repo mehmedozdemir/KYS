@@ -5,6 +5,7 @@ import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 interface FieldSchemaEntry {
   key: string;
@@ -325,6 +326,7 @@ interface ResourceType {
 })
 export class ResourceTypesComponent implements OnInit {
   private http = inject(HttpClient);
+  private confirmDialog = inject(ConfirmDialogService);
   private transloco = inject(TranslocoService);
 
   types = signal<ResourceType[]>([]);
@@ -424,8 +426,8 @@ export class ResourceTypesComponent implements OnInit {
     });
   }
 
-  deleteType(t: ResourceType) {
-    if (!confirm(this.transloco.translate('admin.resourceTypes.deleteConfirm', { name: t.name }))) return;
+  async deleteType(t: ResourceType) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('admin.resourceTypes.deleteConfirm', { name: t.name })))) return;
     this.deletingId.set(t.id);
     this.http.delete(`${environment.apiUrl}/resources/types/${t.id}`).subscribe({
       next: () => { this.deletingId.set(null); this.load(); },

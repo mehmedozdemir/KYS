@@ -37,7 +37,7 @@ public sealed class ArchiveCustomerCommandHandlerTests
 
         var act = () => _handler.Handle(new ArchiveCustomerCommand(customer.Id), CancellationToken.None);
 
-        await act.Should().ThrowAsync<DomainException>().WithMessage("*zaten arşivlenmiş*");
+        await act.Should().ThrowAsync<DomainException>().WithMessage("err.customer.alreadyArchived");
     }
 
     [Fact]

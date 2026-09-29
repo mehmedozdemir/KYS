@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 interface SharedResource {
   id: string;
@@ -68,10 +69,9 @@ interface SharedResourceDetail {
       <div class="filter-bar">
         <select [(ngModel)]="scopeFilter" (ngModelChange)="load()" class="select-input">
           <option value="">{{ 'admin.sharedResources.allScopes' | transloco }}</option>
-          <option value="Production">Production</option>
-          <option value="Test">Test</option>
-          <option value="Staging">Staging</option>
-          <option value="Development">Development</option>
+          @for (t of envTypes(); track t.id) {
+            <option [value]="t.name">{{ t.name }}</option>
+          }
         </select>
       </div>
 
@@ -165,10 +165,9 @@ interface SharedResourceDetail {
                 <label>{{ 'admin.sharedResources.envScope' | transloco }}</label>
                 <select [(ngModel)]="form.environmentScope">
                   <option value="">{{ 'admin.sharedResources.allEnvs' | transloco }}</option>
-                  <option value="Production">Production</option>
-                  <option value="Test">Test</option>
-                  <option value="Staging">Staging</option>
-                  <option value="Development">Development</option>
+                  @for (t of envTypes(); track t.id) {
+                    <option [value]="t.name">{{ t.name }}</option>
+                  }
                 </select>
               </div>
               <div class="form-group">
@@ -271,6 +270,7 @@ interface SharedResourceDetail {
 })
 export class SharedResourcesComponent implements OnInit {
   private http = inject(HttpClient);
+  private confirmDialog = inject(ConfirmDialogService);
   private transloco = inject(TranslocoService);
 
   resources = signal<SharedResource[]>([]);
@@ -292,16 +292,22 @@ export class SharedResourcesComponent implements OnInit {
   connFields: Record<string, string> = {};
   credFields: Record<string, string> = {};
 
+  // Kapsam seçenekleri tanımlı ortam tiplerinden gelir (sabit liste UAT/PREPROD'u kaçırıyordu).
+  envTypes = signal<{ id: string; name: string }[]>([]);
+
   ngOnInit() {
     this.load();
     this.http.get<ResourceType[]>(`${environment.apiUrl}/resources/types`).subscribe({
       next: t => this.resourceTypes.set(t)
     });
+    this.http.get<{ id: string; name: string }[]>(`${environment.apiUrl}/environments/types`).subscribe({
+      next: t => this.envTypes.set(t)
+    });
   }
 
   load() {
     this.loading.set(true);
-    const qs = this.scopeFilter ? `?scope=${this.scopeFilter}` : '';
+    const qs = this.scopeFilter ? `?scope=${encodeURIComponent(this.scopeFilter)}` : '';
     this.http.get<SharedResource[]>(`${environment.apiUrl}/resources/shared${qs}`).subscribe({
       next: r => { this.resources.set(r); this.loading.set(false); },
       error: () => this.loading.set(false)
@@ -435,8 +441,8 @@ export class SharedResourcesComponent implements OnInit {
     this.load();
   }
 
-  deleteResource(r: SharedResource) {
-    if (!confirm(this.transloco.translate('admin.sharedResources.deleteConfirm', { name: r.name }))) return;
+  async deleteResource(r: SharedResource) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('admin.sharedResources.deleteConfirm', { name: r.name })))) return;
     this.deletingId.set(r.id);
     this.http.delete(`${environment.apiUrl}/resources/shared/${r.id}`).subscribe({
       next: () => { this.deletingId.set(null); this.load(); },

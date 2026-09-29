@@ -104,14 +104,14 @@ public sealed class CredentialRevealTests(KysWebApplicationFactory factory)
     // ── Non-existent credential ────────────────────────────────────────────
 
     [Fact]
-    public async Task Reveal_NonExistentCredential_Returns400()
+    public async Task Reveal_NonExistentCredential_Returns404()
     {
         await AuthenticateAsync();
 
         var response = await Client.GetAsync($"/api/v1/credentials/{Guid.NewGuid()}/reveal");
 
-        // DomainException → 500 (global handler)
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        // NotFoundException → 404 (global handler)
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     // ── Update existing credential ─────────────────────────────────────────

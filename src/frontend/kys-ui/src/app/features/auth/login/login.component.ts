@@ -21,7 +21,7 @@ import { TranslocoModule } from '@jsverse/transloco';
             <div class="login-card__logo">{{ branding.branding()?.shortName || 'KYS' }}</div>
           }
           <h1>{{ branding.branding()?.shortName || branding.companyName() }}</h1>
-          <p>{{ 'app.tagline' | transloco }}</p>
+          <p>{{ branding.slogan() || ('app.tagline' | transloco) }}</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-card__form">

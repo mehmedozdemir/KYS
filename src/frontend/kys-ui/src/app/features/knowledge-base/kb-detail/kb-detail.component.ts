@@ -6,6 +6,7 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { marked } from 'marked';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { environment } from '../../../../environments/environment';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 const VIS_CSS: Record<string, string> = { Internal: 'badge--internal', TeamOnly: 'badge--team', Public: 'badge--public' };
 
@@ -169,6 +170,7 @@ interface ArticleDetail {
 })
 export class KbDetailComponent implements OnInit {
   private http = inject(HttpClient);
+  private confirmDialog = inject(ConfirmDialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
@@ -193,8 +195,8 @@ export class KbDetailComponent implements OnInit {
     });
   }
 
-  confirmDelete() {
-    if (!confirm(this.transloco.translate('kb.deleteConfirm'))) return;
+  async confirmDelete() {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('kb.deleteConfirm')))) return;
     const id = this.article()!.id;
     this.http.delete(`${environment.apiUrl}/knowledge-base/${id}`).subscribe({
       next: () => this.router.navigate(['/knowledge-base'])

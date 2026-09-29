@@ -89,6 +89,14 @@ export class AuthEffects {
     )
   );
 
+  // Yeni token geldiğinde oturum uyarısını yeni bitiş süresine göre yeniden planla.
+  refreshTokenSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.refreshTokenSuccess),
+      tap(() => this.sessionTimeout.schedule())
+    ), { dispatch: false }
+  );
+
   refreshTokenFailure$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.refreshTokenFailure),

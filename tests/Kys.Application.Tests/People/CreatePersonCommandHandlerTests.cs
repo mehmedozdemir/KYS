@@ -4,6 +4,7 @@ using Kys.Domain.Entities;
 using Kys.Domain.Enumerations;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
+using Kys.Domain.Interfaces.Services;
 using Microsoft.AspNetCore.Identity;
 using NSubstitute;
 
@@ -14,11 +15,19 @@ public sealed class CreatePersonCommandHandlerTests
     private readonly IPersonRepository _personRepository = Substitute.For<IPersonRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly IPasswordHasher<Person> _passwordHasher = Substitute.For<IPasswordHasher<Person>>();
+    private readonly IAccountEmailService _accountEmail = Substitute.For<IAccountEmailService>();
+    private readonly ILocalizer _localizer = Substitute.For<ILocalizer>();
+    private readonly ISystemRoleRepository _systemRoleRepository = Substitute.For<ISystemRoleRepository>();
+    private readonly ICurrentUserService _currentUser = Substitute.For<ICurrentUserService>();
     private readonly CreatePersonCommandHandler _handler;
 
     public CreatePersonCommandHandlerTests()
     {
-        _handler = new CreatePersonCommandHandler(_personRepository, _unitOfWork, _passwordHasher);
+        _localizer.Get(Arg.Any<string>(), Arg.Any<object[]>()).Returns(ci => ci.ArgAt<string>(0));
+        _systemRoleRepository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(ci => new SystemRole { Id = ci.ArgAt<Guid>(0), Code = "ReadOnly", Name = "Salt Okuma" });
+        _handler = new CreatePersonCommandHandler(
+            _personRepository, _unitOfWork, _passwordHasher, _accountEmail, _localizer, _systemRoleRepository, _currentUser);
     }
 
     [Fact]
@@ -31,7 +40,7 @@ public sealed class CreatePersonCommandHandlerTests
         var act = () => _handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<DomainException>()
-            .WithMessage("*already in use*");
+            .WithMessage("err.person.emailInUse");
     }
 
     [Fact]

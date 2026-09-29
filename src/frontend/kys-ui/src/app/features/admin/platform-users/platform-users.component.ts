@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 interface ProvisionableGroup {
   teamId: string | null;
@@ -332,6 +333,7 @@ const ROLE_COLOR: Record<string, string> = {
 })
 export class PlatformUsersComponent implements OnInit {
   private http = inject(HttpClient);
+  private confirmDialog = inject(ConfirmDialogService);
   private notify = inject(NotificationService);
   private transloco = inject(TranslocoService);
 
@@ -533,8 +535,8 @@ export class PlatformUsersComponent implements OnInit {
   }
 
   // --- Platform erişimini kaldır ---
-  removePlatformUser(p: PersonItem) {
-    if (!confirm(this.transloco.translate('admin.platformUsers.removeConfirm', { name: `${p.firstName} ${p.lastName}` }))) return;
+  async removePlatformUser(p: PersonItem) {
+    if (!(await this.confirmDialog.ask(this.transloco.translate('admin.platformUsers.removeConfirm', { name: `${p.firstName} ${p.lastName}` })))) return;
     this.http.post(`${environment.apiUrl}/admin/users/${p.id}/remove-platform-user`, {}).subscribe({
       next: () => { this.notify.success(this.transloco.translate('admin.platformUsers.accessRemoved')); this.loadUsers(); },
       error: e => this.notify.error(e.error?.detail ?? this.transloco.translate('admin.platformUsers.opFailed'))
