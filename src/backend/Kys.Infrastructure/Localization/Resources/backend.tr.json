@@ -14,6 +14,8 @@
   "err.branding.logoTooLarge": "Logo en fazla 2 MB olabilir.",
   "err.branding.unsupportedFileType": "Desteklenmeyen dosya türü. PNG, JPEG, SVG, WEBP veya GIF yükleyin.",
   "err.forbidden.record": "Bu kayıt üzerinde işlem yapma yetkiniz yok.",
+  "err.orgRole.nameExists": "Bu adla bir organizasyon rolü zaten var.",
+  "err.orgRole.inUse": "Bu rol devam eden ekip üyeliklerinde kullanılıyor; önce üyelikleri bitirin veya başka role taşıyın.",
   "err.forbidden.assignRole": "Salt Okuma dışında bir sistem rolü atama yetkiniz yok.",
   "err.forbidden.environment": "Bu ortamı görme yetkiniz yok.",
   "err.forbidden.productEnvironments": "Bu ürünün ortamlarını görme yetkiniz yok.",

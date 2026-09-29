@@ -229,6 +229,7 @@ export class SidebarComponent {
       adminOnly: true,
       items: [
         { label: 'menu.environmentTypes', icon: 'pi-server', route: '/admin/environment-types' },
+        { label: 'menu.organizationRoles', icon: 'pi-id-card', route: '/admin/organization-roles' },
         { label: 'menu.hostingPlatforms', icon: 'pi-cloud', route: '/admin/hosting-platforms' },
         { label: 'menu.resourceTypes', icon: 'pi-database', route: '/admin/resource-types' },
         { label: 'menu.sharedResources', icon: 'pi-share-alt', route: '/admin/shared-resources' }

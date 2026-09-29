@@ -560,7 +560,8 @@
     "accessGrants": "Access Grants",
     "emailSettings": "Mail Settings",
     "customFields": "Custom Fields",
-    "auditLog": "Audit Log"
+    "auditLog": "Audit Log",
+    "organizationRoles": "Organization Roles"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1222,6 +1223,21 @@
     "organization": {
       "companyNamePh": "e.g. Example Software Inc.",
       "shortNamePh": "e.g. Example"
+    },
+    "orgRoles": {
+      "title": "Organization Roles",
+      "subtitle": "Roles chosen in team memberships (e.g. Mobile Developer, Data Engineer)",
+      "new": "New Role",
+      "edit": "Edit Role",
+      "empty": "No roles defined yet.",
+      "name": "Role Name",
+      "namePh": "e.g. Mobile Developer",
+      "description": "Description",
+      "activeMembers": "Active Members",
+      "inUseHint": "Cannot be deleted while used by ongoing memberships",
+      "deleteConfirm": "Delete role \"{{name}}\"?",
+      "saveError": "Could not save role",
+      "deleteError": "Could not delete role"
     }
   },
   "customFields": {
