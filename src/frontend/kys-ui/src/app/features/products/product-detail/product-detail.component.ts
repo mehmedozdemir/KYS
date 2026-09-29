@@ -32,7 +32,10 @@ interface ProductDetail {
   documentationUrl: string | null;
   teams: { teamId: string; teamName: string; role: string | null; since: string | null }[];
   assignments: { personId: string; fullName: string; responsibility: string | null; startedAt: string | null; isActive: boolean }[];
-  endpoints: { id: string; name: string; endpointType: string | number; defaultBaseUrl: string | null; swaggerUrl: string | null; sortOrder: number }[];
+  endpoints: {
+    id: string; name: string; endpointType: string | number; defaultBaseUrl: string | null; swaggerUrl: string | null; sortOrder: number;
+    description: string | null; healthCheckUrl: string | null; defaultAuthType: string | number;
+  }[];
   resourceTemplates: { id: string; name: string; description?: string; resourceTypeId: string; resourceTypeName: string; isRequired: boolean; canBeShared: boolean; sortOrder: number }[];
   customFields: Record<string, unknown>;
 }
@@ -198,6 +201,9 @@ interface ProductDetail {
                         <span class="ep-name">{{ ep.name }}</span>
                         <span class="badge badge--ep">{{ 'type.endpoint.' + endpointTypeName(ep.endpointType) | transloco }}</span>
                       </div>
+                      <button type="button" class="ep-delete-btn" (click)="openEditEndpoint(ep)" [title]="'common.edit' | transloco">
+                        <i class="pi pi-pencil"></i>
+                      </button>
                       <button type="button" class="ep-delete-btn" (click)="deleteEndpoint(ep.id)" [title]="'common.delete' | transloco">
                         <i class="pi pi-trash"></i>
                       </button>
@@ -483,7 +489,7 @@ interface ProductDetail {
       <div class="modal-backdrop" (click)="showEndpointModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ 'productDetail.newEndpoint' | transloco }}</h2>
+            <h2>{{ (epEditingId() ? 'productDetail.editEndpoint' : 'productDetail.newEndpoint') | transloco }}</h2>
             <button type="button" class="close-btn" (click)="showEndpointModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
@@ -496,7 +502,7 @@ interface ProductDetail {
               </div>
               <div class="form-group">
                 <label>{{ 'productDetail.type' | transloco }} <span class="req">*</span></label>
-                <select [(ngModel)]="epForm.endpointType">
+                <select [(ngModel)]="epForm.endpointType" [disabled]="!!epEditingId()">
                   <option value="0">{{ 'type.endpoint.0' | transloco }}</option>
                   <option value="1">{{ 'type.endpoint.1' | transloco }}</option>
                   <option value="2">{{ 'type.endpoint.2' | transloco }}</option>
@@ -513,11 +519,19 @@ interface ProductDetail {
               <label>{{ 'productDetail.swaggerUrl' | transloco }}</label>
               <input type="url" [(ngModel)]="epForm.swaggerUrl" placeholder="https://.../swagger" />
             </div>
+            <div class="form-group">
+              <label>{{ 'productDetail.healthCheckUrl' | transloco }}</label>
+              <input type="url" [(ngModel)]="epForm.healthCheckUrl" placeholder="https://.../health" />
+            </div>
+            <div class="form-group">
+              <label>{{ 'productDetail.endpointDescription' | transloco }}</label>
+              <textarea rows="2" [(ngModel)]="epForm.description"></textarea>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" (click)="showEndpointModal.set(false)">{{ 'common.cancel' | transloco }}</button>
             <button type="button" class="btn btn-primary" [disabled]="epSaving()" (click)="saveEndpoint()">
-              {{ (epSaving() ? 'common.saving' : 'common.add') | transloco }}
+              {{ (epSaving() ? 'common.saving' : (epEditingId() ? 'common.save' : 'common.add')) | transloco }}
             </button>
           </div>
         </div>
@@ -974,10 +988,30 @@ export class ProductDetailComponent implements OnInit {
   epSaving = signal(false);
   epSubmitted = signal(false);
   epError = signal('');
-  epForm = { name: '', endpointType: '1', defaultBaseUrl: '', swaggerUrl: '' };
+  epForm = { name: '', endpointType: '1', defaultBaseUrl: '', swaggerUrl: '', healthCheckUrl: '', description: '' };
+  epEditingId = signal<string | null>(null);
+  private epEditing: ProductDetail['endpoints'][number] | null = null;
 
   openAddEndpoint() {
-    this.epForm = { name: '', endpointType: '1', defaultBaseUrl: '', swaggerUrl: '' };
+    this.epEditingId.set(null);
+    this.epEditing = null;
+    this.epForm = { name: '', endpointType: '1', defaultBaseUrl: '', swaggerUrl: '', healthCheckUrl: '', description: '' };
+    this.epSubmitted.set(false);
+    this.epError.set('');
+    this.showEndpointModal.set(true);
+  }
+
+  openEditEndpoint(ep: ProductDetail['endpoints'][number]) {
+    this.epEditing = ep;
+    this.epEditingId.set(ep.id);
+    this.epForm = {
+      name: ep.name,
+      endpointType: String(ENDPOINT_TYPES.indexOf(this.endpointTypeName(ep.endpointType))),
+      defaultBaseUrl: ep.defaultBaseUrl ?? '',
+      swaggerUrl: ep.swaggerUrl ?? '',
+      healthCheckUrl: ep.healthCheckUrl ?? '',
+      description: ep.description ?? ''
+    };
     this.epSubmitted.set(false);
     this.epError.set('');
     this.showEndpointModal.set(true);
@@ -989,16 +1023,27 @@ export class ProductDetailComponent implements OnInit {
     this.epSaving.set(true);
     this.epError.set('');
     const id = this.route.snapshot.paramMap.get('id');
-    this.http.post(`${environment.apiUrl}/products/${id}/endpoints`, {
+    const common = {
       name: this.epForm.name.trim(),
-      endpointType: Number(this.epForm.endpointType),
-      sortOrder: (this.product()?.endpoints.length ?? 0),
       defaultBaseUrl: this.epForm.defaultBaseUrl.trim() || null,
       swaggerUrl: this.epForm.swaggerUrl.trim() || null,
-      description: null,
-      healthCheckUrl: null,
-      defaultAuthType: 0
-    }).subscribe({
+      healthCheckUrl: this.epForm.healthCheckUrl.trim() || null,
+      description: this.epForm.description.trim() || null
+    };
+    const editing = this.epEditing;
+    const req = editing
+      ? this.http.put(`${environment.apiUrl}/products/${id}/endpoints/${editing.id}`, {
+          ...common,
+          sortOrder: editing.sortOrder,
+          defaultAuthType: editing.defaultAuthType ?? 'None'   // mevcut değer korunur
+        })
+      : this.http.post(`${environment.apiUrl}/products/${id}/endpoints`, {
+          ...common,
+          endpointType: Number(this.epForm.endpointType),
+          sortOrder: (this.product()?.endpoints.length ?? 0),
+          defaultAuthType: 0
+        });
+    req.subscribe({
       next: () => {
         this.epSaving.set(false);
         this.showEndpointModal.set(false);

@@ -374,7 +374,10 @@
     "personAssignErr": "Could not assign person",
     "templateErr": "Could not add template",
     "templateUpdateErr": "Could not update template",
-    "templateDeleteErr": "Could not delete template."
+    "templateDeleteErr": "Could not delete template.",
+    "editEndpoint": "Edit Endpoint",
+    "healthCheckUrl": "Health Check URL",
+    "endpointDescription": "Description"
   },
   "products": {
     "title": "Products",

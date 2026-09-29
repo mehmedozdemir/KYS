@@ -374,7 +374,10 @@
     "personAssignErr": "Kişi atanamadı",
     "templateErr": "Şablon eklenemedi",
     "templateUpdateErr": "Şablon güncellenemedi",
-    "templateDeleteErr": "Şablon silinemedi."
+    "templateDeleteErr": "Şablon silinemedi.",
+    "editEndpoint": "Endpoint Düzenle",
+    "healthCheckUrl": "Sağlık Kontrolü URL",
+    "endpointDescription": "Açıklama"
   },
   "products": {
     "title": "Ürünler",
