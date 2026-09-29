@@ -5,7 +5,8 @@ using MediatR;
 
 namespace Kys.Application.Environments.Queries.GetEnvironmentDetail;
 
-public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repository, IScopeService scope)
+public sealed class GetEnvironmentDetailQueryHandler(
+    IEnvironmentRepository repository, IEndpointHealthRepository healthRepository, IScopeService scope)
     : IRequestHandler<GetEnvironmentDetailQuery, EnvironmentDetailDto?>
 {
     public async Task<EnvironmentDetailDto?> Handle(GetEnvironmentDetailQuery request, CancellationToken ct)
@@ -45,6 +46,8 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
             r.ProductResourceTemplateId)).ToList();
 
         var endpointUrlMap = env.Endpoints.ToDictionary(e => e.ProductEndpointId);
+        var healthMap = (await healthRepository.GetByEndpointIdsAsync(env.Endpoints.Select(e => e.Id).ToList(), ct))
+            .ToDictionary(h => h.CustomerEnvironmentEndpointId);
         var endpoints = env.CustomerProduct.Product.Endpoints
             .OrderBy(pe => pe.SortOrder)
             .Select(pe =>
@@ -61,7 +64,10 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
                     eur?.AuthType?.ToString(),
                     eur?.IsActive ?? true,
                     eur?.Credentials.Select(c => new CredentialStubDto(c.Id, c.FieldKey, c.LastRotatedAt)).ToList()
-                        ?? []);
+                        ?? [],
+                    // URL değiştiyse eski sonuç yanıltıcı olabilir; yalnızca health URL varken göster
+                    eur is not null && !string.IsNullOrWhiteSpace(eur.HealthCheckUrl) && healthMap.TryGetValue(eur.Id, out var h)
+                        ? EndpointHealthDto.From(h) : null);
             }).ToList();
 
         // IsAdded: şablon bu ortamda kaynak olarak tanımlı mı (eksik kaynak göstergesi için)

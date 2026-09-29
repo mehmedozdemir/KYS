@@ -768,7 +768,32 @@
     "requiredMissingCount": "{{count}} required resource(s) missing",
     "missingRequired": "Missing required resources:",
     "missingOptional": "Other resources not added:",
-    "alreadyAdded": "added"
+    "alreadyAdded": "added",
+    "health": {
+      "checkNow": "Check now",
+      "unknown": "Not checked yet",
+      "unknownHint": "Health is checked automatically within a few minutes.",
+      "healthy": "Reachable",
+      "healthyMs": "Reachable · {{ms}} ms",
+      "unhealthy": "Unreachable",
+      "since": "In this state since {{since}} · Last check: {{checked}}",
+      "err": {
+        "timeout": "timeout",
+        "blocked-address": "blocked address",
+        "tls-error": "certificate error",
+        "invalid-url": "invalid URL",
+        "nameresolutionerror": "name not resolved",
+        "connection": "connection failed",
+        "unknown": "connection error"
+      },
+      "ago": {
+        "now": "just now",
+        "min": "{{n}} min ago",
+        "hour": "{{n}} h ago",
+        "day": "{{n}} d ago"
+      },
+      "label": "Status"
+    }
   },
   "account": {
     "title": "My Account",

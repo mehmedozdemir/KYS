@@ -56,6 +56,16 @@ interface EndpointUrl {
   authTypeName: string | null;
   isActive: boolean;
   credentials: CredentialStub[];
+  health: EndpointHealth | null;
+}
+
+interface EndpointHealth {
+  status: 'Healthy' | 'Unhealthy';
+  statusCode: number | null;
+  latencyMs: number | null;
+  error: string | null;
+  checkedAt: string;
+  statusSince: string;
 }
 
 interface AvailableTemplate {
@@ -544,6 +554,22 @@ interface HostingPlatformOption {
                             <a class="kv-btn" [href]="u.url" target="_blank" rel="noopener" [attr.aria-label]="u.label + ' ↗'">
                               <i class="pi pi-external-link"></i>
                             </a>
+                          </span>
+                        </div>
+                      }
+                      @if (ep.healthCheckUrl) {
+                        <div class="url-row">
+                          <span class="url-lbl">{{ 'environments.health.label' | transloco }}</span>
+                          <span class="health" [attr.data-status]="ep.health?.status ?? 'Unknown'" [title]="healthTitle(ep)">
+                            <i class="pi" [ngClass]="healthIcon(ep)"></i>
+                            <span class="health-label">{{ healthLabel(ep) }}</span>
+                            @if (ep.health) { <span class="health-time">· {{ ago(ep.health.checkedAt) }}</span> }
+                          </span>
+                          <span class="url-actions">
+                            <button type="button" class="kv-btn" [disabled]="checkingHealth()[ep.productEndpointId]"
+                              (click)="checkHealth(ep)" [attr.aria-label]="'environments.health.checkNow' | transloco" [title]="'environments.health.checkNow' | transloco">
+                              <i class="pi pi-refresh" [class.pi-spin]="checkingHealth()[ep.productEndpointId]"></i>
+                            </button>
                           </span>
                         </div>
                       }
@@ -1334,6 +1360,12 @@ interface HostingPlatformOption {
       &:last-child { border-bottom: none; } }
     .ep-id { display: flex; gap: 0.75rem; align-items: flex-start; min-width: 0; }
     .ep-badges { margin-top: 0.375rem; }
+    .health { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; font-size: 0.8125rem; color: var(--text-muted);
+      > .pi { font-size: 0.75rem; } }
+    .health[data-status='Healthy'] > .pi, .health[data-status='Healthy'] .health-label { color: var(--success-strong, var(--success)); }
+    .health[data-status='Unhealthy'] > .pi, .health[data-status='Unhealthy'] .health-label { color: var(--danger); font-weight: 600; }
+    .health[data-status='Unknown'] > .pi { color: var(--text-subtle); }
+    .health-time { color: var(--text-subtle); }
     .url-row { display: grid; grid-template-columns: 4.5rem 1fr auto; align-items: center; gap: 0.5rem; min-width: 0; }
     .url-lbl { font-size: 0.7rem; font-weight: 600; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
     .url-link { font-size: 0.8125rem; color: var(--primary); text-decoration: none; word-break: break-all; &:hover { text-decoration: underline; } }
@@ -2074,6 +2106,65 @@ export class EnvironmentDetailComponent implements OnInit {
     if (portKey && !/:\d+$/.test(cs)) cs += ':' + values[portKey];
     if (dbKey) cs += '/' + values[dbKey];
     return cs;
+  }
+
+  // --- Endpoint sağlık durumu ---
+  checkingHealth = signal<Record<string, boolean>>({});
+
+  checkHealth(ep: EndpointUrl) {
+    const e = this.env();
+    if (!e) return;
+    this.checkingHealth.update(m => ({ ...m, [ep.productEndpointId]: true }));
+    this.http.post<EndpointHealth>(`${environment.apiUrl}/environments/${e.id}/endpoints/${ep.productEndpointId}/health-check`, {}).subscribe({
+      next: h => {
+        this.env.update(cur => cur && ({
+          ...cur, endpoints: cur.endpoints.map(x => x.productEndpointId === ep.productEndpointId ? { ...x, health: h } : x)
+        }));
+        this.checkingHealth.update(m => ({ ...m, [ep.productEndpointId]: false }));
+      },
+      error: () => this.checkingHealth.update(m => ({ ...m, [ep.productEndpointId]: false }))
+    });
+  }
+
+  healthIcon(ep: EndpointUrl) {
+    if (!ep.health) return 'pi-circle';
+    return ep.health.status === 'Healthy' ? 'pi-check-circle' : 'pi-times-circle';
+  }
+
+  healthLabel(ep: EndpointUrl): string {
+    const t = (k: string, p?: Record<string, unknown>) => this.transloco.translate('environments.health.' + k, p);
+    const h = ep.health;
+    if (!h) return t('unknown');
+    if (h.status === 'Healthy') return h.latencyMs != null ? t('healthyMs', { ms: h.latencyMs }) : t('healthy');
+    return t('unhealthy') + ' · ' + this.healthError(h.error);
+  }
+
+  healthTitle(ep: EndpointUrl): string {
+    const h = ep.health;
+    if (!h) return this.transloco.translate('environments.health.unknownHint');
+    return this.transloco.translate('environments.health.since', {
+      since: new Date(h.statusSince).toLocaleString(), checked: new Date(h.checkedAt).toLocaleString()
+    });
+  }
+
+  private healthError(code: string | null): string {
+    const t = (k: string) => this.transloco.translate('environments.health.err.' + k);
+    if (!code) return t('unknown');
+    if (code.startsWith('http-')) return 'HTTP ' + code.slice(5);
+    if (code === 'connection-hostnotfound' || code === 'connection-tryagain') return t('nameresolutionerror');
+    if (code.startsWith('connection-')) return t('connection');
+    if (['timeout', 'blocked-address', 'tls-error', 'invalid-url', 'nameresolutionerror'].includes(code)) return t(code);
+    return t('unknown');
+  }
+
+  // Kısa göreli zaman: "az önce", "5 dk önce", "2 sa önce", "3 gün önce"
+  ago(iso: string): string {
+    const t = (k: string, n?: number) => this.transloco.translate('environments.health.ago.' + k, { n });
+    const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (min < 1) return t('now');
+    if (min < 60) return t('min', min);
+    if (min < 60 * 24) return t('hour', Math.floor(min / 60));
+    return t('day', Math.floor(min / 1440));
   }
 
   // --- Endpoint listesi ---

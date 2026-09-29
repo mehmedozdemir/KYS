@@ -768,7 +768,32 @@
     "requiredMissingCount": "{{count}} zorunlu kaynak eksik",
     "missingRequired": "Eksik zorunlu kaynaklar:",
     "missingOptional": "Eklenmemiş diğer kaynaklar:",
-    "alreadyAdded": "eklendi"
+    "alreadyAdded": "eklendi",
+    "health": {
+      "checkNow": "Şimdi kontrol et",
+      "unknown": "Henüz kontrol edilmedi",
+      "unknownHint": "Sağlık durumu birkaç dakika içinde otomatik kontrol edilir.",
+      "healthy": "Erişilebilir",
+      "healthyMs": "Erişilebilir · {{ms}} ms",
+      "unhealthy": "Erişilemiyor",
+      "since": "Bu durumda: {{since}} itibarıyla · Son kontrol: {{checked}}",
+      "err": {
+        "timeout": "zaman aşımı",
+        "blocked-address": "engellenen adres",
+        "tls-error": "sertifika hatası",
+        "invalid-url": "geçersiz URL",
+        "nameresolutionerror": "alan adı çözülemedi",
+        "connection": "bağlantı kurulamadı",
+        "unknown": "bağlantı hatası"
+      },
+      "ago": {
+        "now": "az önce",
+        "min": "{{n}} dk önce",
+        "hour": "{{n}} sa önce",
+        "day": "{{n}} gün önce"
+      },
+      "label": "Durum"
+    }
   },
   "account": {
     "title": "Hesabım",

@@ -9,7 +9,6 @@
   "error.validationOccurred": "Bir veya daha fazla doğrulama hatası oluştu.",
   "error.unexpected": "Beklenmeyen bir hata oluştu.",
   "error.notFound": "İstenen kayıt bulunamadı.",
-
   "err.branding.companyNameRequired": "Şirket adı zorunludur.",
   "err.branding.logoTooLarge": "Logo en fazla 2 MB olabilir.",
   "err.branding.unsupportedFileType": "Desteklenmeyen dosya türü. PNG, JPEG, SVG, WEBP veya GIF yükleyin.",
@@ -72,13 +71,11 @@
   "err.smtp.rejected": "SMTP sunucusu reddetti: {0}",
   "err.smtp.protocolError": "SMTP protokol hatası: {0} (yanlış porta bağlanıyor olabilirsiniz).",
   "err.smtp.sendFailed": "E-posta gönderilemedi ({0}:{1}): {2}",
-
   "err.vpnConfig.notFound": "VPN yapılandırması bulunamadı.",
   "err.vpnConfig.noPassword": "Bu VPN yapılandırmasında şifre tanımlı değil.",
   "err.vpnConfig.forbiddenReveal": "Bu VPN şifresini görüntüleme yetkiniz yok.",
   "val.vpnConfig.nameRequired": "VPN adı zorunludur.",
   "val.vpnConfig.serverHostRequired": "Sunucu adresi zorunludur.",
-
   "val.credential.targetRequired": "EnvironmentResourceId, SharedResourceId veya EndpointUrlId belirtilmelidir.",
   "val.personalCredential.fieldKeyRequired": "Alan anahtarı zorunludur.",
   "val.personalCredential.valueRequired": "Değer zorunludur.",
@@ -99,7 +96,6 @@
   "val.sharedResource.scope": "Ortam kapsamı şunlardan biri olmalıdır: Dev, Test, Prod, All.",
   "val.product.codeFormat": "Kod yalnızca büyük harf, rakam, tire ve alt çizgi içerebilir.",
   "val.kb.maxTags": "En fazla 10 etiket eklenebilir.",
-
   "val.cf.required": "'{0}' alanı zorunludur.",
   "val.cf.invalidOption": "'{0}' için geçersiz seçenek: '{1}'. Geçerli seçenekler: {2}.",
   "val.cf.number": "'{0}' sayısal bir değer olmalıdır.",
@@ -111,7 +107,6 @@
   "val.cf.minLength": "'{0}' en az {1} karakter olmalıdır.",
   "val.cf.maxLength": "'{0}' en fazla {1} karakter olabilir.",
   "val.cf.regex": "'{0}' beklenen formata uymuyor.",
-
   "email.greeting": "Merhaba {0},",
   "email.footer": "Bu e-posta KYS tarafından otomatik gönderilmiştir.",
   "email.rowPlatform": "Platform",
@@ -128,5 +123,6 @@
   "email.reset.securityNote": "Güvenliğiniz için ilk girişten sonra şifrenizi değiştirmeniz önerilir. Bu işlemi siz talep etmediyseniz yöneticinizle iletişime geçin.",
   "email.test.subject": "KYS — Test E-postası",
   "email.test.heading": "KYS — Test E-postası",
-  "email.test.body": "Bu bir test e-postasıdır. Bu mesajı aldıysanız SMTP yapılandırmanız doğru çalışıyor. ✅"
+  "email.test.body": "Bu bir test e-postasıdır. Bu mesajı aldıysanız SMTP yapılandırmanız doğru çalışıyor. ✅",
+  "err.endpoint.noHealthUrl": "Bu endpoint için health URL tanımlanmamış."
 }
