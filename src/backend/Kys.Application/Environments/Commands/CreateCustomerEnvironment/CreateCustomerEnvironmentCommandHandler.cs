@@ -1,4 +1,5 @@
 using Kys.Domain.Entities;
+using Kys.Domain.Enumerations;
 using Kys.Domain.Exceptions;
 using Kys.Domain.Interfaces.Repositories;
 using Kys.Domain.Interfaces.Services;
@@ -22,6 +23,23 @@ public sealed class CreateCustomerEnvironmentCommandHandler(
 
         if (!envType.IsActive)
             throw new DomainException(localizer.Get("err.environmentType.notActive", envType.Name));
+
+        // İş kuralı: SaaS kullanımda müşteriye ortam/kaynak tanımlanamaz (yalnızca UI'da değil, API'de de).
+        if (customerProduct.UsageMode == UsageMode.SaaS)
+            throw new DomainException("err.environment.saasNotAllowed");
+
+        // Lifecycle: ilk production dışı / production ortamı müşteri ve ürün tarihlerini işaretler.
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var isProduction = string.Equals(envType.Code, "PROD", StringComparison.OrdinalIgnoreCase);
+        customerProduct.InstallationStartedAt ??= today;
+        if (isProduction) customerProduct.ProdReadyAt ??= today;
+        else customerProduct.TestReadyAt ??= today;
+        customerRepository.UpdateCustomerProduct(customerProduct);
+
+        var customer = await customerRepository.GetByIdAsync(customerProduct.CustomerId, ct)
+            ?? throw new NotFoundException(nameof(Customer), customerProduct.CustomerId);
+        customer.MarkEnvironmentReady(isProduction, today);
+        customerRepository.Update(customer);
 
         var environment = new CustomerEnvironment
         {

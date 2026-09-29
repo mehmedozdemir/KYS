@@ -13,7 +13,7 @@ interface PersonListItem {
   lastName: string;
   email: string;
   title: string | null;
-  employmentStatus: number;
+  employmentStatus: string | number;
   isPlatformUser: boolean;
 }
 interface GetPeopleResult {
@@ -23,7 +23,11 @@ interface GetPeopleResult {
   pageSize: number;
 }
 
-const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilot', 2: 'badge--suspended', 3: 'badge--archived' };
+// API enum'ları string döner (JsonStringEnumConverter); eski sayısal değerler de normalize edilir.
+const EMPLOYMENT_STATUSES = ['Active', 'OnLeave', 'Resigned', 'Terminated'];
+const READ_ONLY_ROLE_ID = '00000000-0000-0000-0000-000000000005';
+const employmentName = (s: string | number) => typeof s === 'number' ? EMPLOYMENT_STATUSES[s] ?? String(s) : s;
+const STATUS_CSS: Record<string, string> = { Active: 'badge--active', OnLeave: 'badge--pilot', Resigned: 'badge--suspended', Terminated: 'badge--archived' };
 
 @Component({
   selector: 'app-people-list',
@@ -92,7 +96,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
                   <td class="text-muted">{{ p.title ?? '—' }}</td>
                   <td>
                     <span class="badge" [ngClass]="statusCss(p.employmentStatus)">
-                      {{ 'status.employment.' + p.employmentStatus | transloco }}
+                      {{ 'status.employment.' + statusName(p.employmentStatus) | transloco }}
                     </span>
                   </td>
                   <td>
@@ -266,6 +270,17 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
                   <span class="form-error">{{ 'people.passwordRule' | transloco }}</span>
                 }
               </div>
+              @if (roleOptions().length) {
+                <div class="form-group">
+                  <label>{{ 'people.systemRole' | transloco }}</label>
+                  <select formControlName="systemRoleId">
+                    @for (r of roleOptions(); track r.id) {
+                      <option [value]="r.id">{{ r.name }}</option>
+                    }
+                  </select>
+                  <span class="form-hint">{{ 'people.systemRoleHint' | transloco }}</span>
+                </div>
+              }
             }
 
             @if (createError()) {
@@ -569,10 +584,20 @@ export class PeopleListComponent implements OnInit {
     employmentStatus: [0],
     isPlatformUser: [false],
     username: [''],
-    password: ['']
+    password: [''],
+    systemRoleId: [READ_ONLY_ROLE_ID]
   });
 
-  ngOnInit() { this.load(); }
+  // Rol listesi yalnızca rol atama yetkisi olanlara döner; yoksa seçici gizlenir, backend Salt Okuma atar.
+  roleOptions = signal<{ id: string; name: string; code: string }[]>([]);
+
+  ngOnInit() {
+    this.load();
+    this.http.get<{ id: string; name: string; code: string }[]>(`${environment.apiUrl}/admin/system-roles`).subscribe({
+      next: r => this.roleOptions.set(r),
+      error: () => this.roleOptions.set([])
+    });
+  }
 
   load() {
     this.loading.set(true);
@@ -594,10 +619,11 @@ export class PeopleListComponent implements OnInit {
   goPage(p: number) { this.page = p; this.load(); }
   totalPages() { return Math.ceil((this.result()?.totalCount ?? 0) / this.pageSize); }
 
-  statusCss(s: number) { return STATUS_CSS[s] ?? ''; }
+  statusCss(s: string | number) { return STATUS_CSS[employmentName(s)] ?? ''; }
+  statusName(s: string | number) { return employmentName(s); }
 
   openCreate() {
-    this.createForm.reset({ employmentStatus: 0, isPlatformUser: false });
+    this.createForm.reset({ employmentStatus: 0, isPlatformUser: false, systemRoleId: READ_ONLY_ROLE_ID });
     this.createError.set('');
     this.showCreate.set(true);
   }
@@ -638,7 +664,8 @@ export class PeopleListComponent implements OnInit {
       employmentStatus: Number(v.employmentStatus),
       isPlatformUser: v.isPlatformUser,
       username: v.isPlatformUser ? v.email : null,
-      password: v.isPlatformUser ? v.password : null
+      password: v.isPlatformUser ? v.password : null,
+      systemRoleId: v.isPlatformUser && this.roleOptions().length ? v.systemRoleId : null
     };
 
     this.http.post(`${environment.apiUrl}/people`, body).subscribe({

@@ -32,18 +32,12 @@ interface SystemRole {
   assignedAt: string;
 }
 
-// Seeded system roles (fixed GUIDs from SystemRoleConfiguration)
-const ALL_SYSTEM_ROLES = [
-  { id: '00000000-0000-0000-0000-000000000001', name: 'Platform Yöneticisi', code: 'PlatformAdmin' },
-  { id: '00000000-0000-0000-0000-000000000002', name: 'Direktör', code: 'Director' },
-  { id: '00000000-0000-0000-0000-000000000003', name: 'Ekip Lideri', code: 'TeamLead' },
-  { id: '00000000-0000-0000-0000-000000000004', name: 'Geliştirici', code: 'Developer' },
-  { id: '00000000-0000-0000-0000-000000000005', name: 'Salt Okuma', code: 'ReadOnly' }
-];
+// Atanabilir roller API'den gelir (GET admin/system-roles); sabit liste PO/CTO gibi rolleri kaçırıyordu.
+interface SystemRoleOption { id: string; name: string; code: string; description: string | null; }
 
 const ROLE_COLOR: Record<string, string> = {
-  PlatformAdmin: 'badge--admin', Director: 'badge--director',
-  TeamLead: 'badge--lead', Developer: 'badge--dev', ReadOnly: 'badge--readonly'
+  PlatformAdmin: 'badge--admin', Director: 'badge--director', CTO: 'badge--director',
+  TeamLead: 'badge--lead', PO: 'badge--lead', Developer: 'badge--dev', ReadOnly: 'badge--readonly'
 };
 
 @Component({
@@ -158,7 +152,7 @@ const ROLE_COLOR: Record<string, string> = {
             @let currentRoles = rolesMap().get(assignModal()!) ?? [];
             @let alreadyAssigned = currentRoleIds(assignModal()!);
             <div class="role-list">
-              @for (r of ALL_SYSTEM_ROLES; track r.id) {
+              @for (r of allRoles(); track r.id) {
                 <div class="role-option" [class.assigned]="alreadyAssigned.has(r.id)">
                   <div>
                     <span class="role-chip" [ngClass]="roleColor(r.code)">{{ roleName(r.code, r.name) }}</span>
@@ -341,7 +335,7 @@ export class PlatformUsersComponent implements OnInit {
   private notify = inject(NotificationService);
   private transloco = inject(TranslocoService);
 
-  readonly ALL_SYSTEM_ROLES = ALL_SYSTEM_ROLES;
+  readonly allRoles = signal<SystemRoleOption[]>([]);
 
   roleName(code: string, fallback: string): string {
     const key = `admin.platformUsers.role.${code}`;
@@ -366,7 +360,10 @@ export class PlatformUsersComponent implements OnInit {
   groups = signal<ProvisionableGroup[]>([]);
   selected = signal<Set<string>>(new Set());
 
-  ngOnInit() { this.loadUsers(); }
+  ngOnInit() {
+    this.loadUsers();
+    this.http.get<SystemRoleOption[]>(`${environment.apiUrl}/admin/system-roles`).subscribe({ next: r => this.allRoles.set(r) });
+  }
 
   loadUsers() {
     this.loading.set(true);

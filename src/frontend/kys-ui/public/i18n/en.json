@@ -82,14 +82,22 @@
     "product": {
       "0": "SaaS",
       "1": "Dedicated",
-      "2": "Hybrid"
+      "2": "Hybrid",
+      "SaaS": "SaaS",
+      "CustomerBased": "Customer-specific",
+      "Hybrid": "Hybrid"
     },
     "endpoint": {
       "0": "Frontend",
       "1": "REST API",
       "2": "gRPC",
       "3": "SOAP",
-      "4": "GraphQL"
+      "4": "GraphQL",
+      "Frontend": "Frontend",
+      "RestAPI": "REST API",
+      "Grpc": "gRPC",
+      "Soap": "SOAP",
+      "GraphQL": "GraphQL"
     },
     "team": {
       "Project": "Project — Project-based team",
@@ -100,6 +108,11 @@
       "Internal": "Internal",
       "TeamOnly": "Team",
       "Public": "Public"
+    },
+    "teamShort": {
+      "Project": "Project",
+      "Domain": "Domain",
+      "Platform": "Platform"
     }
   },
   "kb": {
@@ -168,7 +181,9 @@
     "enterEmail": "(enter email)",
     "passwordRule": "Must be at least 8 chars with an uppercase letter and a digit.",
     "operationFailed": "Operation failed.",
-    "genericError": "An error occurred."
+    "genericError": "An error occurred.",
+    "systemRole": "System Role",
+    "systemRoleHint": "Determines what the user can see and edit on the platform. Default: Read Only."
   },
   "peopleDetail": {
     "notFound": "Person not found.",
@@ -472,7 +487,11 @@
     "vpnRevealPassword": "Show Password",
     "vpnHidePassword": "Hide",
     "vpnRevealErr": "Could not retrieve password",
-    "vpnPasswordHint": "Password will be hidden after 30 seconds"
+    "vpnPasswordHint": "Password will be hidden after 30 seconds",
+    "usageModeFixed": "Usage mode is determined by the product type.",
+    "changeProductStatus": "Product Status",
+    "goLiveHint": "The customer go-live date is the earliest go-live date among its products.",
+    "discontinuedAt": "Discontinued On"
   },
   "customers": {
     "title": "Customers",
@@ -759,7 +778,9 @@
         "Updated": "Updated",
         "Deleted": "Deleted",
         "Restored": "Restored",
-        "CredentialRevealed": "Credential Revealed"
+        "CredentialRevealed": "Credential Revealed",
+        "VpnPasswordRevealed": "VPN Password Revealed",
+        "PersonalCredentialRevealed": "Personal Credential Revealed"
       },
       "entity": {
         "Customer": "Customer",
@@ -771,7 +792,25 @@
         "KbArticle": "KB Article",
         "TeamMembership": "Team Membership",
         "CustomerProduct": "Customer Product",
-        "SystemRole": "System Role"
+        "SystemRole": "System Role",
+        "ResourceCredential": "Credential",
+        "CustomerVpnConfig": "VPN Configuration",
+        "ProductEndpoint": "Product Endpoint",
+        "ProductResourceTemplate": "Resource Template",
+        "ProductTeam": "Product Team",
+        "ProductAssignment": "Product Assignment",
+        "CustomerEnvironmentEndpoint": "Environment Endpoint",
+        "SharedResource": "Shared Resource",
+        "AccessGrant": "Access Grant",
+        "OrganizationProfile": "Organization Profile",
+        "CustomFieldDefinition": "Custom Field",
+        "EnvironmentType": "Environment Type",
+        "HostingPlatform": "Hosting Platform",
+        "ResourceType": "Resource Type",
+        "KbTag": "KB Tag",
+        "EmailAccount": "Email Account",
+        "PersonalCredential": "Personal Credential",
+        "OrganizationRole": "Organization Role"
       }
     },
     "accessGrants": {
@@ -1128,7 +1167,9 @@
         "Director": "Director",
         "TeamLead": "Team Lead",
         "Developer": "Developer",
-        "ReadOnly": "Read Only"
+        "ReadOnly": "Read Only",
+        "PO": "Product Owner (PO)",
+        "CTO": "CTO"
       },
       "resetTitle": "Reset Password",
       "resetSuccessMsg": "The password has been reset and the new password was sent to the user's email.",

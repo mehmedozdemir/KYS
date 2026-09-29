@@ -47,6 +47,7 @@ interface ProductOption {
   id: string;
   name: string;
   code: string;
+  productType: string | number; // SaaS | CustomerBased | Hybrid
 }
 
 interface CustomerProduct {
@@ -259,6 +260,10 @@ interface CustomerDetail {
                         <a [routerLink]="['/products', cp.productId]" class="link">{{ cp.productName }}</a>
                         <code class="code-sm">{{ cp.productCode }}</code>
                       </div>
+                      <button type="button" class="btn-icon-sm" [title]="'customerDetail.changeProductStatus' | transloco"
+                        (click)="openCpStatus(cp)">
+                        <i class="pi pi-sync"></i>
+                      </button>
                       <button type="button" class="btn-icon-danger-sm" [title]="'customerDetail.removeProduct' | transloco"
                         [disabled]="removingProductId() === cp.id"
                         (click)="removeProduct(cp.id, cp.productName)">
@@ -451,6 +456,48 @@ interface CustomerDetail {
       }
     </div>
 
+    <!-- Müşteri Ürünü Durum Modal -->
+    @if (cpStatusTarget(); as cpt) {
+      <div class="modal-backdrop" (click)="cpStatusTarget.set(null)">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>{{ 'customerDetail.changeProductStatus' | transloco }} — {{ cpt.productName }}</h2>
+            <button class="modal-close" (click)="cpStatusTarget.set(null)"><i class="pi pi-times"></i></button>
+          </div>
+          <div class="modal-body">
+            @if (cpStatusError()) { <div class="alert-error">{{ cpStatusError() }}</div> }
+            <div class="form-group">
+              <label>{{ 'customerDetail.newStatus' | transloco }}</label>
+              <select [(ngModel)]="cpStatusForm.status">
+                @for (s of cpStatuses; track s) {
+                  <option [value]="s">{{ 'status.customerProduct.' + s | transloco }}</option>
+                }
+              </select>
+            </div>
+            @if (cpStatusForm.status === 'Active') {
+              <div class="form-group">
+                <label>{{ 'customerDetail.goLive' | transloco }}</label>
+                <input type="date" [(ngModel)]="cpStatusForm.date" />
+                <span class="field-hint">{{ 'customerDetail.goLiveHint' | transloco }}</span>
+              </div>
+            }
+            @if (cpStatusForm.status === 'Discontinued') {
+              <div class="form-group">
+                <label>{{ 'customerDetail.discontinuedAt' | transloco }}</label>
+                <input type="date" [(ngModel)]="cpStatusForm.date" />
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="cpStatusTarget.set(null)">{{ 'common.cancel' | transloco }}</button>
+            <button class="btn btn-primary" [disabled]="cpStatusSaving()" (click)="saveCpStatus()">
+              {{ (cpStatusSaving() ? 'common.saving' : 'common.save') | transloco }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Add Product Modal -->
     @if (showAddProductModal()) {
       <div class="modal-backdrop" (click)="showAddProductModal.set(false)">
@@ -462,7 +509,7 @@ interface CustomerDetail {
           <div class="modal-body">
             <div class="form-group">
               <label>{{ 'customerDetail.product' | transloco }} <span class="required">*</span></label>
-              <select [(ngModel)]="addProductForm.productId" [class.input-error]="addProductSubmitted() && !addProductForm.productId">
+              <select [(ngModel)]="addProductForm.productId" (ngModelChange)="onAddProductChange($event)" [class.input-error]="addProductSubmitted() && !addProductForm.productId">
                 <option value="">{{ 'customerDetail.selectProduct' | transloco }}</option>
                 @for (p of availableProducts(); track p.id) {
                   <option [value]="p.id">{{ p.name }} ({{ p.code }})</option>
@@ -474,10 +521,14 @@ interface CustomerDetail {
             </div>
             <div class="form-group">
               <label>{{ 'customerDetail.usageModeLabel' | transloco }} <span class="required">*</span></label>
-              <select [(ngModel)]="addProductForm.usageMode">
-                <option value="0">{{ 'customerDetail.usageSaas' | transloco }}</option>
-                <option value="1">{{ 'customerDetail.usageDedicated' | transloco }}</option>
+              @let modes = allowedUsageModes();
+              <select [(ngModel)]="addProductForm.usageMode" [disabled]="modes.length === 1">
+                @if (modes.includes('0')) { <option value="0">{{ 'customerDetail.usageSaas' | transloco }}</option> }
+                @if (modes.includes('1')) { <option value="1">{{ 'customerDetail.usageDedicated' | transloco }}</option> }
               </select>
+              @if (modes.length === 1) {
+                <span class="field-hint">{{ 'customerDetail.usageModeFixed' | transloco }}</span>
+              }
             </div>
             <div class="form-group">
               <label>{{ 'customerDetail.notes' | transloco }}</label>
@@ -842,6 +893,7 @@ interface CustomerDetail {
     .form-group { display: flex; flex-direction: column; gap: 0.375rem; label { font-size: 0.8125rem; font-weight: 600; color: var(--text); } input, select, textarea { padding: 0.5rem 0.75rem; border: 1px solid var(--border-strong); border-radius: 0.375rem; font-size: 0.875rem; width: 100%; box-sizing: border-box; resize: vertical; background: var(--surface); &:focus { outline: none; border-color: var(--primary); } } }
     .input-error { border-color: var(--danger) !important; }
     .error-msg { font-size: 0.75rem; color: var(--danger); }
+    .field-hint { font-size: 0.75rem; color: var(--text-muted); }
     .required { color: var(--danger); }
     .alert-error { padding: 0.75rem; background: var(--danger-faint-bg); border: 1px solid var(--danger-border); border-radius: 0.375rem; color: var(--danger-soft-text); font-size: 0.8125rem; }
     .btn-cancel { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: 0.5rem; padding: 0.5rem 1.25rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; &:hover { background: var(--surface-3); } }
@@ -941,6 +993,21 @@ export class CustomerDetailComponent implements OnInit {
   availableProducts() {
     const existing = new Set(this.customer()?.products.map(p => p.productId) ?? []);
     return this.allProducts().filter(p => !existing.has(p.id));
+  }
+
+  // Ürün tipi kullanım modunu belirler: SaaS → yalnız SaaS ('0'), müşteriye özel → yalnız Dedicated ('1'), hibrit → ikisi.
+  allowedUsageModes(): string[] {
+    const p = this.allProducts().find(x => x.id === this.addProductForm.productId);
+    const type = p?.productType;
+    if (type === 'SaaS' || type === 0) return ['0'];
+    if (type === 'CustomerBased' || type === 1) return ['1'];
+    return ['0', '1'];
+  }
+
+  onAddProductChange(productId: string) {
+    this.addProductForm.productId = productId;
+    const modes = this.allowedUsageModes();
+    if (!modes.includes(this.addProductForm.usageMode)) this.addProductForm.usageMode = modes[0];
   }
 
   openAddProduct() {
@@ -1232,6 +1299,43 @@ export class CustomerDetailComponent implements OnInit {
   statusCss(s: string) { return CUST_STATUS_CSS[s] ?? ''; }
   usageModeCss(m: string) { return USAGE_MODE_CSS[m] ?? ''; }
   cpStatusCss(s: string) { return CP_STATUS_CSS[s] ?? ''; }
+
+  // --- Müşteri ürünü durum değişikliği (Onboarding → Active → Inactive/Discontinued) ---
+  readonly cpStatuses = ['Onboarding', 'Active', 'Inactive', 'Discontinued'];
+  cpStatusTarget = signal<CustomerProduct | null>(null);
+  cpStatusSaving = signal(false);
+  cpStatusError = signal('');
+  cpStatusForm = { status: 'Onboarding', date: '' };
+
+  openCpStatus(cp: CustomerProduct) {
+    this.cpStatusForm = { status: cp.status, date: cp.goLiveAt ?? new Date().toISOString().slice(0, 10) };
+    this.cpStatusError.set('');
+    this.cpStatusTarget.set(cp);
+  }
+
+  saveCpStatus() {
+    const cp = this.cpStatusTarget();
+    if (!cp) return;
+    const customerId = this.customer()!.id;
+    const { status, date } = this.cpStatusForm;
+    this.cpStatusSaving.set(true);
+    this.cpStatusError.set('');
+    this.http.patch(`${environment.apiUrl}/customers/${customerId}/products/${cp.productId}/status`, {
+      newStatus: status,
+      goLiveAt: status === 'Active' && date ? date : null,
+      discontinuedAt: status === 'Discontinued' && date ? date : null
+    }).subscribe({
+      next: () => {
+        this.cpStatusSaving.set(false);
+        this.cpStatusTarget.set(null);
+        this.http.get<CustomerDetail>(`${environment.apiUrl}/customers/${customerId}`).subscribe({ next: c => this.customer.set(c) });
+      },
+      error: err => {
+        this.cpStatusSaving.set(false);
+        this.cpStatusError.set(err.error?.detail ?? this.transloco.translate('customerDetail.statusError'));
+      }
+    });
+  }
 
   lifecycleSteps() {
     const c = this.customer()!;

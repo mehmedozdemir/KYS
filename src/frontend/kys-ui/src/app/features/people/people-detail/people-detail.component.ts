@@ -13,7 +13,7 @@ interface PersonDetail {
   email: string;
   phone: string | null;
   title: string | null;
-  employmentStatus: number;
+  employmentStatus: string | number;
   hireDate: string | null;
   terminationDate: string | null;
   isPlatformUser: boolean;
@@ -24,7 +24,10 @@ interface PersonDetail {
   teamMemberships: { teamId: string; teamName: string; organizationRole: string; startDate: string; endDate: string | null }[];
 }
 
-const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilot', 2: 'badge--suspended', 3: 'badge--archived' };
+// API enum'ları string döner (JsonStringEnumConverter); eski sayısal değerler de normalize edilir.
+const EMPLOYMENT_STATUSES = ['Active', 'OnLeave', 'Resigned', 'Terminated'];
+const employmentName = (s: string | number) => typeof s === 'number' ? EMPLOYMENT_STATUSES[s] ?? String(s) : s;
+const STATUS_CSS: Record<string, string> = { Active: 'badge--active', OnLeave: 'badge--pilot', Resigned: 'badge--suspended', Terminated: 'badge--archived' };
 
 @Component({
   selector: 'app-people-detail',
@@ -63,7 +66,7 @@ const STATUS_CSS: Record<number, string> = { 0: 'badge--active', 1: 'badge--pilo
           </div>
           <div class="header-badges">
             <span class="badge" [ngClass]="statusCss(person()!.employmentStatus)">
-              {{ 'status.employment.' + person()!.employmentStatus | transloco }}
+              {{ 'status.employment.' + statusName(person()!.employmentStatus) | transloco }}
             </span>
             @if (person()!.isPlatformUser) {
               <span class="badge badge--active">{{ 'peopleDetail.platformUser' | transloco }}</span>
@@ -407,7 +410,7 @@ export class PeopleDetailComponent implements OnInit {
 
   openStatusChange() {
     const p = this.person()!;
-    this.statusForm = { newStatus: String(p.employmentStatus), terminationDate: '', terminationReason: '' };
+    this.statusForm = { newStatus: String(EMPLOYMENT_STATUSES.indexOf(employmentName(p.employmentStatus))), terminationDate: '', terminationReason: '' };
     this.statusError.set('');
     this.showStatusModal.set(true);
   }
@@ -488,5 +491,6 @@ export class PeopleDetailComponent implements OnInit {
     });
   }
 
-  statusCss(s: number) { return STATUS_CSS[s] ?? ''; }
+  statusCss(s: string | number) { return STATUS_CSS[employmentName(s)] ?? ''; }
+  statusName(s: string | number) { return employmentName(s); }
 }

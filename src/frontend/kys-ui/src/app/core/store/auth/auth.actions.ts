@@ -18,7 +18,11 @@ export const loginFailure = createAction(
 
 export const logout = createAction('[Auth] Logout');
 
-export const restoreSession = createAction('[Auth] Restore Session');
+// Sayfa yenilendiğinde localStorage'daki kullanıcıyı store'a geri yükler.
+export const restoreSession = createAction(
+  '[Auth] Restore Session',
+  props<{ user: AuthUser }>()
+);
 
 export const refreshToken = createAction('[Auth] Refresh Token');
 

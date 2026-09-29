@@ -39,6 +39,33 @@ public sealed class Customer : AuditableEntity
     public ICollection<CustomerProduct> Products { get; set; } = [];
     public ICollection<CustomerVpnConfig> VpnConfigs { get; set; } = [];
 
+    // --- Lifecycle: tarihler gerçek olaylardan türetilir, ilk gerçekleşme anı korunur ---
+
+    public void ChangeStatus(CustomerStatus newStatus, DateOnly today)
+    {
+        Status = newStatus;
+        if (newStatus is CustomerStatus.Onboarding or CustomerStatus.Active)
+            OnboardingStartedAt ??= today;
+        if (newStatus == CustomerStatus.Active)
+            ProductionLiveAt ??= today;
+    }
+
+    public void MarkEnvironmentReady(bool isProduction, DateOnly date)
+    {
+        OnboardingStartedAt ??= date;
+        if (isProduction)
+            ProdEnvReadyAt ??= date;
+        else
+            TestEnvReadyAt ??= date;
+    }
+
+    // Birden fazla ürün canlıya geçebilir; müşterinin canlıya geçiş tarihi en erken olanıdır.
+    public void MarkProductionLive(DateOnly date)
+    {
+        if (ProductionLiveAt is null || date < ProductionLiveAt)
+            ProductionLiveAt = date;
+    }
+
     public void Churn(DateOnly serviceEndedAt, string? reason)
     {
         Status = CustomerStatus.Churned;

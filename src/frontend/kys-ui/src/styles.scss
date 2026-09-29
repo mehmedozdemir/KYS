@@ -93,3 +93,24 @@ a {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+// ─── Modallar: küçük ekranda da erişilebilir ───────────────────────────────
+// Bileşen stilleri boyut/renk belirler; bu kural yalnızca taşmayı yönetir.
+// Modal ekran yüksekliğini aşarsa kaydırılır, başlık ve alt butonlar görünür kalır.
+.modal-backdrop .modal {
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.modal-backdrop .modal > .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface);
+}
+.modal-backdrop .modal > .modal-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--surface);
+}
