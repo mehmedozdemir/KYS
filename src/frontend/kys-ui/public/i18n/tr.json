@@ -560,7 +560,8 @@
     "accessGrants": "Erişim Yetkileri",
     "emailSettings": "Mail Ayarları",
     "customFields": "Özel Alanlar",
-    "auditLog": "Audit Log"
+    "auditLog": "Audit Log",
+    "organizationRoles": "Organizasyon Rolleri"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1222,6 +1223,21 @@
     "organization": {
       "companyNamePh": "ör. Örnek Yazılım A.Ş.",
       "shortNamePh": "ör. Örnek"
+    },
+    "orgRoles": {
+      "title": "Organizasyon Rolleri",
+      "subtitle": "Ekip üyeliklerinde seçilen roller (ör. Mobil Geliştirici, Veri Mühendisi)",
+      "new": "Yeni Rol",
+      "edit": "Rolü Düzenle",
+      "empty": "Henüz rol tanımlanmamış.",
+      "name": "Rol Adı",
+      "namePh": "ör. Mobil Geliştirici",
+      "description": "Açıklama",
+      "activeMembers": "Aktif Üye",
+      "inUseHint": "Devam eden üyeliklerde kullanıldığı için silinemez",
+      "deleteConfirm": "\"{{name}}\" rolü silinsin mi?",
+      "saveError": "Rol kaydedilemedi",
+      "deleteError": "Rol silinemedi"
     }
   },
   "customFields": {

@@ -14,6 +14,8 @@
   "err.branding.logoTooLarge": "The logo can be at most 2 MB.",
   "err.branding.unsupportedFileType": "Unsupported file type. Upload PNG, JPEG, SVG, WEBP or GIF.",
   "err.forbidden.record": "You do not have permission to act on this record.",
+  "err.orgRole.nameExists": "An organization role with this name already exists.",
+  "err.orgRole.inUse": "This role is used by ongoing team memberships; end or move them first.",
   "err.forbidden.assignRole": "You are not allowed to assign a system role other than Read Only.",
   "err.forbidden.environment": "You do not have permission to view this environment.",
   "err.forbidden.productEnvironments": "You do not have permission to view this product's environments.",
