@@ -376,7 +376,7 @@ interface ProductDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ (editingTemplateId() ? 'productDetail.templateEditTitle' : 'productDetail.templateAddTitle') | transloco }}</h2>
-            <button type="button" class="close-btn" (click)="showTemplateModal.set(false)"><i class="pi pi-times"></i></button>
+            <button type="button" class="close-btn" (click)="showTemplateModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (templateError()) { <div class="alert-error">{{ templateError() }}</div> }
@@ -484,7 +484,7 @@ interface ProductDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'productDetail.newEndpoint' | transloco }}</h2>
-            <button type="button" class="close-btn" (click)="showEndpointModal.set(false)"><i class="pi pi-times"></i></button>
+            <button type="button" class="close-btn" (click)="showEndpointModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (epError()) { <div class="alert-error">{{ epError() }}</div> }
@@ -530,7 +530,7 @@ interface ProductDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'productDetail.assignTeamTitle' | transloco }}</h2>
-            <button type="button" class="close-btn" (click)="showTeamModal.set(false)"><i class="pi pi-times"></i></button>
+            <button type="button" class="close-btn" (click)="showTeamModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (teamAssignError()) { <div class="alert-error">{{ teamAssignError() }}</div> }
@@ -571,7 +571,7 @@ interface ProductDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'productDetail.assignPersonTitle' | transloco }}</h2>
-            <button type="button" class="close-btn" (click)="showPersonModal.set(false)"><i class="pi pi-times"></i></button>
+            <button type="button" class="close-btn" (click)="showPersonModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (personAssignError()) { <div class="alert-error">{{ personAssignError() }}</div> }
@@ -621,7 +621,7 @@ interface ProductDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'productDetail.editTitle' | transloco }}</h2>
-            <button type="button" class="close-btn" (click)="showEditModal.set(false)"><i class="pi pi-times"></i></button>
+            <button type="button" class="close-btn" (click)="showEditModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (editError()) {

@@ -123,7 +123,7 @@ const ENTITY_TYPE_NAMES = ['Customer', 'Product'];
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ (editingId ? 'admin.customFields.editModal' : 'admin.customFields.newModal') | transloco }}</h2>
-            <button class="close-btn" (click)="closeModal()"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="closeModal()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (saveError()) {

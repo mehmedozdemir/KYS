@@ -35,7 +35,11 @@
     "show": "Göster",
     "confirm": "Onayla",
     "areYouSure": "Emin misiniz?",
-    "clear": "Temizle"
+    "clear": "Temizle",
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "moreActions": "Diğer işlemler",
+    "showHide": "Göster / Gizle"
   },
   "status": {
     "customer": {
@@ -818,7 +822,10 @@
         "EmailAccount": "E-posta Hesabı",
         "PersonalCredential": "Kişisel Erişim Bilgisi",
         "OrganizationRole": "Organizasyon Rolü"
-      }
+      },
+      "field": "Alan",
+      "oldValue": "Eski Değer",
+      "newValue": "Yeni Değer"
     },
     "accessGrants": {
       "title": "Erişim Yetkileri (Grant)",

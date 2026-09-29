@@ -144,7 +144,7 @@ const ROLE_COLOR: Record<string, string> = {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'admin.platformUsers.assignModalTitle' | transloco }}</h2>
-            <button class="close-btn" (click)="assignModal.set(null)"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="assignModal.set(null)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (assignError()) {
@@ -181,7 +181,7 @@ const ROLE_COLOR: Record<string, string> = {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'admin.platformUsers.resetTitle' | transloco }} — {{ resetModal()!.name }}</h2>
-            <button class="close-btn" (click)="resetModal.set(null)"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="resetModal.set(null)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body" style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem">
             @if (resetError()) {
@@ -224,7 +224,7 @@ const ROLE_COLOR: Record<string, string> = {
         <div class="modal modal--lg" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'admin.platformUsers.addModalTitle' | transloco }}</h2>
-            <button class="close-btn" (click)="addModal.set(false)"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="addModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body add-body">
             @if (addLoading()) {

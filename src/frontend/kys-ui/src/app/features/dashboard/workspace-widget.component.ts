@@ -80,7 +80,7 @@ interface WorkspaceCustomer {
             <input type="text" [ngModel]="filter()" (ngModelChange)="filter.set($event)"
               [placeholder]="'workspace.searchPlaceholder' | transloco" />
             @if (filter()) {
-              <button type="button" class="ws-filter-clear" (click)="filter.set('')">
+              <button type="button" class="ws-filter-clear" (click)="filter.set('')" [attr.aria-label]="'common.close' | transloco">
                 <i class="pi pi-times"></i>
               </button>
             }

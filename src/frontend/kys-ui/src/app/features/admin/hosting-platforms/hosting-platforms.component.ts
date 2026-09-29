@@ -91,7 +91,7 @@ const CATEGORY_OPTIONS = ['Konteyner', 'Sunucu', 'Bulut', 'Diğer'];
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ (editingId() ? 'admin.hostingPlatforms.editModal' : 'admin.hostingPlatforms.newModal') | transloco }}</h2>
-            <button class="close-btn" (click)="showModal.set(false)"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="showModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (saveError()) { <div class="alert-error">{{ saveError() }}</div> }
@@ -170,7 +170,7 @@ const CATEGORY_OPTIONS = ['Konteyner', 'Sunucu', 'Bulut', 'Diğer'];
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'admin.hostingPlatforms.deleteModal' | transloco }}</h2>
-            <button class="close-btn" (click)="deletingPlatform.set(null)"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="deletingPlatform.set(null)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (deleteError()) { <div class="alert-error">{{ deleteError() }}</div> }

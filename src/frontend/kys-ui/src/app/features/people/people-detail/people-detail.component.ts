@@ -187,7 +187,7 @@ const STATUS_CSS: Record<string, string> = { Active: 'badge--active', OnLeave: '
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'peopleDetail.statusTitle' | transloco }}</h2>
-            <button type="button" class="close-btn" (click)="showStatusModal.set(false)"><i class="pi pi-times"></i></button>
+            <button type="button" class="close-btn" (click)="showStatusModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (statusError()) {
@@ -229,7 +229,7 @@ const STATUS_CSS: Record<string, string> = { Active: 'badge--active', OnLeave: '
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'peopleDetail.editTitle' | transloco }}</h2>
-            <button type="button" class="close-btn" (click)="showEditModal.set(false)"><i class="pi pi-times"></i></button>
+            <button type="button" class="close-btn" (click)="showEditModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (editError()) {

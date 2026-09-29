@@ -72,7 +72,7 @@ interface ArticleListResult {
         <div class="filter-chips">
           <span class="chip">
             <i class="pi pi-tag"></i> {{ filterTag }}
-            <button (click)="filterTag = ''; onFilterChange()"><i class="pi pi-times"></i></button>
+            <button (click)="filterTag = ''; onFilterChange()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </span>
         </div>
       }
@@ -119,11 +119,11 @@ interface ArticleListResult {
         </div>
         @if (totalCount() > pageSize) {
           <div class="pagination">
-            <button class="page-btn" [disabled]="page() === 1" (click)="goToPage(page() - 1)">
+            <button class="page-btn" [disabled]="page() === 1" (click)="goToPage(page() - 1)" [attr.aria-label]="'common.previous' | transloco">
               <i class="pi pi-chevron-left"></i>
             </button>
             <span class="page-info">{{ page() }} / {{ totalPages() }}</span>
-            <button class="page-btn" [disabled]="page() === totalPages()" (click)="goToPage(page() + 1)">
+            <button class="page-btn" [disabled]="page() === totalPages()" (click)="goToPage(page() + 1)" [attr.aria-label]="'common.next' | transloco">
               <i class="pi pi-chevron-right"></i>
             </button>
           </div>

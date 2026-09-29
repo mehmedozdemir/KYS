@@ -101,7 +101,7 @@ interface AddMemberRequest {
             <div class="modal" (click)="$event.stopPropagation()">
               <div class="modal-header">
                 <h2>{{ 'teamDetail.editTeam' | transloco }}</h2>
-                <button class="modal-close" (click)="showEdit.set(false)"><i class="pi pi-times"></i></button>
+                <button class="modal-close" (click)="showEdit.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
               </div>
               <div class="modal-body">
                 @if (editError()) { <div class="alert-error">{{ editError() }}</div> }
@@ -195,7 +195,7 @@ interface AddMemberRequest {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'teamDetail.endMembershipTitle' | transloco }}</h2>
-            <button type="button" class="close-btn" (click)="closeEndModal()"><i class="pi pi-times"></i></button>
+            <button type="button" class="close-btn" (click)="closeEndModal()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (endError()) {
@@ -226,7 +226,7 @@ interface AddMemberRequest {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'teamDetail.addMember' | transloco }}</h2>
-            <button class="close-btn" (click)="closeAddModal()"><i class="pi pi-times"></i></button>
+            <button class="close-btn" (click)="closeAddModal()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (addError()) {

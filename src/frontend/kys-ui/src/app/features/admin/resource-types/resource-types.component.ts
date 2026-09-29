@@ -128,7 +128,7 @@ interface ResourceType {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ (editingId() ? 'admin.resourceTypes.editModal' : 'admin.resourceTypes.newModal') | transloco }}</h2>
-            <button type="button" class="close-btn" (click)="closeModal()">
+            <button type="button" class="close-btn" (click)="closeModal()" [attr.aria-label]="'common.close' | transloco">
               <i class="pi pi-times"></i>
             </button>
           </div>

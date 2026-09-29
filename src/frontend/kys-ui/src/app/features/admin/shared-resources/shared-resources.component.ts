@@ -138,7 +138,7 @@ interface SharedResourceDetail {
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ (editingId() ? 'admin.sharedResources.editModal' : 'admin.sharedResources.newModal') | transloco }}</h2>
-            <button class="modal-close" (click)="showModal.set(false)"><i class="pi pi-times"></i></button>
+            <button class="modal-close" (click)="showModal.set(false)" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             @if (detailLoading()) {

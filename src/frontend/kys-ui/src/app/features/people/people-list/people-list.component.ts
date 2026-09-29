@@ -109,7 +109,7 @@ const STATUS_CSS: Record<string, string> = { Active: 'badge--active', OnLeave: '
                   <td class="action-cell">
                     <a [routerLink]="['/people', p.id]" class="btn-link">{{ 'people.detail' | transloco }}</a>
                     <div class="kebab-wrap">
-                      <button class="kebab-btn" (click)="$event.stopPropagation(); toggleMenu(p.id)"><i class="pi pi-ellipsis-v"></i></button>
+                      <button class="kebab-btn" (click)="$event.stopPropagation(); toggleMenu(p.id)" [attr.aria-label]="'common.moreActions' | transloco"><i class="pi pi-ellipsis-v"></i></button>
                       @if (openMenuId() === p.id) {
                         <div class="kebab-menu">
                           @if (!p.isPlatformUser && perms.has('person:write')) {
@@ -146,7 +146,7 @@ const STATUS_CSS: Record<string, string> = { Active: 'badge--active', OnLeave: '
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'people.deleteTitle' | transloco }}</h2>
-            <button class="modal-close" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
+            <button class="modal-close" (click)="cancelDelete()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <p style="margin:0;color:var(--text)" [innerHTML]="'people.deleteConfirm' | transloco:{ name: deleteTarget()!.firstName + ' ' + deleteTarget()!.lastName }"></p>
@@ -167,7 +167,7 @@ const STATUS_CSS: Record<string, string> = { Active: 'badge--active', OnLeave: '
         <div class="modal modal--sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'people.promoteTitle' | transloco }}</h2>
-            <button class="modal-close" (click)="closePromote()"><i class="pi pi-times"></i></button>
+            <button class="modal-close" (click)="closePromote()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <div class="modal-body">
             <p style="margin:0 0 1rem;color:var(--text)" [innerHTML]="'people.promoteInfo' | transloco:{ name: promoteTarget()!.firstName + ' ' + promoteTarget()!.lastName }"></p>
@@ -201,7 +201,7 @@ const STATUS_CSS: Record<string, string> = { Active: 'badge--active', OnLeave: '
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ 'people.new' | transloco }}</h2>
-            <button class="modal-close" (click)="closeCreate()"><i class="pi pi-times"></i></button>
+            <button class="modal-close" (click)="closeCreate()" [attr.aria-label]="'common.close' | transloco"><i class="pi pi-times"></i></button>
           </div>
           <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="modal-body">
             <div class="form-row">

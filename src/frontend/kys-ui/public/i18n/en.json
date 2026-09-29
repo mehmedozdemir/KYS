@@ -35,7 +35,11 @@
     "show": "Show",
     "confirm": "Confirm",
     "areYouSure": "Are you sure?",
-    "clear": "Clear"
+    "clear": "Clear",
+    "previous": "Previous",
+    "next": "Next",
+    "moreActions": "More actions",
+    "showHide": "Show / Hide"
   },
   "status": {
     "customer": {
@@ -818,7 +822,10 @@
         "EmailAccount": "Email Account",
         "PersonalCredential": "Personal Credential",
         "OrganizationRole": "Organization Role"
-      }
+      },
+      "field": "Field",
+      "oldValue": "Old Value",
+      "newValue": "New Value"
     },
     "accessGrants": {
       "title": "Access Grants",

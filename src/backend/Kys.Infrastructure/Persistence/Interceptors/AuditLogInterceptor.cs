@@ -41,18 +41,49 @@ public sealed class AuditLogInterceptor(ICurrentUserService currentUserService) 
         return base.SavingChanges(eventData, result);
     }
 
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
-        WriteAuditEntries(eventData.Context);
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
+        var pending = WriteAuditEntries(eventData.Context);
+        if (eventData.Context is not null)
+            await ResolveContextsAsync(eventData.Context, pending, cancellationToken);
+        return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    private void WriteAuditEntries(DbContext? context)
+    // Bağlam (Müşteri / Ürün / Ortam / Kaynak) yalnızca async yolda çözülür; uygulama SaveChangesAsync kullanır.
+    private static async Task ResolveContextsAsync(
+        DbContext context, List<(AuditLog Log, EntityEntry? Entry)> pending, CancellationToken ct)
     {
-        if (context is null) return;
+        var resolver = new AuditContextResolver(context);
+        foreach (var (log, entry) in pending)
+        {
+            if (log.Context is not null) continue;
+            var source = entry ?? await FindTrackedOrStoredAsync(context, log.EntityType, log.EntityId, ct);
+            if (source is null) continue;
+            log.Context = await resolver.ResolveAsync(log.EntityType, prop => ReadGuid(source, prop), ct);
+            // Kendi adı olmayan kişi ilişkileri (ekip üyeliği, ürün ataması, erişim yetkisi) → kişinin adı
+            log.EntityName ??= await resolver.PersonNameAsync(ReadGuid(source, "PersonId") ?? ReadGuid(source, "OwnerPersonId"), ct);
+        }
+    }
+
+    // Handler'ların eklediği audit kayıtları (ör. CredentialRevealed) yalnızca tip + id taşır.
+    private static async Task<EntityEntry?> FindTrackedOrStoredAsync(DbContext context, string entityType, Guid id, CancellationToken ct)
+    {
+        var clr = context.Model.GetEntityTypes().FirstOrDefault(t => t.ClrType.Name == entityType)?.ClrType;
+        if (clr is null) return null;
+        var entity = await context.FindAsync(clr, [id], ct);
+        return entity is null ? null : context.Entry(entity);
+    }
+
+    private static Guid? ReadGuid(EntityEntry entry, string property) =>
+        entry.Metadata.FindProperty(property) is null ? null : entry.Property(property).CurrentValue as Guid?;
+
+    private List<(AuditLog Log, EntityEntry? Entry)> WriteAuditEntries(DbContext? context)
+    {
+        var pending = new List<(AuditLog, EntityEntry?)>();
+        if (context is null) return pending;
 
         var userId = currentUserService.UserId;
         var ip = currentUserService.IpAddress;
@@ -60,7 +91,10 @@ public sealed class AuditLogInterceptor(ICurrentUserService currentUserService) 
 
         // Handler'ların doğrudan eklediği audit kayıtlarına (ör. CredentialRevealed) IP'yi tamamla.
         foreach (var existing in context.ChangeTracker.Entries<AuditLog>().Where(e => e.State == EntityState.Added))
+        {
             existing.Entity.IpAddress ??= ip;
+            pending.Add((existing.Entity, null));
+        }
 
         var logs = new List<AuditLog>();
         foreach (var entry in context.ChangeTracker.Entries().ToList())
@@ -78,10 +112,12 @@ public sealed class AuditLogInterceptor(ICurrentUserService currentUserService) 
             log.ChangedAt = now;
             log.IpAddress = ip;
             logs.Add(log);
+            pending.Add((log, entry));
         }
 
         if (logs.Count > 0)
             context.Set<AuditLog>().AddRange(logs);
+        return pending;
     }
 
     private static AuditLog? BuildLog(EntityEntry entry, Guid entityId)
