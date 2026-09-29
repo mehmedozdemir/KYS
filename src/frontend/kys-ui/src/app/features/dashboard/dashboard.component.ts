@@ -2,6 +2,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { WorkspaceWidgetComponent } from './workspace-widget.component';
+import { ExecutiveSummaryComponent } from './executive-summary.component';
+import { PermissionService } from '../../core/services/permission.service';
 import { TranslocoModule } from '@jsverse/transloco';
 
 interface DashboardStats {
@@ -17,7 +19,7 @@ interface DashboardStats {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [WorkspaceWidgetComponent, TranslocoModule],
+  imports: [WorkspaceWidgetComponent, ExecutiveSummaryComponent, TranslocoModule],
   template: `
     <div class="page-content">
       <div class="page-header">
@@ -65,6 +67,7 @@ interface DashboardStats {
         </div>
       }
 
+      @if (showExecutive) { <app-executive-summary /> }
       <app-workspace-widget />
     </div>
   `,
@@ -109,6 +112,8 @@ interface DashboardStats {
 })
 export class DashboardComponent implements OnInit {
   private http = inject(HttpClient);
+  // Şirket geneli özet (sözleşme bedelleri dahil) yalnızca global kapsam yetkisine açık
+  readonly showExecutive = inject(PermissionService).has('scope:global');
 
   stats: DashboardStats | null = null;
 

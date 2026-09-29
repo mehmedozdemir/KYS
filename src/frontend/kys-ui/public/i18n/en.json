@@ -578,7 +578,27 @@
     "activeCustomers": "Active Customers",
     "activeProducts": "Active Products",
     "teams": "Teams",
-    "activeStaff": "Active Staff"
+    "activeStaff": "Active Staff",
+    "exec": {
+      "title": "Executive Summary",
+      "pipeline": "Customer Pipeline",
+      "acrossCustomers": "{{count}} customers (active + onboarding)",
+      "security": "Credential Reveals",
+      "revealsLast30": "last 30 days",
+      "changesLast7": "{{count}} changes in the last 7 days",
+      "upcoming": "Upcoming Dates (12 months)",
+      "noUpcoming": "No dates in the next 12 months.",
+      "inDays": "in {{days}} days",
+      "onboarding": "Customers Onboarding",
+      "noOnboarding": "No customers onboarding.",
+      "dayCount": "day {{days}}",
+      "testEnv": "Test env",
+      "prodEnv": "Prod env",
+      "goLives": "Recent Go-lives (12 months)",
+      "noGoLives": "No go-lives in the last 12 months.",
+      "adoption": "Product Adoption",
+      "customersLive": "{{total}} customers · {{live}} live"
+    }
   },
   "workspace": {
     "title": "My Workspace",

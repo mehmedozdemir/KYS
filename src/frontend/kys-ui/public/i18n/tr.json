@@ -578,7 +578,27 @@
     "activeCustomers": "Aktif Müşteri",
     "activeProducts": "Aktif Ürün",
     "teams": "Ekip",
-    "activeStaff": "Aktif Personel"
+    "activeStaff": "Aktif Personel",
+    "exec": {
+      "title": "Yönetici Özeti",
+      "pipeline": "Müşteri Hattı",
+      "acrossCustomers": "{{count}} müşteri (aktif + devreye alma)",
+      "security": "Şifre Görüntüleme",
+      "revealsLast30": "son 30 gün",
+      "changesLast7": "son 7 günde {{count}} değişiklik",
+      "upcoming": "Yaklaşan Tarihler (12 ay)",
+      "noUpcoming": "Önümüzdeki 12 ayda tarih yok.",
+      "inDays": "{{days}} gün",
+      "onboarding": "Devreye Alınan Müşteriler",
+      "noOnboarding": "Devreye alma sürecinde müşteri yok.",
+      "dayCount": "{{days}}. gün",
+      "testEnv": "Test ortamı",
+      "prodEnv": "Prod ortamı",
+      "goLives": "Son Canlıya Geçişler (12 ay)",
+      "noGoLives": "Son 12 ayda canlıya geçiş yok.",
+      "adoption": "Ürün Yaygınlığı",
+      "customersLive": "{{total}} müşteri · {{live}} canlı"
+    }
   },
   "workspace": {
     "title": "Çalışma Alanım",
