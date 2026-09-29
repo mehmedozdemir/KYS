@@ -214,6 +214,10 @@ interface Customer {
                 <input type="email" [(ngModel)]="form.primaryContactEmail" />
               </div>
             </div>
+            <div class="form-group">
+              <label>{{ 'customers.contactPhone' | transloco }}</label>
+              <input type="tel" [(ngModel)]="form.primaryContactPhone" placeholder="+90 5xx xxx xx xx" />
+            </div>
             @if (customFieldDefs().length) {
               <div class="section-title">{{ 'common.customFields' | transloco }}</div>
               @for (def of customFieldDefs(); track def.id) {
@@ -469,6 +473,7 @@ export class CustomerListComponent implements OnInit {
     description: '',
     primaryContactName: '',
     primaryContactEmail: '',
+    primaryContactPhone: '',
   };
 
   ngOnInit(): void {
@@ -514,7 +519,7 @@ export class CustomerListComponent implements OnInit {
     this.form = {
       name: '', code: '', shortName: '', sector: '',
       country: '', city: '', description: '',
-      primaryContactName: '', primaryContactEmail: '',
+      primaryContactName: '', primaryContactEmail: '', primaryContactPhone: '',
     };
   }
 
@@ -563,7 +568,7 @@ export class CustomerListComponent implements OnInit {
       description: this.form.description.trim() || null,
       primaryContactName: this.form.primaryContactName.trim() || null,
       primaryContactEmail: this.form.primaryContactEmail.trim() || null,
-      primaryContactPhone: null,
+      primaryContactPhone: this.form.primaryContactPhone.trim() || null,
       customFields: this.buildCustomFields(),
     };
 

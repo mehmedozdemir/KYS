@@ -114,3 +114,28 @@ a {
   z-index: 2;
   background: var(--surface);
 }
+
+// ─── Form alanları: tema uyumlu varsayılanlar ──────────────────────────────
+// Arka planı belirtilmemiş alanlar koyu temada tarayıcının gri (#3b3b3b) varsayılanını
+// alıyordu. :where() → özgüllük 0; bileşen stilleri her zaman önceliklidir.
+:root, [data-theme='light-classic'] { --input-bg: #FFFFFF; }
+[data-theme^='dark'] { --input-bg: var(--bg); }
+
+:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']), select, textarea) {
+  background-color: var(--input-bg);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+:where(input, textarea)::placeholder { color: var(--text-subtle); opacity: 1; }
+:where(input, select, textarea):focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft-bg);
+}
+
+// ─── Tablolar: dar ekranda yatay kaydırma ───────────────────────────────────
+// Liste kartları overflow:hidden ile köşe yuvarlamayı korur ama mobilde sütunları kesiyordu.
+.table-card { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+@media (max-width: 768px) {
+  .table-card > table { min-width: 640px; }
+}

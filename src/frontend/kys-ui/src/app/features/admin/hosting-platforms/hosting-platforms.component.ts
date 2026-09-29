@@ -29,7 +29,7 @@ const CATEGORY_OPTIONS = ['Konteyner', 'Sunucu', 'Bulut', 'Diğer'];
     <div class="page-content">
       <div class="page-header">
         <div>
-          <div class="breadcrumb"><a routerLink="/admin">{{ 'admin.crumb' | transloco }}</a><span>/</span><span>{{ 'admin.hostingPlatforms.title' | transloco }}</span></div>
+          <div class="breadcrumb"><span>{{ 'menu.definitions' | transloco }}</span><span>/</span><span>{{ 'admin.hostingPlatforms.title' | transloco }}</span></div>
           <h1 class="page-title">{{ 'admin.hostingPlatforms.title' | transloco }}</h1>
           <p class="page-subtitle">{{ 'admin.hostingPlatforms.subtitle' | transloco }}</p>
         </div>
@@ -121,7 +121,7 @@ const CATEGORY_OPTIONS = ['Konteyner', 'Sunucu', 'Bulut', 'Diğer'];
               <div class="form-group">
                 <label>{{ 'admin.hostingPlatforms.icon' | transloco }}</label>
                 <select [(ngModel)]="form.icon">
-                  @for (ic of iconOptions; track ic) { <option [ngValue]="ic">{{ ic }}</option> }
+                  @for (ic of iconOptions; track ic) { <option [ngValue]="ic">{{ 'admin.hostingPlatforms.iconNames.' + ic | transloco }}</option> }
                 </select>
               </div>
             </div>

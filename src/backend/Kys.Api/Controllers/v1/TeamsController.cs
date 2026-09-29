@@ -3,6 +3,7 @@ using Kys.Application.Teams.Commands.AddTeamMember;
 using Kys.Application.Teams.Commands.CreateTeam;
 using Kys.Application.Teams.Commands.DeleteTeam;
 using Kys.Application.Teams.Commands.EndTeamMembership;
+using Kys.Application.Teams.Commands.UpdateTeam;
 using Kys.Application.Teams.Queries.GetTeamDetail;
 using Kys.Application.Teams.Queries.GetTeams;
 using Kys.Api.Authorization;
@@ -44,6 +45,17 @@ public sealed class TeamsController(IMediator mediator) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id, version = "1" }, new { id });
     }
 
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [RequirePermission(Capabilities.TeamWrite)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTeamRequest request, CancellationToken ct)
+    {
+        await mediator.Send(new UpdateTeamCommand(id, request.Name, request.Code, request.Description, request.TeamType), ct);
+        return NoContent();
+    }
+
     [HttpPost("{teamId:guid}/members")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -77,3 +89,5 @@ public sealed class TeamsController(IMediator mediator) : ControllerBase
 }
 
 public sealed record AddMemberRequest(Guid PersonId, Guid OrganizationRoleId, DateOnly StartDate);
+
+public sealed record UpdateTeamRequest(string Name, string? Code, string? Description, string TeamType);

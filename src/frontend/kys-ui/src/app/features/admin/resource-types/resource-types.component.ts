@@ -35,7 +35,7 @@ interface ResourceType {
       <div class="page-header">
         <div>
           <div class="breadcrumb">
-            <a routerLink="/admin">{{ 'admin.crumb' | transloco }}</a>
+            <span>{{ 'menu.definitions' | transloco }}</span>
             <span>/</span>
             <span>{{ 'admin.resourceTypes.title' | transloco }}</span>
           </div>

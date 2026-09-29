@@ -10,6 +10,7 @@ public sealed record TeamDetailDto(
     string? Code,
     string? Description,
     bool IsActive,
+    string TeamType,
     IReadOnlyList<TeamMemberDto> Members
 );
 
