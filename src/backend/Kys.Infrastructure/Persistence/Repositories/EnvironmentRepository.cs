@@ -52,6 +52,7 @@ public sealed class EnvironmentRepository(AppDbContext db) : IEnvironmentReposit
             .Include(x => x.EnvironmentType)
             .Include(x => x.HostingPlatform)
             .Include(x => x.Resources)
+            .Include(x => x.CustomerProduct).ThenInclude(cp => cp.Product).ThenInclude(p => p.ResourceTemplates)
             .Where(x => x.CustomerProductId == customerProductId)
             .OrderBy(x => x.EnvironmentType.SortOrder)
             .ToListAsync(ct);

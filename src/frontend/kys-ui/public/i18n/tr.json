@@ -764,7 +764,11 @@
     "vpnCustomerWide": "müşteri geneli",
     "vpnManage": "VPN bilgileri",
     "urlMissingList": "URL girilmemiş:",
-    "productLinkTitle": "Ürünün müşteri kurulum durumu"
+    "productLinkTitle": "Ürünün müşteri kurulum durumu",
+    "requiredMissingCount": "{{count}} zorunlu kaynak eksik",
+    "missingRequired": "Eksik zorunlu kaynaklar:",
+    "missingOptional": "Eklenmemiş diğer kaynaklar:",
+    "alreadyAdded": "eklendi"
   },
   "account": {
     "title": "Hesabım",

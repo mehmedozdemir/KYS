@@ -41,7 +41,8 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
             r.SharedResource?.ConnectionFields ?? [],
             r.SharedResourceId.HasValue && sharedCredentialMap.TryGetValue(r.SharedResourceId.Value, out var sc)
                 ? sc : [],
-            r.ConnectionFields)).ToList();
+            r.ConnectionFields,
+            r.ProductResourceTemplateId)).ToList();
 
         var endpointUrlMap = env.Endpoints.ToDictionary(e => e.ProductEndpointId);
         var endpoints = env.CustomerProduct.Product.Endpoints
@@ -63,11 +64,13 @@ public sealed class GetEnvironmentDetailQueryHandler(IEnvironmentRepository repo
                         ?? []);
             }).ToList();
 
+        // IsAdded: şablon bu ortamda kaynak olarak tanımlı mı (eksik kaynak göstergesi için)
+        var addedTemplateIds = env.Resources.Select(r => r.ProductResourceTemplateId).ToHashSet();
         var availableTemplates = env.CustomerProduct.Product.ResourceTemplates
             .OrderBy(t => t.SortOrder)
             .Select(t => new AvailableResourceTemplateDto(
                 t.Id, t.Name, t.ResourceType.Name, t.IsRequired, t.CanBeShared, t.ResourceType.FieldSchema,
-                t.SharedResourceId, t.SharedResource?.Name))
+                t.SharedResourceId, t.SharedResource?.Name, addedTemplateIds.Contains(t.Id)))
             .ToList();
 
         return new EnvironmentDetailDto(

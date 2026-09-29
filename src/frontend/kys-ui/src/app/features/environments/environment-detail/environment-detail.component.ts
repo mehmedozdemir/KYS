@@ -42,6 +42,7 @@ interface EnvironmentResource {
   sharedConnectionFields: Record<string, unknown>;
   sharedCredentials: CredentialStub[];
   connectionFields: Record<string, unknown>;
+  productResourceTemplateId: string;
 }
 
 interface EndpointUrl {
@@ -66,6 +67,7 @@ interface AvailableTemplate {
   fieldSchema: Record<string, FieldSchemaDef>;
   sharedResourceId: string | null;
   sharedResourceName: string | null;
+  isAdded: boolean;
 }
 
 interface SharedResourceOption {
@@ -95,6 +97,7 @@ interface EnvironmentSummary {
   environmentTypeColor: string | null;
   isActive: boolean;
   deployedVersion: string | null;
+  missingRequiredResourceCount: number;
 }
 
 interface VpnSummary {
@@ -285,6 +288,11 @@ interface HostingPlatformOption {
                 <span class="env-tab-dot" [style.background]="s.environmentTypeColor ?? '#6B7280'"></span>
                 {{ s.name }}
                 @if (s.deployedVersion) { <span class="env-tab-ver">{{ s.deployedVersion }}</span> }
+                @if (s.missingRequiredResourceCount) {
+                  <i class="pi pi-exclamation-triangle env-tab-warn"
+                    [title]="'environments.requiredMissingCount' | transloco:{ count: s.missingRequiredResourceCount }"
+                    [attr.aria-label]="'environments.requiredMissingCount' | transloco:{ count: s.missingRequiredResourceCount }"></i>
+                }
                 @if (!s.isActive) { <span class="env-pill-inactive">{{ 'environments.inactive' | transloco }}</span> }
               </button>
             }
@@ -294,7 +302,17 @@ interface HostingPlatformOption {
         <!-- Resources -->
         <div class="section">
           <div class="section-header">
-            <h2 class="section-title">{{ 'environments.resources' | transloco }}</h2>
+            <h2 class="section-title">
+              {{ 'environments.resources' | transloco }}
+              @if (env()!.availableTemplates.length) {
+                <span class="section-meta">
+                  {{ addedTemplateCount() }} / {{ env()!.availableTemplates.length }}
+                  @if (missingRequired().length) {
+                    <span class="section-meta-warn">· <i class="pi pi-exclamation-triangle"></i> {{ 'environments.requiredMissingCount' | transloco:{ count: missingRequired().length } }}</span>
+                  }
+                </span>
+              }
+            </h2>
             @if (env()!.availableTemplates.length) {
               <button type="button" class="btn-add-resource" (click)="openAddResource()">
                 <i class="pi pi-plus"></i> {{ 'environments.addResource' | transloco }}
@@ -437,6 +455,27 @@ interface HostingPlatformOption {
               }
             </div>
           }
+          <!-- Ürün şablonunda tanımlı ama bu ortama eklenmemiş kaynaklar; tıklayınca şablon seçili "Kaynak Ekle" açılır -->
+          @if (missingRequired().length) {
+            <div class="res-missing res-missing--required">
+              <span class="res-missing-lbl"><i class="pi pi-exclamation-triangle"></i> {{ 'environments.missingRequired' | transloco }}</span>
+              @for (t of missingRequired(); track t.id) {
+                <button type="button" class="res-missing-item" (click)="openAddResource(t.id)" [title]="'environments.addResource' | transloco">
+                  {{ t.name }} <span class="res-missing-type">· {{ t.resourceTypeName }}</span> <i class="pi pi-plus"></i>
+                </button>
+              }
+            </div>
+          }
+          @if (missingOptional().length) {
+            <div class="res-missing">
+              <span class="res-missing-lbl"><i class="pi pi-info-circle"></i> {{ 'environments.missingOptional' | transloco }}</span>
+              @for (t of missingOptional(); track t.id) {
+                <button type="button" class="res-missing-item" (click)="openAddResource(t.id)" [title]="'environments.addResource' | transloco">
+                  {{ t.name }} <span class="res-missing-type">· {{ t.resourceTypeName }}</span> <i class="pi pi-plus"></i>
+                </button>
+              }
+            </div>
+          }
         </div>
 
         <!-- Gizli değer: göster/gizle + (açıkken) kopyala -->
@@ -567,8 +606,8 @@ interface HostingPlatformOption {
                 (ngModelChange)="onTemplateChange($event)"
                 [class.input-error]="addResourceSubmitted() && !addResourceForm.templateId">
                 <option value="">{{ 'environments.selectTemplate' | transloco }}</option>
-                @for (t of env()!.availableTemplates; track t.id) {
-                  <option [value]="t.id">{{ t.name }} ({{ t.resourceTypeName }})</option>
+                @for (t of templatesForAdd(); track t.id) {
+                  <option [value]="t.id">{{ t.name }} ({{ t.resourceTypeName }}){{ t.isRequired && !t.isAdded ? ' *' : '' }}{{ t.isAdded ? ' — ' + ('environments.alreadyAdded' | transloco) : '' }}</option>
                 }
               </select>
               @if (addResourceSubmitted() && !addResourceForm.templateId) {
@@ -1239,6 +1278,17 @@ interface HostingPlatformOption {
 
     /* Personal credentials */
     .personal-creds-info-box { display: flex; align-items: flex-start; gap: 0.625rem; padding: 0.75rem 1rem; background: var(--indigo-soft-bg); border: 1px solid var(--indigo-soft-bg-2, #c7d2fe); border-radius: 0.5rem; font-size: 0.8125rem; color: var(--indigo-strong, #4338ca); i { flex-shrink: 0; margin-top: 0.1rem; } }
+    .section-meta { margin-left: 0.5rem; font-size: 0.8125rem; font-weight: 500; color: var(--text-muted); }
+    .section-meta-warn { color: var(--warning-strong, var(--warning)); i { font-size: 0.75rem; } }
+    .env-tab-warn { font-size: 0.7rem; color: var(--warning-strong, var(--warning)); }
+    .res-missing { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.75rem; font-size: 0.8125rem; color: var(--text-muted); }
+    .res-missing-lbl { display: inline-flex; align-items: center; gap: 0.375rem; i { font-size: 0.75rem; } }
+    .res-missing--required .res-missing-lbl { color: var(--warning-strong, var(--warning)); font-weight: 600; }
+    .res-missing-item { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.3rem 0.625rem; border-radius: 9999px; border: 1px dashed var(--border-strong);
+      background: none; color: var(--text); font-size: 0.8125rem; cursor: pointer; i { font-size: 0.7rem; color: var(--text-subtle); }
+      &:hover { border-color: var(--primary); color: var(--primary); i { color: var(--primary); } } }
+    .res-missing--required .res-missing-item { border-style: solid; border-color: var(--warning-border, var(--warning)); background: var(--warning-faint-bg); }
+    .res-missing-type { color: var(--text-subtle); }
     .prod-banner { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.875rem; margin-bottom: 0.75rem; border-radius: 0.5rem;
       background: var(--danger-faint-bg); border: 1px solid var(--danger-border, var(--danger-soft-text)); color: var(--danger-strong, var(--danger)); font-size: 0.8125rem; font-weight: 500; }
     .header-main { min-width: 0; }
@@ -1356,7 +1406,18 @@ export class EnvironmentDetailComponent implements OnInit {
   sharedCredKeys = signal<string[]>([]);
   private sharedResourcesLoaded = false;
 
-  openAddResource() {
+  // --- Eksik kaynaklar (ürün şablonu var, ortamda karşılığı yok) ---
+  missingRequired() { return (this.env()?.availableTemplates ?? []).filter(t => !t.isAdded && t.isRequired); }
+  missingOptional() { return (this.env()?.availableTemplates ?? []).filter(t => !t.isAdded && !t.isRequired); }
+  addedTemplateCount() { return (this.env()?.availableTemplates ?? []).filter(t => t.isAdded).length; }
+
+  // Ekleme listesinde önce eksikler (zorunlu önce), sonra eklenmiş olanlar
+  templatesForAdd() {
+    const rank = (t: AvailableTemplate) => (t.isAdded ? 2 : t.isRequired ? 0 : 1);
+    return [...(this.env()?.availableTemplates ?? [])].sort((a, b) => rank(a) - rank(b));
+  }
+
+  openAddResource(templateId?: string) {
     this.addResourceForm = { templateId: '', isShared: false, sharedResourceId: '', notes: '', override: false };
     this.addResourceCreds = {};
     this.selectedTemplate.set(null);
@@ -1365,6 +1426,10 @@ export class EnvironmentDetailComponent implements OnInit {
     this.addResourceSubmitted.set(false);
     this.addResourceError.set('');
     this.showAddResourceModal.set(true);
+    if (templateId) {
+      this.addResourceForm.templateId = templateId;
+      this.onTemplateChange(templateId);
+    }
   }
 
   closeAddResource() { this.showAddResourceModal.set(false); }

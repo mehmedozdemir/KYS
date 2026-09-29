@@ -764,7 +764,11 @@
     "vpnCustomerWide": "customer-wide",
     "vpnManage": "VPN details",
     "urlMissingList": "URL not set:",
-    "productLinkTitle": "Product deployment status by customer"
+    "productLinkTitle": "Product deployment status by customer",
+    "requiredMissingCount": "{{count}} required resource(s) missing",
+    "missingRequired": "Missing required resources:",
+    "missingOptional": "Other resources not added:",
+    "alreadyAdded": "added"
   },
   "account": {
     "title": "My Account",
