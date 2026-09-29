@@ -8,6 +8,7 @@ import { PermissionService } from '../../../core/services/permission.service';
 import { CustomFieldInputsComponent, CustomFieldDef } from '../../../shared/components/custom-field-inputs/custom-field-inputs.component';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { SECTOR_SUGGESTIONS, COUNTRY_SUGGESTIONS, TR_CITY_SUGGESTIONS } from '../../../shared/customer-lookups';
 
 const CUST_STATUS_CSS: Record<string, string> = { Prospect: 'badge--prospect', Onboarding: 'badge--onboarding', Active: 'badge--active', Inactive: 'badge--inactive', Churned: 'badge--churned' };
 const USAGE_MODE_CSS: Record<string, string> = { SaaS: 'badge--saas', Dedicated: 'badge--custom' };
@@ -577,17 +578,17 @@ interface CustomerDetail {
             <div class="form-row">
               <div class="form-group">
                 <label>{{ 'customers.sector' | transloco }}</label>
-                <input type="text" [(ngModel)]="editForm.sector" />
+                <input type="text" [(ngModel)]="editForm.sector" list="cd-sectors" autocomplete="off" />
               </div>
               <div class="form-group">
                 <label>{{ 'customers.country' | transloco }}</label>
-                <input type="text" [(ngModel)]="editForm.country" />
+                <input type="text" [(ngModel)]="editForm.country" list="cd-countries" autocomplete="off" />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label>{{ 'customers.city' | transloco }}</label>
-                <input type="text" [(ngModel)]="editForm.city" />
+                <input type="text" [(ngModel)]="editForm.city" list="cd-cities" autocomplete="off" />
               </div>
               <div class="form-group"></div>
             </div>
@@ -797,6 +798,9 @@ interface CustomerDetail {
         </div>
       </div>
     }
+      <datalist id="cd-sectors">@for (x of sectorSuggestions; track x) { <option [value]="x"></option> }</datalist>
+    <datalist id="cd-countries">@for (x of countrySuggestions; track x) { <option [value]="x"></option> }</datalist>
+    <datalist id="cd-cities">@for (x of citySuggestions; track x) { <option [value]="x"></option> }</datalist>
   `,
   styles: [`
     .loading-state { text-align: center; padding: 4rem; color: var(--text-subtle); }
@@ -930,6 +934,10 @@ interface CustomerDetail {
   `]
 })
 export class CustomerDetailComponent implements OnInit {
+  readonly sectorSuggestions = SECTOR_SUGGESTIONS;
+  readonly countrySuggestions = COUNTRY_SUGGESTIONS;
+  readonly citySuggestions = TR_CITY_SUGGESTIONS;
+
   private http = inject(HttpClient);
   private confirmDialog = inject(ConfirmDialogService);
   protected perms = inject(PermissionService);
