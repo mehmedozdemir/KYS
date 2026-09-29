@@ -23,7 +23,7 @@ interface EnvType {
     <div class="page-content">
       <div class="page-header">
         <div>
-          <div class="breadcrumb"><a routerLink="/admin">{{ 'admin.crumb' | transloco }}</a><span>/</span><span>{{ 'admin.environmentTypes.title' | transloco }}</span></div>
+          <div class="breadcrumb"><span>{{ 'menu.definitions' | transloco }}</span><span>/</span><span>{{ 'admin.environmentTypes.title' | transloco }}</span></div>
           <h1 class="page-title">{{ 'admin.environmentTypes.title' | transloco }}</h1>
           <p class="page-subtitle">{{ 'admin.environmentTypes.subtitle' | transloco }}</p>
         </div>

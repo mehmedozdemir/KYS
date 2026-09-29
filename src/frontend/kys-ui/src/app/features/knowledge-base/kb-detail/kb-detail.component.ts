@@ -133,8 +133,10 @@ interface ArticleDetail {
     .article-body { background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); min-width: 0; }
     .article-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-strong); flex: 1; } }
 
-    .article-content {
-      font-size: 0.9375rem; line-height: 1.75; color: var(--text);
+    .article-content { font-size: 0.9375rem; line-height: 1.75; color: var(--text); }
+    /* İçerik [innerHTML] ile eklenir; emulated encapsulation bu düğümlere stil uygulamaz.
+       :host ::ng-deep ile bileşen içinde kalarak markdown çıktısına ulaşılır. */
+    :host ::ng-deep .article-content {
       h1,h2,h3,h4 { font-weight: 700; color: var(--text-strong); margin: 1.5rem 0 0.5rem; }
       h1 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
       h2 { font-size: 1.25rem; }
@@ -143,7 +145,8 @@ interface ArticleDetail {
       ul, ol { padding-left: 1.5rem; margin: 0.75rem 0; }
       li { margin: 0.25rem 0; }
       code { background: var(--surface-3); padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.875em; color: var(--text-strong); }
-      pre { background: var(--text-strong); color: var(--border); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; code { background: none; color: inherit; padding: 0; } }
+      pre { background: var(--surface-2); color: var(--text-strong); border: 1px solid var(--border); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; font-size: 0.8125rem; line-height: 1.6; code { background: none; color: inherit; padding: 0; } }
+      input[type='checkbox'] { margin-right: 0.5rem; accent-color: var(--primary); }
       blockquote { border-left: 4px solid var(--primary); margin: 1rem 0; padding: 0.5rem 1rem; background: var(--primary-soft-bg); color: var(--primary-soft-text); border-radius: 0 0.375rem 0.375rem 0; p { margin: 0; } }
       a { color: var(--primary); text-decoration: underline; }
       table { border-collapse: collapse; width: 100%; margin: 1rem 0; th,td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; } th { background: var(--surface-2); font-weight: 600; } }

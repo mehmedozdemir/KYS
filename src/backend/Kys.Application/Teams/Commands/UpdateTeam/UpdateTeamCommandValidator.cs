@@ -1,0 +1,17 @@
+using FluentValidation;
+
+namespace Kys.Application.Teams.Commands.UpdateTeam;
+
+public sealed class UpdateTeamCommandValidator : AbstractValidator<UpdateTeamCommand>
+{
+    private static readonly string[] ValidTypes = ["Domain", "Project", "Platform"];
+
+    public UpdateTeamCommandValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Code).MaximumLength(20).When(x => x.Code is not null);
+        RuleFor(x => x.Description).MaximumLength(1000).When(x => x.Description is not null);
+        RuleFor(x => x.TeamType).NotEmpty().Must(t => ValidTypes.Contains(t))
+            .WithMessage("val.team.teamType");
+    }
+}

@@ -12,6 +12,7 @@ interface TeamDetail {
   code: string | null;
   description: string | null;
   isActive: boolean;
+  teamType: string;
   members: TeamMember[];
 }
 
@@ -80,14 +81,58 @@ interface AddMemberRequest {
                 @if (team()!.code) {
                   <span class="code-badge">{{ team()!.code }}</span>
                 }
+                <span class="type-badge">{{ 'type.teamShort.' + team()!.teamType | transloco }}</span>
               </div>
               <p class="header-desc">{{ team()!.description ?? ('productDetail.noDescription' | transloco) }}</p>
             </div>
           </div>
-          <span class="badge" [ngClass]="team()!.isActive ? 'badge--active' : 'badge--archived'">
-            {{ (team()!.isActive ? 'status.customer.Active' : 'status.customer.Inactive') | transloco }}
-          </span>
+          <div class="header-actions">
+            <span class="badge" [ngClass]="team()!.isActive ? 'badge--active' : 'badge--archived'">
+              {{ (team()!.isActive ? 'status.customer.Active' : 'status.customer.Inactive') | transloco }}
+            </span>
+            <button type="button" class="btn btn-secondary" (click)="openEdit()">
+              <i class="pi pi-pencil"></i> {{ 'common.edit' | transloco }}
+            </button>
+          </div>
         </div>
+
+        @if (showEdit()) {
+          <div class="modal-backdrop" (click)="showEdit.set(false)">
+            <div class="modal" (click)="$event.stopPropagation()">
+              <div class="modal-header">
+                <h2>{{ 'teamDetail.editTeam' | transloco }}</h2>
+                <button class="modal-close" (click)="showEdit.set(false)"><i class="pi pi-times"></i></button>
+              </div>
+              <div class="modal-body">
+                @if (editError()) { <div class="alert-error">{{ editError() }}</div> }
+                <div class="form-group">
+                  <label>{{ 'teams.name' | transloco }} <span class="required">*</span></label>
+                  <input type="text" [(ngModel)]="editForm.name" />
+                </div>
+                <div class="form-group">
+                  <label>{{ 'teams.code' | transloco }}</label>
+                  <input type="text" [(ngModel)]="editForm.code" maxlength="20" />
+                </div>
+                <div class="form-group">
+                  <label>{{ 'teams.teamType' | transloco }}</label>
+                  <select [(ngModel)]="editForm.teamType">
+                    @for (t of teamTypes; track t) { <option [value]="t">{{ 'type.team.' + t | transloco }}</option> }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>{{ 'teams.description' | transloco }}</label>
+                  <textarea rows="3" [(ngModel)]="editForm.description"></textarea>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="showEdit.set(false)">{{ 'common.cancel' | transloco }}</button>
+                <button class="btn btn-primary" [disabled]="editSaving() || !editForm.name.trim()" (click)="saveEdit()">
+                  {{ (editSaving() ? 'common.saving' : 'common.save') | transloco }}
+                </button>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- Members section -->
         <div class="section-header">
@@ -114,13 +159,13 @@ interface AddMemberRequest {
               <tbody>
                 @for (m of team()!.members; track m.membershipId) {
                   <tr [class.inactive-row]="!!m.endDate">
-                    <td class="person-cell">
+                    <td><div class="person-cell">
                       <div class="avatar">{{ m.personName[0] }}</div>
                       <div>
                         <a [routerLink]="['/people', m.personId]" class="person-name">{{ m.personName }}</a>
                         <p class="person-email">{{ m.personEmail }}</p>
                       </div>
-                    </td>
+                    </div></td>
                     <td>{{ m.organizationRoleName }}</td>
                     <td>{{ m.startDate | date:'dd.MM.yyyy' }}</td>
                     <td>
@@ -269,6 +314,9 @@ interface AddMemberRequest {
     }
     h1 { font-size: 1.25rem; font-weight: 700; color: var(--text-strong); }
     .name-row { display: flex; align-items: center; gap: 0.625rem; }
+    .type-badge { display: inline-flex; align-items: center; padding: 0.1875rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--primary-soft-bg); color: var(--primary-strong); }
+    .header-actions { display: flex; align-items: center; gap: 0.75rem; }
+    .form-group textarea { padding: 0.5rem 0.75rem; border: 1px solid var(--border-strong); border-radius: 0.5rem; font-size: 0.875rem; width: 100%; box-sizing: border-box; resize: vertical; font-family: inherit; }
     .code-badge { display: inline-flex; align-items: center; padding: 0.1875rem 0.5rem; background: var(--indigo-soft-bg); color: var(--indigo-strong); border-radius: 0.375rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; }
     .header-desc { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.125rem; }
 
@@ -332,6 +380,42 @@ export class TeamDetailComponent implements OnInit {
 
   team = signal<TeamDetail | null>(null);
   loading = signal(true);
+
+  // --- Ekip düzenleme ---
+  readonly teamTypes = ['Domain', 'Platform', 'Project'];
+  showEdit = signal(false);
+  editSaving = signal(false);
+  editError = signal('');
+  editForm = { name: '', code: '', description: '', teamType: 'Project' };
+
+  openEdit() {
+    const t = this.team()!;
+    this.editForm = { name: t.name, code: t.code ?? '', description: t.description ?? '', teamType: t.teamType };
+    this.editError.set('');
+    this.showEdit.set(true);
+  }
+
+  saveEdit() {
+    const t = this.team()!;
+    this.editSaving.set(true);
+    this.editError.set('');
+    this.http.put(`${environment.apiUrl}/teams/${t.id}`, {
+      name: this.editForm.name.trim(),
+      code: this.editForm.code.trim() || null,
+      description: this.editForm.description.trim() || null,
+      teamType: this.editForm.teamType
+    }).subscribe({
+      next: () => {
+        this.editSaving.set(false);
+        this.showEdit.set(false);
+        this.http.get<TeamDetail>(`${environment.apiUrl}/teams/${t.id}`).subscribe({ next: d => this.team.set(d) });
+      },
+      error: err => {
+        this.editSaving.set(false);
+        this.editError.set(err.error?.detail ?? this.transloco.translate('teamDetail.editError'));
+      }
+    });
+  }
   orgRoles = signal<OrganizationRole[]>([]);
 
   showAddModal = signal(false);

@@ -115,10 +115,10 @@ interface CreateProductForm {
             <tbody>
               @for (p of products(); track p.id) {
                 <tr class="clickable-row" [routerLink]="['/products', p.id]">
-                  <td class="name-cell">
+                  <td><div class="name-cell">
                     <div class="product-icon"><i class="pi pi-box"></i></div>
                     <span class="product-name">{{ p.name }}</span>
-                  </td>
+                  </div></td>
                   <td><code class="code-badge">{{ p.code }}</code></td>
                   <td><span class="badge" [class]="typeCss(p.productType)">{{ 'type.product.' + typeName(p.productType) | transloco }}</span></td>
                   <td><span class="badge" [class]="statusCss(p.status)">{{ 'status.product.' + p.status | transloco }}</span></td>

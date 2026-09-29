@@ -54,7 +54,7 @@ interface SharedResourceDetail {
       <div class="page-header">
         <div>
           <div class="breadcrumb">
-            <a routerLink="/admin">{{ 'admin.crumb' | transloco }}</a>
+            <span>{{ 'menu.definitions' | transloco }}</span>
             <span>/</span>
             <span>{{ 'admin.sharedResources.title' | transloco }}</span>
           </div>

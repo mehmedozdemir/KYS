@@ -14,6 +14,7 @@ interface TeamSummary {
   description: string | null;
   memberCount: number;
   isActive: boolean;
+  teamType: string;
 }
 
 interface PagedResult<T> {
@@ -82,13 +83,14 @@ interface CreateTeamRequest {
             <tbody>
               @for (team of teams(); track team.id) {
                 <tr class="clickable-row" [routerLink]="['/teams', team.id]">
-                  <td class="name-cell">
+                  <td><div class="name-cell">
                     <div class="team-avatar">{{ team.name[0] }}</div>
                     <span class="team-name">{{ team.name }}</span>
                     @if (team.code) {
                       <span class="code-tag">{{ team.code }}</span>
                     }
-                  </td>
+                    <span class="type-tag" [attr.data-type]="team.teamType">{{ 'type.teamShort.' + team.teamType | transloco }}</span>
+                  </div></td>
                   <td class="desc-cell">{{ team.description ?? '—' }}</td>
                   <td>
                     <span class="member-count">
@@ -222,6 +224,9 @@ interface CreateTeamRequest {
     .name-cell { display: flex; align-items: center; gap: 0.625rem; }
     .team-avatar { width: 2rem; height: 2rem; border-radius: 0.375rem; background: var(--indigo-soft-bg); color: var(--indigo-strong); display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; flex-shrink: 0; }
     .team-name { font-weight: 500; color: var(--text-strong); }
+    .type-tag { display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; background: var(--surface-3); color: var(--text-muted); }
+    .type-tag[data-type="Domain"] { background: var(--primary-soft-bg); color: var(--primary-strong); }
+    .type-tag[data-type="Platform"] { background: var(--indigo-soft-bg); color: var(--indigo-strong); }
     .code-tag { display: inline-flex; align-items: center; padding: 0.125rem 0.375rem; background: var(--indigo-soft-bg); color: var(--indigo-strong); border-radius: 0.25rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; }
     .desc-cell { color: var(--text-muted); max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .member-count { display: flex; align-items: center; gap: 0.375rem; color: var(--text-muted); i { font-size: 0.75rem; } }

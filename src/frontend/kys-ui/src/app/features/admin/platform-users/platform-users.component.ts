@@ -82,13 +82,13 @@ const ROLE_COLOR: Record<string, string> = {
             <tbody>
               @for (p of filtered(); track p.id) {
                 <tr>
-                  <td class="person-cell">
+                  <td><div class="person-cell">
                     <div class="avatar">{{ p.firstName[0] }}{{ p.lastName[0] }}</div>
                     <div>
                       <a [routerLink]="['/people', p.id]" class="person-name">{{ p.firstName }} {{ p.lastName }}</a>
                       <p class="person-email">{{ p.email }}</p>
                     </div>
-                  </td>
+                  </div></td>
                   <td class="text-muted">{{ p.title ?? '—' }}</td>
                   <td>
                     @if (p.isLocked) {

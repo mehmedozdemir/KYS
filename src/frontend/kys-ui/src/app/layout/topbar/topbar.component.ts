@@ -35,7 +35,7 @@ const CATEGORY_ROUTE: Record<string, string> = {
   template: `
     <header class="topbar">
       <div class="topbar__left">
-      <button class="topbar__menu-btn" (click)="layout.primaryToggle()" [title]="'topbar.menu' | transloco">
+      <button class="topbar__menu-btn" (click)="layout.primaryToggle()" [title]="'topbar.menu' | transloco" [attr.aria-label]="'topbar.menu' | transloco">
         <i class="pi pi-bars"></i>
       </button>
       <div class="topbar__search" [class.topbar__search--active]="showDropdown()">
@@ -53,7 +53,7 @@ const CATEGORY_ROUTE: Record<string, string> = {
         @if (searching()) {
           <i class="pi pi-spin pi-spinner search-spinner"></i>
         } @else if (searchQuery.length > 0) {
-          <button class="clear-btn" (click)="clearSearch()"><i class="pi pi-times"></i></button>
+          <button class="clear-btn" (click)="clearSearch()" [attr.aria-label]="'common.clear' | transloco"><i class="pi pi-times"></i></button>
         }
 
         @if (showDropdown() && searchQuery.length >= 3) {
@@ -82,7 +82,7 @@ const CATEGORY_ROUTE: Record<string, string> = {
               <div class="dropdown-footer">
                 <button class="view-all-btn" (click)="onEnter()">
                   <i class="pi pi-search"></i>
-                  Tüm sonuçları gör
+                  {{ 'topbar.viewAllResults' | transloco }}
                 </button>
               </div>
             } @else if (!searching()) {
@@ -101,7 +101,7 @@ const CATEGORY_ROUTE: Record<string, string> = {
           <i class="pi pi-globe"></i> {{ lang.current().toUpperCase() }}
         </button>
         <div class="theme-menu">
-          <button class="topbar__icon-btn" (click)="toggleThemeMenu($event)" [title]="'topbar.theme' | transloco">
+          <button class="topbar__icon-btn" (click)="toggleThemeMenu($event)" [title]="'topbar.theme' | transloco" [attr.aria-label]="'topbar.theme' | transloco">
             <i class="pi pi-palette"></i>
           </button>
           @if (showThemeMenu()) {
@@ -124,7 +124,7 @@ const CATEGORY_ROUTE: Record<string, string> = {
             <i class="pi pi-user"></i> {{ user.fullName }}
           </a>
         }
-        <button class="topbar__logout" (click)="onLogout()" [title]="'topbar.logout' | transloco">
+        <button class="topbar__logout" (click)="onLogout()" [title]="'topbar.logout' | transloco" [attr.aria-label]="'topbar.logout' | transloco">
           <i class="pi pi-sign-out"></i>
         </button>
       </div>
